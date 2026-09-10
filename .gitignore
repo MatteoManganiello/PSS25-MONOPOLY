@@ -1,0 +1,30 @@
+# --- Gradle ---
+.gradle/
+build/
+# Il wrapper va invece versionato, cosi' chi clona il progetto puo' compilarlo
+# senza installare Gradle: le righe seguenti lo escludono dalle regole di ignore.
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+!gradlew
+!gradlew.bat
+
+# --- Java ---
+*.class
+hs_err_pid*
+replay_pid*
+
+# --- IDE ---
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+.vscode/
+.classpath
+.project
+.settings/
+bin/
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db
