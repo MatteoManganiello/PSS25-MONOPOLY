@@ -35,13 +35,3 @@ src/test/java/monopoly/model/  # test JUnit 5 (board, economy, game)
 java -jar build/libs/monopoly-1.0.0.jar
 ./gradlew clean        # ripulisce la cartella build/
 ```
-
-Su Windows si usa `gradlew.bat` al posto di `./gradlew`.
-
-## Stato di avanzamento
-
-- [x] Giorno 1: setup del progetto e modello del dominio (Player, Token, Dice, Bank, Property, Tile, Board, GamePhase)
-- [ ] Gestione dei turni (controller + GamePhase)
-- [ ] Caselle speciali (imprevisti, probabilita', tasse, prigione)
-- [ ] Interfaccia grafica
-- [ ] Salvataggio della partita
