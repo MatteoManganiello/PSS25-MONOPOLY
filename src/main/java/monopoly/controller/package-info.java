@@ -1,8 +1,8 @@
 /**
  * Controller dell'architettura MVC: coordinamento tra model e view.
  * <p>
- * Package ancora vuoto. Conterra' la gestione del ciclo dei turni, guidata dalle
- * fasi di {@link monopoly.model.game.GamePhase}: lancio dei dadi, movimento della
- * pedina, invocazione dell'effetto della casella e aggiornamento della view.
+ * {@link monopoly.controller.GameEngine} e' l'unico punto di ingresso per chi
+ * comanda la partita: fa eseguire i comandi al model e notifica gli eventi agli
+ * osservatori ({@link monopoly.controller.GameObserver}), cioe' alle view.
  */
 package monopoly.controller;

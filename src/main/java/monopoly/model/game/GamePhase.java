@@ -8,8 +8,7 @@ package monopoly.model.game;
  * abilitare o disabilitare i comandi della view di conseguenza (per esempio il
  * pulsante "lancia i dadi" e' attivo solo nella fase {@link #ROLL}).
  * <p>
- * GIORNO 1: l'enum e' solo dichiarato; la logica che fa avanzare le fasi
- * arrivera' con la gestione dei turni.
+ * La logica che fa avanzare le fasi si trova in {@link TurnManager}.
  */
 public enum GamePhase {
 
