@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import monopoly.model.board.Board;
+import monopoly.model.board.RecordingTile;
 import monopoly.model.player.Player;
 import monopoly.model.player.PlayerStatus;
 import monopoly.model.player.Token;
@@ -27,7 +28,8 @@ class GameStateTest {
         alice = new Player("Alice", new Token("Car", "RED"));
         bob = new Player("Bob", new Token("Dog", "BLUE"));
         carol = new Player("Carol", new Token("Hat", "GREEN"));
-        state = new GameState(new Board(), List.of(alice, bob, carol), new Dice());
+        // Questi test riguardano solo l'ordine dei turni: basta un tabellone neutro.
+        state = new GameState(RecordingTile.createBoard(), List.of(alice, bob, carol), new Dice());
     }
 
     @Test
@@ -101,7 +103,7 @@ class GameStateTest {
 
     @Test
     void invalidPlayerListsAreRejected() {
-        final Board board = new Board();
+        final Board board = RecordingTile.createBoard();
         final Dice dice = new Dice();
         assertThrows(IllegalArgumentException.class, () -> new GameState(board, List.of(alice), dice));
         assertThrows(IllegalArgumentException.class, () -> new GameState(board, List.of(alice, alice), dice));

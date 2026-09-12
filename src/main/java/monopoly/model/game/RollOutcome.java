@@ -6,6 +6,13 @@ package monopoly.model.game;
  * Descrive cosa e' successo secondo le regole del turno, cosi' chi riceve il
  * risultato (il controller e, tramite lui, la view) puo' reagire con uno
  * {@code switch} esaustivo invece di ricostruire la situazione guardando i dadi.
+ * <p>
+ * Attenzione a cosa <em>non</em> dice: l'esito riguarda il movimento del giocatore, non
+ * le conseguenze economiche del turno. Un giocatore puo' risultare {@link #MOVED} ed
+ * essere nel frattempo fallito, perche' la casella su cui si e' fermato gli ha chiesto
+ * un affitto che non poteva pagare. Il fallimento si legge sempre nello stato del
+ * giocatore ({@link monopoly.model.player.PlayerStatus#BANKRUPT BANKRUPT}) e
+ * nell'evento {@code onPlayerBankrupt}, mai da qui.
  */
 public enum RollOutcome {
 
@@ -22,7 +29,17 @@ public enum RollOutcome {
     RELEASED_FROM_JAIL(true),
 
     /** Il giocatore era in prigione e non ha fatto doppio: resta dov'e'. */
-    STAYED_IN_JAIL(false);
+    STAYED_IN_JAIL(false),
+
+    /**
+     * Il giocatore ha esaurito i tentativi di uscita: paga la cauzione ed e' libero,
+     * ma per questo turno resta fermo sulla casella della prigione.
+     * <p>
+     * Vale anche quando e' proprio la cauzione a farlo fallire: la prigione comunque non
+     * lo trattiene piu', ma e' uscito dalla partita. Come per {@link #MOVED}, e' lo stato
+     * del giocatore a dire se e' ancora in gioco.
+     */
+    RELEASED_ON_BAIL(false);
 
     private final boolean movesPlayer;
 

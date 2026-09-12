@@ -9,7 +9,8 @@ import monopoly.model.player.Player;
  * implementate qui una volta sola, e un comportamento che invece cambia da
  * casella a casella: cosa succede quando un giocatore ci si ferma sopra.
  * Quel comportamento e' dichiarato dal metodo astratto {@link #onLand(Player)},
- * che ogni sottoclasse concreta e' obbligata a definire.
+ * che ogni sottoclasse concreta e' obbligata a definire; {@link #onPass(Player)}
+ * descrive invece il (raro) effetto del semplice passaggio sulla casella.
  * <p>
  * La classe e' astratta proprio perche' una "casella generica" non esiste sul
  * tabellone reale: esistono solo caselle specifiche (proprieta', tasse, imprevisti,
@@ -51,6 +52,24 @@ public abstract class Tile {
      * @param player il giocatore che si e' fermato sulla casella
      */
     public abstract void onLand(Player player);
+
+    /**
+     * Effetto della casella sul giocatore che la <em>attraversa</em> senza fermarsi.
+     * <p>
+     * A differenza di {@link #onLand(Player)} non e' astratto ma ha gia' un corpo,
+     * vuoto: quasi nessuna casella fa qualcosa quando ci si passa sopra, quindi
+     * obbligare tutte le sottoclassi a ridefinirlo sarebbe solo un fastidio. Chi ha
+     * bisogno di reagire al passaggio lo ridefinisce: e' il caso di
+     * {@link StartTile}, che accredita lo stipendio anche a chi passa dal "Via".
+     * <p>
+     * E' il {@link monopoly.model.game.TurnManager TurnManager} a chiamarlo, una volta per ogni casella attraversata
+     * durante il movimento.
+     *
+     * @param player il giocatore che sta attraversando la casella
+     */
+    public void onPass(final Player player) {
+        // Nessun effetto: passare su una casella, di norma, non comporta nulla.
+    }
 
     /** @return il nome della casella */
     public String getName() {

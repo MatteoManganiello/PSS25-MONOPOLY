@@ -8,9 +8,9 @@ import java.util.function.Consumer;
 import monopoly.model.board.Board;
 import monopoly.model.board.Tile;
 import monopoly.model.game.Dice;
+import monopoly.model.game.GameEventSupport;
 import monopoly.model.game.GamePhase;
 import monopoly.model.game.GameState;
-import monopoly.model.game.RollOutcome;
 import monopoly.model.game.RollResult;
 import monopoly.model.game.TurnManager;
 import monopoly.model.player.Player;
@@ -29,6 +29,13 @@ import monopoly.model.player.Player;
  * {@link #addObserver(GameObserver)} e ricevono gli eventi attraverso l'interfaccia
  * {@link GameObserver}, senza che il motore conosca le loro classi concrete.
  * <p>
+ * Gli eventi arrivano da due sorgenti. Quelli sullo svolgimento della partita (avvio,
+ * dadi, movimento, turni) li produce direttamente il motore; quelli sugli effetti
+ * (acquisti, affitti, tasse, prigione, fallimenti) li produce il model mentre applica
+ * le regole, e il motore si limita a pubblicarli con
+ * {@link GameEventSupport#publishPending()} subito dopo il proprio evento, cosi' i
+ * messaggi arrivano alla view nell'ordine in cui sono accaduti.
+ * <p>
  * Uso tipico:
  * <pre>
  *   GameEngine engine = new GameEngine(players);
@@ -42,6 +49,7 @@ public class GameEngine {
 
     private final GameState state;
     private final TurnManager turnManager;
+    private final GameEventSupport modelEvents;
     private final List<GameObserver> observers;
     private boolean started;
 
@@ -52,7 +60,7 @@ public class GameEngine {
      * @throws IllegalArgumentException se l'elenco dei giocatori non e' valido
      */
     public GameEngine(final List<Player> players) {
-        this(new GameState(new Board(), players, new Dice()));
+        this(GameState.createStandardGame(players, new Dice()));
     }
 
     /**
@@ -68,6 +76,7 @@ public class GameEngine {
         }
         this.state = state;
         this.turnManager = new TurnManager(state);
+        this.modelEvents = state.getContext().getEvents();
         this.observers = new ArrayList<>();
         this.started = false;
     }
@@ -89,6 +98,9 @@ public class GameEngine {
         }
         if (!this.observers.contains(observer)) {
             this.observers.add(observer);
+            // Un GameObserver e' anche un GameEventListener: con una sola registrazione
+            // riceve sia gli eventi del motore sia quelli prodotti dal model.
+            this.modelEvents.addListener(observer);
         }
     }
 
@@ -99,6 +111,7 @@ public class GameEngine {
      */
     public void removeObserver(final GameObserver observer) {
         this.observers.remove(observer);
+        this.modelEvents.removeListener(observer);
     }
 
     // ------------------------------------------------------------------
@@ -121,6 +134,9 @@ public class GameEngine {
         final Player firstPlayer = this.state.getCurrentPlayer();
         this.notifyObservers(observer -> observer.onGameStarted(this.state));
         this.notifyObservers(observer -> observer.onTurnStarted(firstPlayer));
+        // Ogni comando lascia la coda del model vuota: eventuali eventi prodotti durante
+        // la preparazione della partita vengono raccontati subito, non al primo lancio.
+        this.modelEvents.publishPending();
     }
 
     /**
@@ -134,6 +150,9 @@ public class GameEngine {
         final RollResult result = this.turnManager.rollDice();
         this.notifyObservers(observer -> observer.onDiceRolled(result));
         this.notifyMovement(result);
+        // Effetti della casella (acquisto, affitto, tassa, prigione, fallimento):
+        // sono gia' avvenuti dentro rollDice, qui vengono raccontati alla view.
+        this.modelEvents.publishPending();
         this.notifyObservers(observer -> observer.onGameStateChanged(this.state));
         this.checkGameOver();
     }
@@ -146,8 +165,26 @@ public class GameEngine {
     public void endTurn() {
         this.requireGameInProgress();
         final Player nextPlayer = this.turnManager.endTurn();
+        this.modelEvents.publishPending();
         this.notifyObservers(observer -> observer.onTurnStarted(nextPlayer));
         this.notifyObservers(observer -> observer.onGameStateChanged(this.state));
+    }
+
+    /**
+     * Fa pagare al giocatore di turno la cauzione per uscire subito di prigione.
+     * Dopo il pagamento il giocatore puo' lanciare i dadi normalmente.
+     *
+     * @return true se la cauzione e' stata pagata e il giocatore e' libero
+     * @throws IllegalStateException se la partita non e' in corso, se non e' il momento
+     *                               di lanciare o se il giocatore di turno non e' in prigione
+     */
+    public boolean payBail() {
+        this.requireGameInProgress();
+        final boolean released = this.turnManager.payBail();
+        this.modelEvents.publishPending();
+        this.notifyObservers(observer -> observer.onGameStateChanged(this.state));
+        this.checkGameOver();
+        return released;
     }
 
     /**
@@ -176,6 +213,16 @@ public class GameEngine {
         return this.isInProgress() && this.state.getPhase() == GamePhase.ROLL;
     }
 
+    /**
+     * @return true se il giocatore di turno e' in prigione e puo' permettersi la
+     *         cauzione (per abilitare il pulsante "paga la cauzione")
+     */
+    public boolean canPayBail() {
+        return this.isInProgress()
+                && this.state.getPhase() == GamePhase.ROLL
+                && this.state.getContext().getJail().canPayBail(this.state.getCurrentPlayer());
+    }
+
     /** @return true se ora il giocatore di turno puo' (e deve) passare la mano */
     public boolean canEndTurn() {
         return this.isInProgress() && this.state.getPhase() == GamePhase.END_TURN;
@@ -200,26 +247,30 @@ public class GameEngine {
     // Metodi di supporto
     // ------------------------------------------------------------------
 
-    /** Traduce l'esito del lancio nell'evento di spostamento corrispondente. */
+    /**
+     * Traduce l'esito del lancio nell'evento di spostamento corrispondente.
+     * <p>
+     * Gli esiti che non muovono la pedina (prigione, cauzione) non producono un evento
+     * di movimento: li annuncia gia' il model tramite
+     * {@link monopoly.model.game.JailManager JailManager}.
+     */
     private void notifyMovement(final RollResult result) {
-        final Player player = result.player();
-        if (result.outcome().movesPlayer()) {
-            final Board board = this.state.getBoard();
-            final Tile from = board.getTileAt(result.fromPosition());
-            final Tile to = board.getTileAt(result.toPosition());
-            this.notifyObservers(observer -> observer.onPlayerMoved(player, from, to));
-        } else if (result.outcome() == RollOutcome.SENT_TO_JAIL) {
-            this.notifyObservers(observer -> observer.onPlayerSentToJail(player));
+        if (!result.outcome().movesPlayer()) {
+            return;
         }
+        final Player player = result.player();
+        final Board board = this.state.getBoard();
+        final Tile from = board.getTileAt(result.fromPosition());
+        final Tile to = board.getTileAt(result.toPosition());
+        this.notifyObservers(observer -> observer.onPlayerMoved(player, from, to));
     }
 
     /**
      * Chiude la partita quando resta un solo giocatore non fallito.
      * <p>
-     * Oggi nessuno puo' ancora fallire (affitti e tasse arriveranno con le caselle
-     * del Giorno 3), ma il controllo e' gia' al suo posto: bastera' che una casella
-     * dichiari fallito un giocatore. I giocatori falliscono uno alla volta, quindi
-     * ne resta sempre almeno uno.
+     * Dal Giorno 3 il fallimento e' reale: chi non riesce a pagare un affitto o una
+     * tassa esce dalla partita. I giocatori falliscono uno alla volta, quindi ne resta
+     * sempre almeno uno.
      */
     private void checkGameOver() {
         final List<Player> activePlayers = this.state.getActivePlayers();
