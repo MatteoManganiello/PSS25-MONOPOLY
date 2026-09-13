@@ -103,19 +103,20 @@ public class Property extends Tile {
     }
 
     /**
-     * Effetto della casella proprieta'.
+     * Effetto della casella proprieta': qui nessuno, di proposito.
      * <p>
-     * GIORNO 1: implementazione volutamente vuota. Le regole (proporre l'acquisto
-     * se la casella e' libera, far pagare l'affitto al proprietario se e' occupata)
-     * verranno aggiunte quando ci sara' la gestione dei turni, perche' richiedono
-     * un'interazione con il giocatore e con la {@link Bank}.
+     * Le regole vere (acquisto se la casella e' libera, affitto al proprietario se e'
+     * di un altro, nessun effetto se e' gia' propria) sono implementate da
+     * {@link monopoly.model.board.PropertyTile PropertyTile}, che estende questa classe.
+     * La divisione e' voluta: per applicarle servono la {@link Bank} e le regole
+     * economiche, collaboratori che una {@code Property} - oggetto di dominio passivo,
+     * che descrive prezzo, affitto e proprietario - non ha e non deve avere.
      *
      * @param player il giocatore che si e' fermato sulla proprieta'
      */
     @Override
     public void onLand(final Player player) {
-        // TODO (gestione turni): se isAvailable() -> proporre l'acquisto;
-        // altrimenti, se !isOwnedBy(player) -> pagare getRent() al proprietario.
+        // Nessun effetto: il comportamento della casella e' definito da PropertyTile.
     }
 
     @Override

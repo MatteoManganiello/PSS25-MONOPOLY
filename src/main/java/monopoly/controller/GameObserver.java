@@ -1,6 +1,7 @@
 package monopoly.controller;
 
 import monopoly.model.board.Tile;
+import monopoly.model.game.GameEventListener;
 import monopoly.model.game.GameState;
 import monopoly.model.game.RollResult;
 import monopoly.model.player.Player;
@@ -19,10 +20,17 @@ import monopoly.model.player.Player;
  * solo {@link #onDiceRolled}, il tabellone solo {@link #onPlayerMoved}, mentre una
  * view semplice puo' limitarsi a {@link #onGameStateChanged} e ridisegnare tutto.
  * <p>
+ * Estende {@link GameEventListener}, che dichiara gli eventi prodotti dal model
+ * (acquisti, affitti, tasse, prigione, fallimenti): qui si aggiungono gli eventi che
+ * riguardano lo svolgimento della partita (avvio, turni, dadi, movimento, fine).
+ * La divisione segue i livelli dell'MVC - il model non conosce il controller e puo'
+ * quindi dichiarare solo la prima meta' - ma chi implementa {@code GameObserver} li
+ * riceve tutti, registrandosi una volta sola con {@link GameEngine#addObserver}.
+ * <p>
  * Gli oggetti del model ricevuti come parametro vanno usati in sola lettura: ogni
  * modifica alla partita passa dai comandi del {@link GameEngine}.
  */
-public interface GameObserver {
+public interface GameObserver extends GameEventListener {
 
     /**
      * La partita e' iniziata (o, in futuro, e' stata ricaricata).
@@ -56,14 +64,6 @@ public interface GameObserver {
      * @param to     la casella di arrivo
      */
     default void onPlayerMoved(final Player player, final Tile from, final Tile to) {
-    }
-
-    /**
-     * Un giocatore e' stato mandato in prigione per tre doppi consecutivi.
-     *
-     * @param player il giocatore finito in prigione
-     */
-    default void onPlayerSentToJail(final Player player) {
     }
 
     /**

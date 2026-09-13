@@ -12,8 +12,10 @@ import java.util.List;
  * permette di sostituire o aggiungere tipi di casella senza modificare
  * una sola riga di questa classe.
  * <p>
- * GIORNO 1: le caselle sono tutte segnaposto ({@link PlaceholderTile}); verranno
- * sostituite dalle caselle definitive nei prossimi giorni.
+ * Il tabellone non sa nemmeno quali caselle lo compongono: le riceve gia' pronte
+ * nel costruttore. A costruirle e' {@link BoardFactory#createStandardBoard}, che e'
+ * anche il modo normale di ottenere un tabellone da gioco; il costruttore pubblico
+ * resta utile ai test e, in futuro, al caricamento da file.
  */
 public class Board {
 
@@ -34,14 +36,9 @@ public class Board {
 
     private final List<Tile> tiles;
 
-    /** Crea un tabellone standard riempito con caselle segnaposto. */
-    public Board() {
-        this(createPlaceholderTiles());
-    }
-
     /**
      * Crea un tabellone a partire da un elenco di caselle gia' pronto.
-     * Utile per i test e, in futuro, per caricare la configurazione da file.
+     * Per il tabellone da gioco si usa {@link BoardFactory#createStandardBoard}.
      *
      * @param tiles le {@link Board#SIZE} caselle del tabellone, in ordine di posizione
      * @throws IllegalArgumentException se le caselle non sono esattamente {@link Board#SIZE}
@@ -76,31 +73,6 @@ public class Board {
     /** @return tutte le caselle in sola lettura */
     public List<Tile> getTiles() {
         return Collections.unmodifiableList(this.tiles);
-    }
-
-    /**
-     * Costruisce le caselle segnaposto del tabellone: i quattro angoli ricevono
-     * gia' il nome definitivo, le altre un nome provvisorio.
-     *
-     * @return la lista delle 40 caselle segnaposto
-     */
-    private static List<Tile> createPlaceholderTiles() {
-        final List<Tile> placeholders = new ArrayList<>(SIZE);
-        for (int position = 0; position < SIZE; position++) {
-            placeholders.add(new PlaceholderTile(placeholderName(position), position));
-        }
-        return placeholders;
-    }
-
-    /** @return il nome provvisorio della casella nella posizione indicata */
-    private static String placeholderName(final int position) {
-        return switch (position) {
-            case START_POSITION -> "GO";
-            case JAIL_POSITION -> "Jail";
-            case FREE_PARKING_POSITION -> "Free Parking";
-            case GO_TO_JAIL_POSITION -> "Go To Jail";
-            default -> "Tile " + position;
-        };
     }
 
     @Override

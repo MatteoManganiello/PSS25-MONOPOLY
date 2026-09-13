@@ -5,10 +5,13 @@ import monopoly.model.player.Player;
 /**
  * Casella segnaposto senza alcun effetto.
  * <p>
- * Serve a riempire il tabellone finche' le caselle definitive (proprieta',
- * imprevisti, probabilita', tasse, prigione, ...) non saranno implementate:
- * in questo modo {@link Board} e' gia' completa e utilizzabile, e le singole
- * caselle potranno essere sostituite una alla volta senza toccare il resto del codice.
+ * Nata al Giorno 1 per riempire il tabellone prima che esistessero le caselle vere,
+ * ha ancora un compito preciso: nel tabellone standard occupa le caselle
+ * "Imprevisti" e "Probabilita'", che avranno un effetto solo quando ci sara' il
+ * mazzo di carte. E' l'esempio piu' evidente del vantaggio del polimorfismo: il
+ * tabellone e' completo e giocabile anche se una parte delle regole non c'e' ancora,
+ * e quelle caselle potranno essere sostituite una alla volta senza toccare
+ * {@link Board}, il {@link monopoly.model.game.TurnManager TurnManager} o la view.
  */
 public class PlaceholderTile extends Tile {
 

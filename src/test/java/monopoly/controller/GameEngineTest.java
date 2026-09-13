@@ -93,13 +93,13 @@ class GameEngineTest {
 
     @Test
     void startGameNotifiesTheInitialStateAndTheFirstTurn() {
-        newEngine(new Board(), SEED_NO_DOUBLE).startGame();
+        newEngine(RecordingTile.createBoard(), SEED_NO_DOUBLE).startGame();
         assertEquals(List.of("started", "turn:Alice"), observer.events);
     }
 
     @Test
     void commandsAreRejectedBeforeTheGameStarts() {
-        final GameEngine engine = newEngine(new Board(), SEED_NO_DOUBLE);
+        final GameEngine engine = newEngine(RecordingTile.createBoard(), SEED_NO_DOUBLE);
         assertThrows(IllegalStateException.class, engine::rollDice);
         assertThrows(IllegalStateException.class, engine::endTurn);
         engine.startGame();
@@ -108,7 +108,7 @@ class GameEngineTest {
 
     @Test
     void rollDiceNotifiesDiceMovementAndStateChange() {
-        final GameEngine engine = newEngine(new Board(), SEED_NO_DOUBLE);
+        final GameEngine engine = newEngine(RecordingTile.createBoard(), SEED_NO_DOUBLE);
         engine.startGame();
         observer.events.clear();
 
@@ -119,7 +119,7 @@ class GameEngineTest {
 
     @Test
     void availableCommandsFollowTheTurnPhase() {
-        final GameEngine engine = newEngine(new Board(), SEED_NO_DOUBLE);
+        final GameEngine engine = newEngine(RecordingTile.createBoard(), SEED_NO_DOUBLE);
         assertFalse(engine.canRollDice());
 
         engine.startGame();
@@ -133,7 +133,7 @@ class GameEngineTest {
 
     @Test
     void endTurnPassesToTheNextPlayer() {
-        final GameEngine engine = newEngine(new Board(), SEED_NO_DOUBLE);
+        final GameEngine engine = newEngine(RecordingTile.createBoard(), SEED_NO_DOUBLE);
         engine.startGame();
         engine.rollDice();
         observer.events.clear();
@@ -146,7 +146,7 @@ class GameEngineTest {
 
     @Test
     void playTurnRollsAgainAfterADoubleAndThenPassesTheTurn() {
-        final GameEngine engine = newEngine(new Board(), SEED_DOUBLE_THEN_NORMAL);
+        final GameEngine engine = newEngine(RecordingTile.createBoard(), SEED_DOUBLE_THEN_NORMAL);
         engine.startGame();
         observer.events.clear();
 
@@ -176,7 +176,7 @@ class GameEngineTest {
 
     @Test
     void removedObserversAreNoLongerNotified() {
-        final GameEngine engine = newEngine(new Board(), SEED_NO_DOUBLE);
+        final GameEngine engine = newEngine(RecordingTile.createBoard(), SEED_NO_DOUBLE);
         engine.removeObserver(observer);
         engine.startGame();
         engine.rollDice();

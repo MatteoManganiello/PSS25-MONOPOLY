@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 
 import monopoly.model.board.Board;
+import monopoly.model.board.BoardFactory;
 import monopoly.model.player.Player;
 
 /**
@@ -15,6 +16,11 @@ import monopoly.model.player.Player;
  * Raccoglie in un unico oggetto tutto cio' che serve per descrivere (e in futuro
  * salvare e ricaricare) una partita: tabellone, giocatori, dadi, giocatore di
  * turno, fase del turno, doppi consecutivi e fine della partita.
+ * <p>
+ * Dal Giorno 3 fa parte della partita anche il {@link GameContext}: la banca e le
+ * regole (economia e prigione) con cui sono state costruite le caselle del tabellone.
+ * Tenerlo qui garantisce che {@link TurnManager}, caselle e controller lavorino tutti
+ * sugli stessi oggetti.
  * <p>
  * La classe custodisce i dati e ne garantisce la coerenza, ma non applica le
  * regole del turno: quello e' compito di {@link TurnManager}. Tabellone, giocatori
@@ -32,6 +38,7 @@ public class GameState {
     private final Board board;
     private final List<Player> players;
     private final Dice dice;
+    private final GameContext context;
 
     private int currentPlayerIndex;
     private GamePhase phase;
@@ -48,18 +55,56 @@ public class GameState {
      * @throws IllegalArgumentException se un parametro e' null o l'elenco dei giocatori non e' valido
      */
     public GameState(final Board board, final List<Player> players, final Dice dice) {
-        if (board == null || dice == null) {
-            throw new IllegalArgumentException("Tabellone e dadi non possono essere null");
+        this(board, players, dice, new GameContext());
+    }
+
+    /**
+     * Crea lo stato iniziale di una partita indicando anche i servizi da usare.
+     * <p>
+     * E' il costruttore da preferire quando il tabellone e' stato costruito con un
+     * certo {@link GameContext}: passando qui lo stesso contesto, le caselle e le
+     * regole del turno useranno la stessa banca e la stessa prigione. Ci pensa gia'
+     * {@link #createStandardGame(List, Dice)}.
+     *
+     * @param board   il tabellone
+     * @param players i giocatori nell'ordine di turno
+     * @param dice    i dadi della partita
+     * @param context banca, regole economiche, prigione e canale degli eventi
+     * @throws IllegalArgumentException se un parametro e' null o l'elenco dei giocatori non e' valido
+     */
+    public GameState(final Board board, final List<Player> players, final Dice dice,
+                     final GameContext context) {
+        if (board == null || dice == null || context == null) {
+            throw new IllegalArgumentException("Tabellone, dadi e contesto non possono essere null");
         }
         checkPlayers(players);
         this.board = board;
         // Copia difensiva: l'ordine dei giocatori non puo' essere alterato da fuori.
         this.players = new ArrayList<>(players);
         this.dice = dice;
+        this.context = context;
         this.currentPlayerIndex = 0;
         this.phase = GamePhase.ROLL;
         this.consecutiveDoubles = 0;
         this.gameOver = false;
+    }
+
+    /**
+     * Prepara una partita completa: crea i servizi condivisi, costruisce il tabellone
+     * standard collegato a quei servizi e restituisce lo stato iniziale.
+     * <p>
+     * E' il punto in cui i pezzi vengono montati nell'ordine giusto, cosi' nessuno
+     * puo' ritrovarsi con un tabellone collegato a una banca diversa da quella della
+     * partita.
+     *
+     * @param players i giocatori nell'ordine di turno
+     * @param dice    i dadi da usare (nei test, con seme fisso)
+     * @return lo stato iniziale di una nuova partita sul tabellone standard
+     * @throws IllegalArgumentException se i parametri non sono validi
+     */
+    public static GameState createStandardGame(final List<Player> players, final Dice dice) {
+        final GameContext context = new GameContext();
+        return new GameState(BoardFactory.createStandardBoard(context), players, dice, context);
     }
 
     /** @return il tabellone della partita */
@@ -70,6 +115,11 @@ public class GameState {
     /** @return tutti i giocatori in ordine di turno (falliti compresi), in sola lettura */
     public List<Player> getPlayers() {
         return Collections.unmodifiableList(this.players);
+    }
+
+    /** @return i servizi condivisi della partita: banca, economia, prigione, eventi */
+    public GameContext getContext() {
+        return this.context;
     }
 
     /** @return i dadi della partita */
