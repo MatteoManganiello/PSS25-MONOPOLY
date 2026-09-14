@@ -71,6 +71,36 @@ public abstract class Tile {
         // Nessun effetto: passare su una casella, di norma, non comporta nulla.
     }
 
+    /**
+     * Famiglia a cui appartiene la casella.
+     * <p>
+     * E' l'informazione con cui la view sceglie l'aspetto della casella (un colore per
+     * le proprieta', uno per le tasse, uno per gli angoli) senza dover chiedere "di che
+     * classe sei?": ogni sottoclasse dichiara da se' la propria categoria. Resta un dato
+     * descrittivo, non una regola - le regole sono in {@link #onLand(Player)}.
+     *
+     * @return la categoria della casella, {@link TileCategory#OTHER} se non dichiarata
+     */
+    public TileCategory getCategory() {
+        return TileCategory.OTHER;
+    }
+
+    /**
+     * Riga di dettaglio della casella: l'informazione che la caratterizza (il prezzo di
+     * una proprieta', l'importo di una tassa, ...), pronta per essere mostrata sotto il
+     * nome.
+     * <p>
+     * Come {@link #onLand(Player)} e' un metodo polimorfico: la view chiama sempre
+     * {@code tile.getDetail()} e non sa quale casella le rispondera'. Il corpo di
+     * default e' una stringa vuota, cosi' le caselle senza dettagli da mostrare non
+     * devono ridefinire nulla.
+     *
+     * @return il dettaglio da mostrare, oppure una stringa vuota
+     */
+    public String getDetail() {
+        return "";
+    }
+
     /** @return il nome della casella */
     public String getName() {
         return this.name;

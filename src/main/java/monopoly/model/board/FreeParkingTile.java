@@ -77,6 +77,21 @@ public class FreeParkingTile extends Tile {
         }
     }
 
+    /** @return {@link TileCategory#FREE_PARKING}: e' il posteggio gratuito */
+    @Override
+    public TileCategory getCategory() {
+        return TileCategory.FREE_PARKING;
+    }
+
+    /**
+     * @return "Sosta libera" con la regola ufficiale, il montepremi accumulato se la
+     *         variante e' attiva
+     */
+    @Override
+    public String getDetail() {
+        return this.jackpotEnabled ? "Montepremi " + this.pot : "Sosta libera";
+    }
+
     /**
      * Con la regola ufficiale non fa nulla; con la variante attiva consegna il
      * montepremi al giocatore e lo azzera.

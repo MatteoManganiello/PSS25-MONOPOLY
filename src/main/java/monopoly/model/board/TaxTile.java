@@ -46,6 +46,18 @@ public class TaxTile extends Tile {
         return this.amount;
     }
 
+    /** @return {@link TileCategory#TAX}: la casella impone un pagamento */
+    @Override
+    public TileCategory getCategory() {
+        return TileCategory.TAX;
+    }
+
+    /** @return l'importo dovuto, preceduto dal verbo che ne chiarisce il segno */
+    @Override
+    public String getDetail() {
+        return "Paga " + this.amount;
+    }
+
     /**
      * Calcola quanto deve pagare il giocatore indicato.
      * <p>

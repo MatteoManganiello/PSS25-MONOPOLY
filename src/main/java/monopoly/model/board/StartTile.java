@@ -58,6 +58,18 @@ public class StartTile extends Tile {
         return this.salary;
     }
 
+    /** @return {@link TileCategory#START}: e' la casella di partenza */
+    @Override
+    public TileCategory getCategory() {
+        return TileCategory.START;
+    }
+
+    /** @return lo stipendio incassato passando di qui */
+    @Override
+    public String getDetail() {
+        return "Ritira " + this.salary;
+    }
+
     /**
      * Accredita lo stipendio a chi si ferma esattamente sul "Via".
      *

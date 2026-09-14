@@ -35,6 +35,18 @@ public class GoToJailTile extends Tile {
         this.jail = jail;
     }
 
+    /** @return {@link TileCategory#GO_TO_JAIL}: la casella spedisce in prigione */
+    @Override
+    public TileCategory getCategory() {
+        return TileCategory.GO_TO_JAIL;
+    }
+
+    /** @return l'avviso di cosa attende chi si ferma qui */
+    @Override
+    public String getDetail() {
+        return "Vai dentro!";
+    }
+
     /**
      * Manda il giocatore in prigione.
      *

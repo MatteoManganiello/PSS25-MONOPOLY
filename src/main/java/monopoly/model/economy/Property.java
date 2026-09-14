@@ -3,6 +3,7 @@ package monopoly.model.economy;
 import java.util.Optional;
 
 import monopoly.model.board.Tile;
+import monopoly.model.board.TileCategory;
 import monopoly.model.player.Player;
 
 /**
@@ -100,6 +101,18 @@ public class Property extends Tile {
      */
     public boolean isOwnedBy(final Player player) {
         return this.owner != null && this.owner.equals(player);
+    }
+
+    /** @return {@link TileCategory#PROPERTY}: la casella e' acquistabile */
+    @Override
+    public TileCategory getCategory() {
+        return TileCategory.PROPERTY;
+    }
+
+    /** @return il prezzo di acquisto, il dato scritto sulle caselle acquistabili */
+    @Override
+    public String getDetail() {
+        return String.valueOf(this.price);
     }
 
     /**

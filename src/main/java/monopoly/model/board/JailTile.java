@@ -30,6 +30,18 @@ public class JailTile extends Tile {
         super(name, position);
     }
 
+    /** @return {@link TileCategory#JAIL}: e' la casella della prigione */
+    @Override
+    public TileCategory getCategory() {
+        return TileCategory.JAIL;
+    }
+
+    /** @return la scritta che ricorda come chi ci arriva con i dadi sia solo di passaggio */
+    @Override
+    public String getDetail() {
+        return "Solo visita";
+    }
+
     /**
      * Non produce alcun effetto: chi ci si ferma con i dadi e' solo di passaggio.
      *

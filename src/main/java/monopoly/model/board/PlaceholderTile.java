@@ -26,6 +26,21 @@ public class PlaceholderTile extends Tile {
     }
 
     /**
+     * @return {@link TileCategory#CARD}: nel tabellone standard il segnaposto occupa
+     *         proprio le caselle "Imprevisti" e "Probabilita'"
+     */
+    @Override
+    public TileCategory getCategory() {
+        return TileCategory.CARD;
+    }
+
+    /** @return un punto interrogativo: l'effetto della casella e' ancora da scoprire */
+    @Override
+    public String getDetail() {
+        return "?";
+    }
+
+    /**
      * Non produce alcun effetto: il giocatore si ferma e basta.
      *
      * @param player il giocatore che si e' fermato sulla casella (ignorato)
