@@ -1,10 +1,10 @@
-package monopoly.model.economy;
+package it.unibo.monopoly.model.economy;
 
 import java.util.Optional;
 
-import monopoly.model.board.Tile;
-import monopoly.model.board.TileCategory;
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.board.Tile;
+import it.unibo.monopoly.model.board.TileCategory;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Casella acquistabile del tabellone (terreno, stazione o societa').
@@ -120,7 +120,7 @@ public class Property extends Tile {
      * <p>
      * Le regole vere (acquisto se la casella e' libera, affitto al proprietario se e'
      * di un altro, nessun effetto se e' gia' propria) sono implementate da
-     * {@link monopoly.model.board.PropertyTile PropertyTile}, che estende questa classe.
+     * {@link it.unibo.monopoly.model.board.PropertyTile PropertyTile}, che estende questa classe.
      * La divisione e' voluta: per applicarle servono la {@link Bank} e le regole
      * economiche, collaboratori che una {@code Property} - oggetto di dominio passivo,
      * che descrive prezzo, affitto e proprietario - non ha e non deve avere.

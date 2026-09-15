@@ -1,4 +1,4 @@
-package monopoly.model.board;
+package it.unibo.monopoly.model.board;
 
 import java.util.ArrayList;
 import java.util.Collections;

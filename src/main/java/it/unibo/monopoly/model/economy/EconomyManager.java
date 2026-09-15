@@ -1,11 +1,11 @@
-package monopoly.model.economy;
+package it.unibo.monopoly.model.economy;
 
 import java.util.List;
 import java.util.Optional;
 
-import monopoly.model.game.GameEventSupport;
-import monopoly.model.player.Player;
-import monopoly.model.player.PlayerStatus;
+import it.unibo.monopoly.model.game.GameEventSupport;
+import it.unibo.monopoly.model.player.Player;
+import it.unibo.monopoly.model.player.PlayerStatus;
 
 /**
  * Regole economiche della partita: acquisto e vendita di proprieta', affitti,
@@ -27,7 +27,7 @@ import monopoly.model.player.PlayerStatus;
  * non va in rosso. Consegna al creditore (l'altro giocatore, oppure la banca se il
  * debito era verso di lei) <em>tutto</em> il contante che gli resta e <em>tutte</em>
  * le sue proprieta', poi passa nello stato {@link PlayerStatus#BANKRUPT} ed esce
- * dalla partita: da quel momento {@link monopoly.model.game.GameState#advanceToNextPlayer()
+ * dalla partita: da quel momento {@link it.unibo.monopoly.model.game.GameState#advanceToNextPlayer()
  * advanceToNextPlayer()} lo salta. Le proprieta' cedute alla banca tornano in vendita.
  * <p>
  * Ogni movimento che cambia lo stato della partita viene annunciato tramite

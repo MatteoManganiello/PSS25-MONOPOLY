@@ -1,4 +1,4 @@
-package monopoly.view;
+package it.unibo.monopoly.view;
 
 import java.awt.BorderLayout;
 import java.awt.GraphicsEnvironment;
@@ -8,11 +8,11 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import monopoly.controller.GameEngine;
-import monopoly.controller.GameObserver;
-import monopoly.model.game.GameState;
-import monopoly.model.game.RollResult;
-import monopoly.model.player.Player;
+import it.unibo.monopoly.controller.GameEngine;
+import it.unibo.monopoly.controller.GameObserver;
+import it.unibo.monopoly.model.game.GameState;
+import it.unibo.monopoly.model.game.RollResult;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Finestra principale della GUI: mette insieme i pannelli e fa da ponte fra il
@@ -51,7 +51,7 @@ import monopoly.model.player.Player;
  * Thread di Swing; il motore notifica gli osservatori durante quella stessa
  * chiamata, quindi anche gli aggiornamenti grafici avvengono sull'EDT, come Swing
  * richiede. Per questo la finestra va creata dentro
- * {@link SwingUtilities#invokeLater(Runnable)} (lo fa {@link monopoly.MonopolyApp
+ * {@link SwingUtilities#invokeLater(Runnable)} (lo fa {@link it.unibo.monopoly.MonopolyApp
  * MonopolyApp}) e non serve nessuna sincronizzazione. Chi comanda il motore senza
  * passare da un pulsante - per esempio al termine di un caricamento da file in un
  * thread in background - deve inviare i comandi con {@code SwingUtilities.invokeLater}:

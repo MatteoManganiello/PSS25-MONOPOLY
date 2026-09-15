@@ -1,6 +1,6 @@
-package monopoly.model.board;
+package it.unibo.monopoly.model.board;
 
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Casella segnaposto senza alcun effetto.
@@ -11,7 +11,7 @@ import monopoly.model.player.Player;
  * mazzo di carte. E' l'esempio piu' evidente del vantaggio del polimorfismo: il
  * tabellone e' completo e giocabile anche se una parte delle regole non c'e' ancora,
  * e quelle caselle potranno essere sostituite una alla volta senza toccare
- * {@link Board}, il {@link monopoly.model.game.TurnManager TurnManager} o la view.
+ * {@link Board}, il {@link it.unibo.monopoly.model.game.TurnManager TurnManager} o la view.
  */
 public class PlaceholderTile extends Tile {
 

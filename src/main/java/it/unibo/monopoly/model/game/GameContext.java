@@ -1,13 +1,13 @@
-package monopoly.model.game;
+package it.unibo.monopoly.model.game;
 
-import monopoly.model.economy.Bank;
-import monopoly.model.economy.EconomyManager;
+import it.unibo.monopoly.model.economy.Bank;
+import it.unibo.monopoly.model.economy.EconomyManager;
 
 /**
  * Contenitore dei servizi condivisi da tutta la partita: banca, regole economiche,
  * regole della prigione e canale degli eventi.
  * <p>
- * Nasce da un problema concreto: {@link monopoly.model.board.Tile#onLand(monopoly.model.player.Player)
+ * Nasce da un problema concreto: {@link it.unibo.monopoly.model.board.Tile#onLand(it.unibo.monopoly.model.player.Player)
  * onLand(Player)} riceve solo il giocatore, ma una casella per fare il suo effetto
  * ha bisogno di collaboratori (per addebitare un affitto serve la banca, per mandare
  * in prigione servono le regole della prigione). La soluzione e' l'iniezione nel

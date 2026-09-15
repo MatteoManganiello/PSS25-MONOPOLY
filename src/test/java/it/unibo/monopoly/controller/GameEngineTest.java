@@ -1,4 +1,4 @@
-package monopoly.controller;
+package it.unibo.monopoly.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -13,17 +13,17 @@ import java.util.Random;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import monopoly.model.board.Board;
-import monopoly.model.board.RecordingTile;
-import monopoly.model.board.Tile;
-import monopoly.model.economy.Bank;
-import monopoly.model.game.Dice;
-import monopoly.model.game.GameState;
-import monopoly.model.game.JailManager;
-import monopoly.model.game.RollResult;
-import monopoly.model.player.Player;
-import monopoly.model.player.PlayerStatus;
-import monopoly.model.player.Token;
+import it.unibo.monopoly.model.board.Board;
+import it.unibo.monopoly.model.board.RecordingTile;
+import it.unibo.monopoly.model.board.Tile;
+import it.unibo.monopoly.model.economy.Bank;
+import it.unibo.monopoly.model.game.Dice;
+import it.unibo.monopoly.model.game.GameState;
+import it.unibo.monopoly.model.game.JailManager;
+import it.unibo.monopoly.model.game.RollResult;
+import it.unibo.monopoly.model.player.Player;
+import it.unibo.monopoly.model.player.PlayerStatus;
+import it.unibo.monopoly.model.player.Token;
 
 /** Test del motore di gioco: ciclo di vita della partita e notifiche agli osservatori. */
 class GameEngineTest {

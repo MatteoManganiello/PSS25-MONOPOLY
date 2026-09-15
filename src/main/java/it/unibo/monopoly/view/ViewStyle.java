@@ -1,4 +1,4 @@
-package monopoly.view;
+package it.unibo.monopoly.view;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -8,11 +8,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
-import monopoly.model.board.TileCategory;
-import monopoly.model.game.GameState;
-import monopoly.model.player.Player;
-import monopoly.model.player.PlayerStatus;
-import monopoly.model.player.Token;
+import it.unibo.monopoly.model.board.TileCategory;
+import it.unibo.monopoly.model.game.GameState;
+import it.unibo.monopoly.model.player.Player;
+import it.unibo.monopoly.model.player.PlayerStatus;
+import it.unibo.monopoly.model.player.Token;
 
 /**
  * Aspetto condiviso della GUI: colori, caratteri, formattazione dei numeri e le poche

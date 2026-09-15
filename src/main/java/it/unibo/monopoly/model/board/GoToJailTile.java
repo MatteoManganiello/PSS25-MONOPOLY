@@ -1,13 +1,13 @@
-package monopoly.model.board;
+package it.unibo.monopoly.model.board;
 
-import monopoly.model.game.JailManager;
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.game.JailManager;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Casella "Vai in prigione": chi ci si ferma viene spedito direttamente in prigione.
  * <p>
  * Non applica la regola da sola: delega al {@link JailManager}, che e' lo stesso
- * oggetto usato dal {@link monopoly.model.game.TurnManager TurnManager} per i tre
+ * oggetto usato dal {@link it.unibo.monopoly.model.game.TurnManager TurnManager} per i tre
  * doppi consecutivi. Le due strade che portano in prigione producono quindi
  * esattamente lo stesso effetto (spostamento sulla casella della prigione, stato
  * {@code IN_JAIL}, tentativi di uscita azzerati, evento per la view).

@@ -1,4 +1,4 @@
-package monopoly.model.game;
+package it.unibo.monopoly.model.game;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -11,12 +11,12 @@ import java.util.Random;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import monopoly.model.board.Board;
-import monopoly.model.board.PropertyTile;
-import monopoly.model.economy.Bank;
-import monopoly.model.economy.EconomyManager;
-import monopoly.model.player.Player;
-import monopoly.model.player.Token;
+import it.unibo.monopoly.model.board.Board;
+import it.unibo.monopoly.model.board.PropertyTile;
+import it.unibo.monopoly.model.economy.Bank;
+import it.unibo.monopoly.model.economy.EconomyManager;
+import it.unibo.monopoly.model.player.Player;
+import it.unibo.monopoly.model.player.Token;
 
 /**
  * Test di integrazione fra turni, tabellone standard ed economia: il

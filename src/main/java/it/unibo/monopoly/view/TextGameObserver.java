@@ -1,15 +1,15 @@
-package monopoly.view;
+package it.unibo.monopoly.view;
 
 import java.util.Optional;
 
-import monopoly.controller.GameEngine;
-import monopoly.controller.GameObserver;
-import monopoly.model.board.Tile;
-import monopoly.model.economy.Property;
-import monopoly.model.game.GameState;
-import monopoly.model.game.RollOutcome;
-import monopoly.model.game.RollResult;
-import monopoly.model.player.Player;
+import it.unibo.monopoly.controller.GameEngine;
+import it.unibo.monopoly.controller.GameObserver;
+import it.unibo.monopoly.model.board.Tile;
+import it.unibo.monopoly.model.economy.Property;
+import it.unibo.monopoly.model.game.GameState;
+import it.unibo.monopoly.model.game.RollOutcome;
+import it.unibo.monopoly.model.game.RollResult;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Cronaca testuale della partita: trasforma in righe di testo tutto cio' che il
@@ -129,7 +129,7 @@ public abstract class TextGameObserver implements GameObserver {
      * Non e' un evento: e' un riepilogo che l'applicazione puo' chiedere quando vuole
      * (a fine demo testuale, oppure a fine partita nel log della GUI). Lo stato dei
      * giocatori e' scritto con le stesse parole del pannello grafico
-     * ({@link ViewStyle#describe(monopoly.model.player.PlayerStatus)}), non con il nome
+     * ({@link ViewStyle#describe(it.unibo.monopoly.model.player.PlayerStatus)}), non con il nome
      * della costante dell'enum.
      *
      * @param state lo stato della partita da riassumere

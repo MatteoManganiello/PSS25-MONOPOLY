@@ -1,19 +1,19 @@
-package monopoly.model.game;
+package it.unibo.monopoly.model.game;
 
 import java.util.Optional;
 
-import monopoly.model.economy.Property;
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.economy.Property;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Ascoltatore dei fatti concreti che accadono dentro il model: passaggi di denaro,
  * cambi di proprietario, ingressi e uscite di prigione, fallimenti.
  * <p>
  * E' il lato "model" del pattern Observer gia' usato al Giorno 2: le caselle, la
- * {@link monopoly.model.economy.EconomyManager EconomyManager} e il
+ * {@link it.unibo.monopoly.model.economy.EconomyManager EconomyManager} e il
  * {@link JailManager} devono poter raccontare cosa hanno fatto, ma non devono
  * conoscere ne' la view ne' il controller. Per questo l'interfaccia sta nel model
- * e viene estesa da {@link monopoly.controller.GameObserver GameObserver}, che vi
+ * e viene estesa da {@link it.unibo.monopoly.controller.GameObserver GameObserver}, che vi
  * aggiunge gli eventi di svolgimento della partita (inizio, dadi, movimento, fine).
  * Una view, implementando {@code GameObserver}, riceve quindi entrambi i gruppi di
  * eventi con una sola registrazione.

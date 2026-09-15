@@ -1,4 +1,4 @@
-package monopoly.model.economy;
+package it.unibo.monopoly.model.economy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -6,8 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
-import monopoly.model.player.Player;
-import monopoly.model.player.Token;
+import it.unibo.monopoly.model.player.Player;
+import it.unibo.monopoly.model.player.Token;
 
 /** Test di base sui movimenti di denaro. */
 class BankTest {

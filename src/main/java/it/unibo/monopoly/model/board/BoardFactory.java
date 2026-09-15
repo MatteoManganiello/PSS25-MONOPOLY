@@ -1,11 +1,11 @@
-package monopoly.model.board;
+package it.unibo.monopoly.model.board;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import monopoly.model.economy.EconomyManager;
-import monopoly.model.game.GameContext;
-import monopoly.model.game.JailManager;
+import it.unibo.monopoly.model.economy.EconomyManager;
+import it.unibo.monopoly.model.game.GameContext;
+import it.unibo.monopoly.model.game.JailManager;
 
 /**
  * Costruisce il tabellone standard da {@link Board#SIZE} caselle.

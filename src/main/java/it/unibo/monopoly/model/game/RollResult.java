@@ -1,6 +1,6 @@
-package monopoly.model.game;
+package it.unibo.monopoly.model.game;
 
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Risultato immutabile di un singolo lancio: chi ha lanciato, cosa e' uscito,
@@ -17,7 +17,7 @@ import monopoly.model.player.Player;
  * @param fromPosition posizione del giocatore prima del lancio
  * @param toPosition   casella raggiunta con il lancio: coincide con {@code fromPosition}
  *                     se il giocatore e' rimasto in prigione, ed e'
- *                     {@link monopoly.model.board.Board#JAIL_POSITION} se ci e' stato mandato
+ *                     {@link it.unibo.monopoly.model.board.Board#JAIL_POSITION} se ci e' stato mandato
  * @param outcome      esito del lancio secondo le regole del turno
  */
 public record RollResult(Player player, int firstDie, int secondDie,

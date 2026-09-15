@@ -1,4 +1,4 @@
-package monopoly;
+package it.unibo.monopoly;
 
 import java.util.List;
 
@@ -6,11 +6,11 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-import monopoly.controller.GameEngine;
-import monopoly.model.player.Player;
-import monopoly.model.player.Token;
-import monopoly.view.ConsoleGameObserver;
-import monopoly.view.MainWindow;
+import it.unibo.monopoly.controller.GameEngine;
+import it.unibo.monopoly.model.player.Player;
+import it.unibo.monopoly.model.player.Token;
+import it.unibo.monopoly.view.ConsoleGameObserver;
+import it.unibo.monopoly.view.MainWindow;
 
 /**
  * Punto di ingresso dell'applicazione.

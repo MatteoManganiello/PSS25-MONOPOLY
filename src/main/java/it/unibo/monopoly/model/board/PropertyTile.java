@@ -1,8 +1,8 @@
-package monopoly.model.board;
+package it.unibo.monopoly.model.board;
 
-import monopoly.model.economy.EconomyManager;
-import monopoly.model.economy.Property;
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.economy.EconomyManager;
+import it.unibo.monopoly.model.economy.Property;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Casella acquistabile: terreno, stazione o societa'.

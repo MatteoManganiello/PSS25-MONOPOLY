@@ -1,4 +1,4 @@
-package monopoly.model.board;
+package it.unibo.monopoly.model.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -9,12 +9,12 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import monopoly.model.economy.Bank;
-import monopoly.model.economy.EconomyManager;
-import monopoly.model.game.GameContext;
-import monopoly.model.game.JailManager;
-import monopoly.model.player.Player;
-import monopoly.model.player.Token;
+import it.unibo.monopoly.model.economy.Bank;
+import it.unibo.monopoly.model.economy.EconomyManager;
+import it.unibo.monopoly.model.game.GameContext;
+import it.unibo.monopoly.model.game.JailManager;
+import it.unibo.monopoly.model.player.Player;
+import it.unibo.monopoly.model.player.Token;
 
 /**
  * Test degli effetti delle singole caselle, cioe' del polimorfismo di

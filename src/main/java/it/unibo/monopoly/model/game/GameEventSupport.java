@@ -1,4 +1,4 @@
-package monopoly.model.game;
+package it.unibo.monopoly.model.game;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ import java.util.function.Consumer;
  * l'ordine del racconto: le caselle producono i loro effetti <em>dentro</em>
  * {@code TurnManager.rollDice()}, quindi una consegna immediata farebbe comparire
  * "Alice compra Vicolo Corto" prima ancora di "Alice lancia i dadi". Accodando,
- * il {@link monopoly.controller.GameEngine GameEngine} pubblica prima il lancio e
+ * il {@link it.unibo.monopoly.controller.GameEngine GameEngine} pubblica prima il lancio e
  * il movimento e poi gli effetti, nell'ordine in cui un giocatore se li aspetta.
  * <p>
  * Se non c'e' nessun ascoltatore gli eventi non vengono nemmeno accodati: il model

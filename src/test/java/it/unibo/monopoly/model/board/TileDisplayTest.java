@@ -1,4 +1,4 @@
-package monopoly.model.board;
+package it.unibo.monopoly.model.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -7,9 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import monopoly.model.economy.EconomyManager;
-import monopoly.model.game.GameContext;
-import monopoly.model.game.JailManager;
+import it.unibo.monopoly.model.economy.EconomyManager;
+import it.unibo.monopoly.model.game.GameContext;
+import it.unibo.monopoly.model.game.JailManager;
 
 /**
  * Test delle informazioni che ogni casella espone alla view: la categoria

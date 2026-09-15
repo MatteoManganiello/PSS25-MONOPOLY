@@ -1,4 +1,4 @@
-package monopoly.view;
+package it.unibo.monopoly.view;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -13,9 +13,9 @@ import java.util.Locale;
 
 import javax.swing.JPanel;
 
-import monopoly.model.board.Tile;
-import monopoly.model.economy.Property;
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.board.Tile;
+import it.unibo.monopoly.model.economy.Property;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Componente grafico di una singola casella del tabellone.
@@ -32,7 +32,7 @@ import monopoly.model.player.Player;
  * controllo di tipo su {@link Property}, ma e' uno solo e localizzato, non una
  * catena di {@code instanceof} che elenca tutte le sottoclassi.
  * <p>
- * E' un componente passivo: non conosce il {@link monopoly.controller.GameEngine
+ * E' un componente passivo: non conosce il {@link it.unibo.monopoly.controller.GameEngine
  * GameEngine} e non modifica nulla. Riceve dal {@link BoardPanel} chi si trova sulla
  * casella ({@link #setOccupants(List)}) e se e' la casella del giocatore di turno
  * ({@link #setCurrent(boolean)}), e si limita a ridisegnarsi.

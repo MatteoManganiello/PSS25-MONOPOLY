@@ -1,4 +1,4 @@
-package monopoly.model.board;
+package it.unibo.monopoly.model.board;
 
 /**
  * Famiglia a cui appartiene una casella del tabellone.
@@ -12,7 +12,7 @@ package monopoly.model.board;
  * <p>
  * E' un'informazione puramente descrittiva: nessuna regola del gioco dipende da
  * questo valore, gli effetti restano nel metodo polimorfico
- * {@link Tile#onLand(monopoly.model.player.Player) onLand}.
+ * {@link Tile#onLand(it.unibo.monopoly.model.player.Player) onLand}.
  */
 public enum TileCategory {
 

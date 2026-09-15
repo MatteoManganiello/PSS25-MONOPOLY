@@ -1,11 +1,11 @@
-package monopoly.model.board;
+package it.unibo.monopoly.model.board;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Casella finta per i test: ricorda chi ci si e' fermato sopra ed esegue un

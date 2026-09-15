@@ -1,19 +1,19 @@
-package monopoly.controller;
+package it.unibo.monopoly.controller;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import monopoly.model.board.Board;
-import monopoly.model.board.Tile;
-import monopoly.model.game.Dice;
-import monopoly.model.game.GameEventSupport;
-import monopoly.model.game.GamePhase;
-import monopoly.model.game.GameState;
-import monopoly.model.game.RollResult;
-import monopoly.model.game.TurnManager;
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.board.Board;
+import it.unibo.monopoly.model.board.Tile;
+import it.unibo.monopoly.model.game.Dice;
+import it.unibo.monopoly.model.game.GameEventSupport;
+import it.unibo.monopoly.model.game.GamePhase;
+import it.unibo.monopoly.model.game.GameState;
+import it.unibo.monopoly.model.game.RollResult;
+import it.unibo.monopoly.model.game.TurnManager;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Motore della partita: coordinatore di alto livello e unico punto di ingresso
@@ -252,7 +252,7 @@ public class GameEngine {
      * <p>
      * Gli esiti che non muovono la pedina (prigione, cauzione) non producono un evento
      * di movimento: li annuncia gia' il model tramite
-     * {@link monopoly.model.game.JailManager JailManager}.
+     * {@link it.unibo.monopoly.model.game.JailManager JailManager}.
      */
     private void notifyMovement(final RollResult result) {
         if (!result.outcome().movesPlayer()) {

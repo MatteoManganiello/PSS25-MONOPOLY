@@ -1,4 +1,4 @@
-package monopoly.view;
+package it.unibo.monopoly.view;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -14,9 +14,9 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import monopoly.model.economy.Property;
-import monopoly.model.game.GameState;
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.economy.Property;
+import it.unibo.monopoly.model.game.GameState;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Pannello laterale con la situazione di ogni giocatore: nome e pedina, denaro,

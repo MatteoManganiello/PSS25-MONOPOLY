@@ -1,10 +1,10 @@
-package monopoly.controller;
+package it.unibo.monopoly.controller;
 
-import monopoly.model.board.Tile;
-import monopoly.model.game.GameEventListener;
-import monopoly.model.game.GameState;
-import monopoly.model.game.RollResult;
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.board.Tile;
+import it.unibo.monopoly.model.game.GameEventListener;
+import it.unibo.monopoly.model.game.GameState;
+import it.unibo.monopoly.model.game.RollResult;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Osservatore degli eventi di una partita (ruolo "Observer" dell'omonimo pattern).

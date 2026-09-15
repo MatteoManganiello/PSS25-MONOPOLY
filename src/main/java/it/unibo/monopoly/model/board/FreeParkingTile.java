@@ -1,7 +1,7 @@
-package monopoly.model.board;
+package it.unibo.monopoly.model.board;
 
-import monopoly.model.economy.EconomyManager;
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.economy.EconomyManager;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Posteggio gratuito: per il regolamento ufficiale e' una casella di sosta, senza

@@ -1,12 +1,12 @@
-package monopoly.model.player;
+package it.unibo.monopoly.model.player;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import monopoly.model.board.Board;
-import monopoly.model.economy.Bank;
-import monopoly.model.economy.Property;
+import it.unibo.monopoly.model.board.Board;
+import it.unibo.monopoly.model.economy.Bank;
+import it.unibo.monopoly.model.economy.Property;
 
 /**
  * Giocatore della partita.
@@ -15,7 +15,7 @@ import monopoly.model.economy.Property;
  * denaro, posizione sul tabellone, proprieta' possedute e stato di gioco.
  * La classe e' volutamente "passiva": conosce i propri dati e li mantiene
  * coerenti, ma non decide le regole (chi le applica sono la {@link Bank},
- * le sottoclassi di {@link monopoly.model.board.Tile Tile} e, dai prossimi giorni, il controller).
+ * le sottoclassi di {@link it.unibo.monopoly.model.board.Tile Tile} e, dai prossimi giorni, il controller).
  * <p>
  * L'identita' di un giocatore e' l'oggetto stesso: non si ridefinisce
  * {@code equals}, cosi' due giocatori con lo stesso nome restano distinti.

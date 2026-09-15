@@ -1,4 +1,4 @@
-package monopoly.model.game;
+package it.unibo.monopoly.model.game;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -6,9 +6,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
-import monopoly.model.board.Board;
-import monopoly.model.board.BoardFactory;
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.board.Board;
+import it.unibo.monopoly.model.board.BoardFactory;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Fotografia completa dello stato di una partita in un dato istante.

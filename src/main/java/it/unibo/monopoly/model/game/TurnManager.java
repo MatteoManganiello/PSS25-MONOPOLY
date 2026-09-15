@@ -1,8 +1,8 @@
-package monopoly.model.game;
+package it.unibo.monopoly.model.game;
 
-import monopoly.model.board.Board;
-import monopoly.model.board.Tile;
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.board.Board;
+import it.unibo.monopoly.model.board.Tile;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Applica le regole di svolgimento di un turno allo stato della partita.

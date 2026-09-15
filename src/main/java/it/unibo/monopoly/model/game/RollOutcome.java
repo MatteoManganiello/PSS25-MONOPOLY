@@ -1,4 +1,4 @@
-package monopoly.model.game;
+package it.unibo.monopoly.model.game;
 
 /**
  * Esito di un singolo lancio di dadi del giocatore di turno.
@@ -11,7 +11,7 @@ package monopoly.model.game;
  * le conseguenze economiche del turno. Un giocatore puo' risultare {@link #MOVED} ed
  * essere nel frattempo fallito, perche' la casella su cui si e' fermato gli ha chiesto
  * un affitto che non poteva pagare. Il fallimento si legge sempre nello stato del
- * giocatore ({@link monopoly.model.player.PlayerStatus#BANKRUPT BANKRUPT}) e
+ * giocatore ({@link it.unibo.monopoly.model.player.PlayerStatus#BANKRUPT BANKRUPT}) e
  * nell'evento {@code onPlayerBankrupt}, mai da qui.
  */
 public enum RollOutcome {

@@ -1,6 +1,6 @@
-package monopoly.model.economy;
+package it.unibo.monopoly.model.economy;
 
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Banca del gioco: unico punto del modello in cui il denaro viene creato,

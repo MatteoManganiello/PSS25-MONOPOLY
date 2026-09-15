@@ -1,6 +1,6 @@
-package monopoly.model.board;
+package it.unibo.monopoly.model.board;
 
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Casella generica del tabellone: classe base astratta di tutte le caselle.
@@ -62,7 +62,7 @@ public abstract class Tile {
      * bisogno di reagire al passaggio lo ridefinisce: e' il caso di
      * {@link StartTile}, che accredita lo stipendio anche a chi passa dal "Via".
      * <p>
-     * E' il {@link monopoly.model.game.TurnManager TurnManager} a chiamarlo, una volta per ogni casella attraversata
+     * E' il {@link it.unibo.monopoly.model.game.TurnManager TurnManager} a chiamarlo, una volta per ogni casella attraversata
      * durante il movimento.
      *
      * @param player il giocatore che sta attraversando la casella

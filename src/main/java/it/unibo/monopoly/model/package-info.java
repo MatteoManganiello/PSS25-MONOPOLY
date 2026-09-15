@@ -6,4 +6,4 @@
  * proprieta'), {@code game} (stato e svolgimento della partita).
  * Nessuna classe del model conosce la view o il controller.
  */
-package monopoly.model;
+package it.unibo.monopoly.model;

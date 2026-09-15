@@ -1,4 +1,4 @@
-package monopoly.controller;
+package it.unibo.monopoly.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -11,14 +11,14 @@ import java.util.Random;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import monopoly.model.board.PropertyTile;
-import monopoly.model.economy.Bank;
-import monopoly.model.economy.Property;
-import monopoly.model.game.Dice;
-import monopoly.model.game.GameState;
-import monopoly.model.game.RollResult;
-import monopoly.model.player.Player;
-import monopoly.model.player.Token;
+import it.unibo.monopoly.model.board.PropertyTile;
+import it.unibo.monopoly.model.economy.Bank;
+import it.unibo.monopoly.model.economy.Property;
+import it.unibo.monopoly.model.game.Dice;
+import it.unibo.monopoly.model.game.GameState;
+import it.unibo.monopoly.model.game.RollResult;
+import it.unibo.monopoly.model.player.Player;
+import it.unibo.monopoly.model.player.Token;
 
 /**
  * Test del collegamento fra effetti delle caselle e osservatori: cio' che succede
@@ -43,8 +43,8 @@ class GameEngineEconomyTest {
         }
 
         @Override
-        public void onPlayerMoved(final Player player, final monopoly.model.board.Tile from,
-                                  final monopoly.model.board.Tile to) {
+        public void onPlayerMoved(final Player player, final it.unibo.monopoly.model.board.Tile from,
+                                  final it.unibo.monopoly.model.board.Tile to) {
             events.add("moved:" + player.getName() + ":" + from.getPosition() + "->" + to.getPosition());
         }
 

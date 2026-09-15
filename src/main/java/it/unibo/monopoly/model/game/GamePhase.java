@@ -1,4 +1,4 @@
-package monopoly.model.game;
+package it.unibo.monopoly.model.game;
 
 /**
  * Fasi in cui si articola il turno di un giocatore.

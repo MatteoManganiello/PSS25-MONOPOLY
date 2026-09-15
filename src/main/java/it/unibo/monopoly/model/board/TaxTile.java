@@ -1,7 +1,7 @@
-package monopoly.model.board;
+package it.unibo.monopoly.model.board;
 
-import monopoly.model.economy.EconomyManager;
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.economy.EconomyManager;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Casella delle tasse: chi ci si ferma versa un importo alla banca.

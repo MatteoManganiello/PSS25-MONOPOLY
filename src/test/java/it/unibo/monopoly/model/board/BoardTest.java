@@ -1,4 +1,4 @@
-package monopoly.model.board;
+package it.unibo.monopoly.model.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -9,8 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import monopoly.model.economy.Property;
-import monopoly.model.game.GameContext;
+import it.unibo.monopoly.model.economy.Property;
+import it.unibo.monopoly.model.game.GameContext;
 
 /** Test sul tabellone e sulla composizione del tabellone standard. */
 class BoardTest {

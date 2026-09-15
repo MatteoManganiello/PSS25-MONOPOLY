@@ -1,4 +1,4 @@
-package monopoly.model.player;
+package it.unibo.monopoly.model.player;
 
 /**
  * Stato in cui si puo' trovare un giocatore durante la partita.

@@ -1,8 +1,8 @@
-package monopoly.model.board;
+package it.unibo.monopoly.model.board;
 
-import monopoly.model.economy.Bank;
-import monopoly.model.economy.EconomyManager;
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.economy.Bank;
+import it.unibo.monopoly.model.economy.EconomyManager;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Casella di partenza, il "Via": la banca versa lo stipendio a chi ci passa sopra

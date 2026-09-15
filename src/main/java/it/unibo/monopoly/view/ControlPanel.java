@@ -1,4 +1,4 @@
-package monopoly.view;
+package it.unibo.monopoly.view;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -16,10 +16,10 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import monopoly.controller.GameEngine;
-import monopoly.model.game.JailManager;
-import monopoly.model.game.RollResult;
-import monopoly.model.player.Player;
+import it.unibo.monopoly.controller.GameEngine;
+import it.unibo.monopoly.model.game.JailManager;
+import it.unibo.monopoly.model.game.RollResult;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * I comandi con cui si gioca: il pulsante dei dadi, il passaggio del turno, le

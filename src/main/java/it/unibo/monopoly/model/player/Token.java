@@ -1,4 +1,4 @@
-package monopoly.model.player;
+package it.unibo.monopoly.model.player;
 
 import java.util.Objects;
 

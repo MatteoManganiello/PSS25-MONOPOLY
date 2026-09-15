@@ -1,4 +1,4 @@
-package monopoly.view;
+package it.unibo.monopoly.view;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -15,9 +15,9 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import monopoly.model.board.Board;
-import monopoly.model.game.GameState;
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.board.Board;
+import it.unibo.monopoly.model.game.GameState;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Il tabellone disegnato: le {@link Board#SIZE} caselle disposte sul perimetro con

@@ -1,19 +1,19 @@
-package monopoly.model.game;
+package it.unibo.monopoly.model.game;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import monopoly.model.board.Board;
-import monopoly.model.economy.EconomyManager;
-import monopoly.model.player.Player;
-import monopoly.model.player.PlayerStatus;
+import it.unibo.monopoly.model.board.Board;
+import it.unibo.monopoly.model.economy.EconomyManager;
+import it.unibo.monopoly.model.player.Player;
+import it.unibo.monopoly.model.player.PlayerStatus;
 
 /**
  * Regole della prigione: chi ci entra, come ci si esce e quanto costa uscirne.
  * <p>
  * Sta in un'unica classe perche' in prigione si finisce da due strade diverse
  * (tre doppi consecutivi, gestiti dal {@link TurnManager}, e la casella
- * {@link monopoly.model.board.GoToJailTile GoToJailTile}) e si esce da tre
+ * {@link it.unibo.monopoly.model.board.GoToJailTile GoToJailTile}) e si esce da tre
  * ({@link #releaseWithDouble(Player)}, cauzione pagata di propria volonta',
  * cauzione obbligatoria dopo i tentativi falliti): avere un solo posto in cui la
  * regola e' scritta evita che le due strade si comportino in modo diverso.

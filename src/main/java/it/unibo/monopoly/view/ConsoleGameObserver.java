@@ -1,9 +1,9 @@
-package monopoly.view;
+package it.unibo.monopoly.view;
 
 import java.io.PrintStream;
 
-import monopoly.controller.GameEngine;
-import monopoly.controller.GameObserver;
+import it.unibo.monopoly.controller.GameEngine;
+import it.unibo.monopoly.controller.GameObserver;
 
 /**
  * View testuale: stampa su console la cronaca della partita.
@@ -20,7 +20,7 @@ import monopoly.controller.GameObserver;
  * <p>
  * La GUI del Giorno 4 non ha sostituito questa view: le due possono osservare la
  * stessa partita contemporaneamente, ed e' proprio cio' che fa
- * {@link monopoly.MonopolyApp MonopolyApp} registrandole entrambe sul motore.
+ * {@link it.unibo.monopoly.MonopolyApp MonopolyApp} registrandole entrambe sul motore.
  */
 public class ConsoleGameObserver extends TextGameObserver {
 

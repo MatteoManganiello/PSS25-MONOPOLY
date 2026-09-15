@@ -1,6 +1,6 @@
-package monopoly.model.board;
+package it.unibo.monopoly.model.board;
 
-import monopoly.model.player.Player;
+import it.unibo.monopoly.model.player.Player;
 
 /**
  * Casella della prigione.
@@ -12,7 +12,7 @@ import monopoly.model.player.Player;
  *       ferma sulla casella come su una qualsiasi altra e al turno dopo riparte;</li>
  *   <li>chi ci viene mandato (tre doppi consecutivi o casella "Vai in prigione") e'
  *       davvero in prigione, ma in quel caso non c'e' stato nessun atterraggio: ci
- *       ha pensato il {@link monopoly.model.game.JailManager JailManager} a
+ *       ha pensato il {@link it.unibo.monopoly.model.game.JailManager JailManager} a
  *       spostarlo e a cambiargli stato.</li>
  * </ul>
  * La distinzione non e' quindi nella casella ma nello stato del giocatore
