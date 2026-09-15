@@ -1,5 +1,6 @@
 package it.unibo.monopoly.controller;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -13,6 +14,10 @@ import it.unibo.monopoly.model.game.GamePhase;
 import it.unibo.monopoly.model.game.GameState;
 import it.unibo.monopoly.model.game.RollResult;
 import it.unibo.monopoly.model.game.TurnManager;
+import it.unibo.monopoly.model.persistence.GameStateLoader;
+import it.unibo.monopoly.model.persistence.GameStateSaver;
+import it.unibo.monopoly.model.persistence.PersistenceResult;
+import it.unibo.monopoly.model.persistence.SaveFileException;
 import it.unibo.monopoly.model.player.Player;
 
 /**
@@ -36,6 +41,14 @@ import it.unibo.monopoly.model.player.Player;
  * {@link GameEventSupport#publishPending()} subito dopo il proprio evento, cosi' i
  * messaggi arrivano alla view nell'ordine in cui sono accaduti.
  * <p>
+ * <b>Salvataggio e caricamento.</b> Anche la persistenza passa da qui
+ * ({@link #saveGame(Path)}, {@link #loadGame(Path)}), cosi' la view non deve conoscere
+ * come e' fatto un file di salvataggio. Il lavoro sui file lo fanno le classi di
+ * {@code model.persistence}; il motore decide quando una partita caricata prende il
+ * posto di quella in corso e lo annuncia agli osservatori. Per questo stato, turni ed
+ * eventi del model non sono {@code final}: sono l'unica parte del motore che cambia
+ * con un caricamento, mentre osservatori e dadi restano gli stessi.
+ * <p>
  * Uso tipico:
  * <pre>
  *   GameEngine engine = new GameEngine(players);
@@ -47,10 +60,20 @@ import it.unibo.monopoly.model.player.Player;
  */
 public class GameEngine {
 
-    private final GameState state;
-    private final TurnManager turnManager;
-    private final GameEventSupport modelEvents;
+    private GameState state;
+    private TurnManager turnManager;
+    private GameEventSupport modelEvents;
     private final List<GameObserver> observers;
+
+    /**
+     * I dadi del tavolo. Non fanno parte di un salvataggio, quindi una partita caricata
+     * continua con questi: nei test, con dadi a seme fisso, anche il seguito di una
+     * partita caricata e' prevedibile.
+     */
+    private final Dice dice;
+
+    private final GameStateSaver saver;
+    private final GameStateLoader loader;
     private boolean started;
 
     /**
@@ -78,6 +101,9 @@ public class GameEngine {
         this.turnManager = new TurnManager(state);
         this.modelEvents = state.getContext().getEvents();
         this.observers = new ArrayList<>();
+        this.dice = state.getDice();
+        this.saver = new GameStateSaver();
+        this.loader = new GameStateLoader();
         this.started = false;
     }
 
@@ -202,6 +228,112 @@ public class GameEngine {
         if (this.canEndTurn()) {
             this.endTurn();
         }
+    }
+
+    // ------------------------------------------------------------------
+    // Salvataggio e caricamento
+    // ------------------------------------------------------------------
+
+    /**
+     * Salva la partita in corso sul file indicato, sostituendolo se esiste gia'.
+     * <p>
+     * Va chiamato dal thread che esegue i comandi (per la GUI, l'EDT): la fotografia
+     * della partita deve essere presa fra un comando e l'altro, mai mentre un lancio la
+     * sta modificando. Il file e' di poche righe, quindi scriverlo non blocca
+     * l'interfaccia in modo percettibile.
+     * <p>
+     * Non notifica gli osservatori: salvare non cambia la partita.
+     *
+     * @param file il file su cui salvare
+     * @return l'esito da mostrare all'utente; i problemi di disco non lanciano eccezioni
+     * @throws IllegalArgumentException se il file e' null
+     */
+    public PersistenceResult saveGame(final Path file) {
+        return this.saver.save(this.state, file);
+    }
+
+    /**
+     * Carica una partita da file e la mette al posto di quella in corso, notificando gli
+     * osservatori.
+     * <p>
+     * E' la forma sincrona del caricamento, comoda nei test e per chi non ha
+     * un'interfaccia da tenere reattiva: equivale a {@link #readSavedGame(Path)} seguito
+     * da {@link #resumeGame(GameState)}. Se il file non e' valido la partita in corso
+     * resta com'era e nessun osservatore viene avvisato.
+     *
+     * @param file il file da caricare
+     * @return l'esito da mostrare all'utente; un file mancante o danneggiato non lancia eccezioni
+     * @throws IllegalArgumentException se il file e' null
+     */
+    public PersistenceResult loadGame(final Path file) {
+        final GameState loaded;
+        try {
+            loaded = this.readSavedGame(file);
+        } catch (final SaveFileException e) {
+            return PersistenceResult.failure("Caricamento non riuscito: " + e.getMessage());
+        }
+        this.resumeGame(loaded);
+        return PersistenceResult.success("Partita caricata da " + file.getFileName());
+    }
+
+    /**
+     * Legge un salvataggio e ricostruisce la partita, <em>senza</em> metterla in gioco.
+     * <p>
+     * E' la parte del caricamento che lavora sul disco, ed e' separata apposta da
+     * {@link #resumeGame(GameState)}: non modifica il motore, non notifica nessuno e usa
+     * solo campi che non cambiano mai (il lettore e i dadi). Per questo, a differenza
+     * degli altri comandi, puo' essere eseguita in un thread in background; la partita
+     * restituita e' nuova e non ancora condivisa con nessuno.
+     *
+     * @param file il file da leggere
+     * @return la partita ricostruita, completa e coerente
+     * @throws SaveFileException        se il file manca, non si legge, e' danneggiato o incompatibile
+     * @throws IllegalArgumentException se il file e' null
+     */
+    public GameState readSavedGame(final Path file) throws SaveFileException {
+        return this.loader.load(file, this.dice);
+    }
+
+    /**
+     * Mette in gioco una partita gia' pronta - di norma letta con
+     * {@link #readSavedGame(Path)} - al posto di quella in corso, e lo annuncia agli
+     * osservatori.
+     * <p>
+     * <b>Osservatori.</b> Restano gli stessi, registrati una volta sola. Gli eventi del
+     * model viaggiano pero' sul canale della partita ({@link GameEventSupport}), quindi le
+     * registrazioni vengono spostate dal canale della partita abbandonata a quello della
+     * nuova: nessuno riceve gli eventi due volte, e la partita abbandonata non trattiene
+     * riferimenti alle view. Non serve ricreare le view ne' registrarle di nuovo.
+     * <p>
+     * <b>Notifiche.</b> Le stesse di un avvio, nello stesso ordine:
+     * {@link GameObserver#onGameLoaded(GameState)} (che per chi non lo ridefinisce vale
+     * come {@link GameObserver#onGameStarted(GameState)}), il turno corrente se la partita
+     * non e' finita, e infine {@link GameObserver#onGameStateChanged(GameState)}, l'evento
+     * con cui si chiude ogni comando.
+     * <p>
+     * Come ogni comando, va chiamato sul thread degli osservatori: per la GUI, l'EDT.
+     *
+     * @param loaded la partita da mettere in gioco
+     * @throws IllegalArgumentException se la partita e' null
+     */
+    public void resumeGame(final GameState loaded) {
+        if (loaded == null) {
+            throw new IllegalArgumentException("La partita da riprendere non puo' essere null");
+        }
+        this.observers.forEach(this.modelEvents::removeListener);
+        this.state = loaded;
+        this.turnManager = new TurnManager(loaded);
+        this.modelEvents = loaded.getContext().getEvents();
+        this.observers.forEach(this.modelEvents::addListener);
+        this.started = true;
+
+        this.notifyObservers(observer -> observer.onGameLoaded(loaded));
+        if (!loaded.isGameOver()) {
+            final Player current = loaded.getCurrentPlayer();
+            this.notifyObservers(observer -> observer.onTurnStarted(current));
+        }
+        this.modelEvents.publishPending();
+        this.notifyObservers(observer -> observer.onGameStateChanged(loaded));
     }
 
     // ------------------------------------------------------------------

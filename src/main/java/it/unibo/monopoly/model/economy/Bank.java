@@ -32,6 +32,18 @@ public class Bank {
         this.balance = INITIAL_FUNDS;
     }
 
+    /**
+     * Crea la banca con un saldo gia' noto, per esempio quello di una partita salvata.
+     * <p>
+     * Il saldo non viene controllato: la banca non puo' fallire, quindi durante una
+     * partita lunga anche un valore negativo e' una situazione possibile.
+     *
+     * @param balance il denaro in cassa
+     */
+    public Bank(final int balance) {
+        this.balance = balance;
+    }
+
     /** @return il denaro attualmente in cassa alla banca */
     public int getBalance() {
         return this.balance;

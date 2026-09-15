@@ -100,6 +100,16 @@ public final class ControlPanel extends JPanel {
     }
 
     /**
+     * Svuota il disegno dei dadi.
+     * <p>
+     * Serve quando la finestra passa a un'altra partita, per esempio caricata da file:
+     * l'ultimo lancio mostrato apparteneva alla partita precedente.
+     */
+    public void clearRoll() {
+        this.diceView.setValues(DiceView.NOT_ROLLED, DiceView.NOT_ROLLED);
+    }
+
+    /**
      * Aggiunge una riga al racconto della partita e vi scorre sopra.
      *
      * @param line la riga da mostrare

@@ -20,9 +20,15 @@ import it.unibo.monopoly.model.player.Player;
  * <p>
  * <b>Composizione.</b> Il layout segue la disposizione classica di un gioco da
  * tavolo: il {@link BoardPanel} al centro, il {@link PlayerInfoPanel} sul lato
- * destro e il {@link ControlPanel} in basso. Ogni pannello ha una sola
- * responsabilita' e non conosce gli altri: e' la finestra a comporli e a dire a
- * ciascuno quando aggiornarsi.
+ * destro e il {@link ControlPanel} in basso; in alto il {@link GameMenuBar} con
+ * salvataggio e caricamento. Ogni pannello ha una sola responsabilita' e non conosce
+ * gli altri: e' la finestra a comporli e a dire a ciascuno quando aggiornarsi.
+ * <p>
+ * <b>Partite caricate.</b> Quando il motore mette in gioco una partita caricata da
+ * file, la finestra riceve l'evento di avvio con uno stato nuovo. Non viene ricreata e
+ * non si registra di nuovo: sostituisce soltanto il tabellone e le schede dei
+ * giocatori, che erano costruiti sulla partita precedente, e poi si ridisegna. Il
+ * pannello dei comandi resta, perche' interroga sempre il motore, e con lui resta il log.
  * <p>
  * <b>Collegamento con il model.</b> La finestra implementa {@link GameObserver} e si
  * registra sul {@link GameEngine}: e' l'unico punto in cui gli eventi della partita
@@ -72,9 +78,17 @@ public final class MainWindow extends JFrame implements GameObserver {
     private static final String TITLE = "Monopoly - PSS25";
 
     private final transient GameEngine engine;
-    private final BoardPanel boardPanel;
-    private final PlayerInfoPanel playerInfoPanel;
+
+    /** Tabellone della partita mostrata: cambia quando viene caricata un'altra partita. */
+    private BoardPanel boardPanel;
+
+    /** Schede dei giocatori della partita mostrata: cambiano insieme al tabellone. */
+    private PlayerInfoPanel playerInfoPanel;
+
     private final ControlPanel controlPanel;
+
+    /** La partita su cui sono costruiti tabellone e schede dei giocatori. */
+    private transient GameState displayedState;
 
     /** Cronaca testuale della partita, riversata nell'area di log dei comandi. */
     private final transient TextGameObserver logObserver;
@@ -93,6 +107,7 @@ public final class MainWindow extends JFrame implements GameObserver {
         }
         this.engine = engine;
         final GameState state = engine.getState();
+        this.displayedState = state;
         this.boardPanel = new BoardPanel(state);
         this.playerInfoPanel = new PlayerInfoPanel(state);
         this.controlPanel = new ControlPanel(engine);
@@ -117,6 +132,7 @@ public final class MainWindow extends JFrame implements GameObserver {
         };
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setJMenuBar(new GameMenuBar(engine, this, this.controlPanel::appendLog));
         this.setLayout(new BorderLayout(6, 6));
         this.add(this.boardPanel, BorderLayout.CENTER);
         this.add(this.playerInfoPanel, BorderLayout.EAST);
@@ -137,11 +153,17 @@ public final class MainWindow extends JFrame implements GameObserver {
 
     /**
      * Disegna la situazione iniziale.
+     * <p>
+     * Arriva anche quando il motore mette in gioco una partita caricata da file: la
+     * finestra non ridefinisce {@link GameObserver#onGameLoaded(GameState)}, che ricade
+     * qui. In quel caso lo stato e' un oggetto nuovo, e prima di ridisegnare vengono
+     * sostituiti i pannelli costruiti sulla partita precedente.
      *
      * @param state lo stato iniziale della partita
      */
     @Override
     public void onGameStarted(final GameState state) {
+        this.showState(state);
         this.refreshAll();
     }
 
@@ -199,9 +221,10 @@ public final class MainWindow extends JFrame implements GameObserver {
      * Senza questo passaggio il {@link GameEngine} continuerebbe a tenere un
      * riferimento alla finestra e al suo log e a notificarli a ogni comando: una
      * finestra gia' chiusa resterebbe in memoria e continuerebbe a ridisegnarsi. Oggi
-     * la chiusura dalla "X" termina l'intera applicazione, ma una finestra puo' anche
-     * essere sostituita da un'altra (nuova partita, partita caricata) mentre il
-     * programma continua a girare.
+     * la chiusura dalla "X" termina l'intera applicazione, ma il motore puo' sopravvivere
+     * alla finestra che lo osserva. Caricare una partita, invece, non passa da qui: la
+     * finestra resta la stessa e il motore sposta da solo le registrazioni sulla nuova
+     * partita.
      * <p>
      * Chiamarlo piu' volte non e' un problema: rimuovere un osservatore gia' rimosso
      * non ha effetto.
@@ -223,6 +246,32 @@ public final class MainWindow extends JFrame implements GameObserver {
     private void limitToScreen() {
         final Rectangle usable = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
         this.setSize(Math.min(this.getWidth(), usable.width), Math.min(this.getHeight(), usable.height));
+    }
+
+    /**
+     * Mette in finestra i pannelli della partita indicata, se non sono gia' quelli.
+     * <p>
+     * Tabellone e schede dei giocatori leggono un {@link GameState} preciso, ricevuto
+     * alla creazione (con le sue caselle e i suoi giocatori): quando la partita cambia si
+     * creano pannelli nuovi al posto dei vecchi. Questi pannelli non sono osservatori,
+     * quindi sostituirli non lascia registrazioni appese sul motore. Anche i dadi
+     * disegnati appartenevano alla partita precedente, e vengono svuotati.
+     */
+    private void showState(final GameState state) {
+        requireEdt();
+        if (state == this.displayedState) {
+            return;
+        }
+        this.remove(this.boardPanel);
+        this.remove(this.playerInfoPanel);
+        this.boardPanel = new BoardPanel(state);
+        this.playerInfoPanel = new PlayerInfoPanel(state);
+        this.add(this.boardPanel, BorderLayout.CENTER);
+        this.add(this.playerInfoPanel, BorderLayout.EAST);
+        this.displayedState = state;
+        this.controlPanel.clearRoll();
+        this.revalidate();
+        this.repaint();
     }
 
     /** Chiede a tutti i pannelli di rileggere lo stato della partita e ridisegnarsi. */

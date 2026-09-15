@@ -33,11 +33,32 @@ import it.unibo.monopoly.model.player.Player;
 public interface GameObserver extends GameEventListener {
 
     /**
-     * La partita e' iniziata (o, in futuro, e' stata ricaricata).
+     * La partita e' iniziata.
+     * <p>
+     * Arriva anche quando il motore mette in gioco una partita caricata da file, se
+     * l'osservatore non ridefinisce {@link #onGameLoaded(GameState)}.
      *
      * @param state lo stato iniziale da mostrare
      */
     default void onGameStarted(final GameState state) {
+    }
+
+    /**
+     * Il motore ha messo in gioco una partita caricata da file, al posto di quella in corso.
+     * <p>
+     * Per chi osserva, una partita caricata e' una partita che riparte da una situazione
+     * gia' avviata: per questo l'implementazione di default ricade su
+     * {@link #onGameStarted(GameState)}, e una view che all'avvio ridisegna tutto non
+     * deve fare nulla di nuovo. Chi vuole distinguere i due casi - per esempio per
+     * scrivere "partita caricata" invece di "partita iniziata" - ridefinisce questo metodo.
+     * <p>
+     * Attenzione: lo stato ricevuto e' un oggetto nuovo, diverso da quello della partita
+     * precedente. Chi aveva conservato un riferimento al vecchio stato deve sostituirlo.
+     *
+     * @param state lo stato della partita caricata
+     */
+    default void onGameLoaded(final GameState state) {
+        this.onGameStarted(state);
     }
 
     /**

@@ -51,6 +51,23 @@ public abstract class TextGameObserver implements GameObserver {
         }
     }
 
+    /**
+     * Racconta una partita caricata: a differenza di un avvio, i giocatori hanno gia'
+     * denaro, proprieta' e uno stato, e vale la pena ricordarli.
+     *
+     * @param state lo stato della partita caricata
+     */
+    @Override
+    public void onGameLoaded(final GameState state) {
+        this.write("");
+        this.write("=== Partita caricata con " + state.getPlayers().size() + " giocatori ===");
+        for (final Player player : state.getPlayers()) {
+            this.write("  " + player.getName() + " (pedina: " + player.getToken().getName() + "): "
+                    + player.getMoney() + ", proprieta': " + player.getProperties().size()
+                    + ", " + ViewStyle.describe(player.getStatus()));
+        }
+    }
+
     @Override
     public void onTurnStarted(final Player player) {
         this.write("");
