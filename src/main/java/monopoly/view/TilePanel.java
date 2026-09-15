@@ -196,9 +196,10 @@ public final class TilePanel extends JPanel {
      * Scrive il nome della casella (su piu' righe se serve) e la riga di dettaglio.
      * <p>
      * Lo spazio e' poco: il numero di righe del nome viene calcolato in base
-     * all'altezza davvero disponibile, cosi' il dettaglio - prezzo o importo - resta
-     * sempre leggibile anche sulle caselle dal nome lungo, che vengono invece
-     * accorciate con i puntini (il nome intero e' nel tooltip).
+     * all'altezza davvero disponibile, cioe' togliendo la riga di dettaglio e la fascia
+     * in basso riservata alle pedine. Cosi' il dettaglio - prezzo o importo - resta
+     * sempre leggibile e non finisce sotto le pedine anche sulle caselle dal nome
+     * lungo, che vengono invece accorciate con i puntini (il nome intero e' nel tooltip).
      */
     private void paintTexts(final Graphics2D graphics, final int width, final int height, final int textTop) {
         graphics.setColor(ViewStyle.OUTLINE);
@@ -209,7 +210,7 @@ public final class TilePanel extends JPanel {
         final int detailAscent = detail.isEmpty() ? 0
                 : graphics.getFontMetrics(ViewStyle.TILE_DETAIL_FONT).getAscent();
 
-        final int spaceForName = height - textTop - detailAscent - PADDING;
+        final int spaceForName = height - textTop - detailAscent - TOKEN_DIAMETER - PADDING;
         final int maxLines = Math.max(1, Math.min(MAX_NAME_LINES, spaceForName / nameMetrics.getHeight()));
 
         int baseline = textTop + nameMetrics.getAscent();
@@ -221,21 +222,35 @@ public final class TilePanel extends JPanel {
         if (!detail.isEmpty()) {
             graphics.setFont(ViewStyle.TILE_DETAIL_FONT);
             final FontMetrics detailMetrics = graphics.getFontMetrics();
-            // In fondo alla casella se il nome lo consente, subito sotto al nome
-            // altrimenti; mai oltre il bordo inferiore.
+            // Appena sopra le pedine se il nome lo consente, subito sotto al nome
+            // altrimenti; mai oltre il bordo inferiore. Dopo il ciclo "baseline" e' gia'
+            // la linea di base della riga libera successiva: la riga di dettaglio parte
+            // dalla cima di quella riga, senza lasciare una riga vuota in mezzo.
+            final int belowName = baseline - nameMetrics.getAscent() + detailMetrics.getAscent();
             final int detailBaseline = Math.min(height - PADDING - detailMetrics.getDescent(),
-                    Math.max(baseline + detailMetrics.getAscent(), height - TOKEN_DIAMETER - PADDING));
+                    Math.max(belowName, height - TOKEN_DIAMETER - PADDING));
             graphics.drawString(detail, centeredX(detail, detailMetrics, width), detailBaseline);
         }
     }
 
-    /** Disegna una pallina per ogni giocatore presente, con l'iniziale del suo nome. */
+    /**
+     * Disegna una pallina per ogni giocatore presente, con l'iniziale del suo nome.
+     * <p>
+     * Le pedine stanno affiancate finche' c'e' posto. Quando sono troppe per la
+     * larghezza della casella (da quattro giocatori in su) si sovrappongono in parte,
+     * come fiches impilate, invece di uscire dal bordo: il colore resta visibile e i
+     * nomi completi sono nel tooltip.
+     */
     private void paintTokens(final Graphics2D graphics, final int width, final int height) {
         if (this.occupants.isEmpty()) {
             return;
         }
-        final int spacing = TOKEN_DIAMETER + 1;
-        final int totalWidth = this.occupants.size() * spacing;
+        final int count = this.occupants.size();
+        // Spazio in cui possono iniziare le pedine successive alla prima.
+        final int available = width - 2 * PADDING - TOKEN_DIAMETER;
+        final int spacing = count == 1 ? 0
+                : Math.max(1, Math.min(TOKEN_DIAMETER + 1, available / (count - 1)));
+        final int totalWidth = (count - 1) * spacing + TOKEN_DIAMETER;
         int x = Math.max(PADDING, (width - totalWidth) / 2);
         final int y = height - TOKEN_DIAMETER - 2;
 

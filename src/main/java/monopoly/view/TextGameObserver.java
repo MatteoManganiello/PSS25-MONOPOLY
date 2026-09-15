@@ -113,8 +113,8 @@ public abstract class TextGameObserver implements GameObserver {
 
     @Override
     public void onPlayerBankrupt(final Player player, final Optional<Player> creditor) {
-        this.write("  " + player.getName() + " e' fallito: cede tutto a "
-                + creditor.map(Player::getName).orElse("la banca") + " ed esce dalla partita");
+        this.write("  " + player.getName() + " e' fallito: cede tutto "
+                + creditor.map(owner -> "a " + owner.getName()).orElse("alla banca") + " ed esce dalla partita");
     }
 
     @Override
@@ -127,7 +127,10 @@ public abstract class TextGameObserver implements GameObserver {
      * Scrive la situazione patrimoniale di tutti i giocatori.
      * <p>
      * Non e' un evento: e' un riepilogo che l'applicazione puo' chiedere quando vuole
-     * (a fine demo testuale, oppure a fine partita nel log della GUI).
+     * (a fine demo testuale, oppure a fine partita nel log della GUI). Lo stato dei
+     * giocatori e' scritto con le stesse parole del pannello grafico
+     * ({@link ViewStyle#describe(monopoly.model.player.PlayerStatus)}), non con il nome
+     * della costante dell'enum.
      *
      * @param state lo stato della partita da riassumere
      */
@@ -136,7 +139,8 @@ public abstract class TextGameObserver implements GameObserver {
         this.write("=== Situazione ===");
         for (final Player player : state.getPlayers()) {
             this.write(String.format("  %-6s %5d  proprieta': %2d  stato: %s",
-                    player.getName(), player.getMoney(), player.getProperties().size(), player.getStatus()));
+                    player.getName(), player.getMoney(), player.getProperties().size(),
+                    ViewStyle.describe(player.getStatus())));
         }
         this.write("  Cassa della banca: " + state.getContext().getBank().getBalance());
     }

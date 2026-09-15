@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -53,6 +54,9 @@ public final class BoardPanel extends JPanel {
     /** Indice dell'ultima riga e dell'ultima colonna della griglia. */
     private static final int LAST_CELL = GRID_SIDE - 1;
 
+    /** Posizione fuori dal tabellone: nessuna casella da evidenziare. */
+    private static final int NO_HIGHLIGHT = -1;
+
     private final transient GameState state;
 
     /** Un pannello per casella, all'indice corrispondente alla posizione sul tabellone. */
@@ -88,6 +92,10 @@ public final class BoardPanel extends JPanel {
      * caselle in cui si trovano ora, evidenzia la casella del giocatore di turno e
      * aggiorna la scritta centrale.
      * <p>
+     * A partita finita, o quando il giocatore corrente e' fallito, nessuna casella
+     * viene evidenziata (vedi {@link ViewStyle#playerToHighlight(GameState)}); a partita
+     * finita la scritta centrale diventa "Partita finita".
+     * <p>
      * E' l'unico metodo che il {@link MainWindow} deve chiamare dopo un evento del
      * model: il pannello ricava tutto il resto dal {@link GameState}.
      */
@@ -100,13 +108,16 @@ public final class BoardPanel extends JPanel {
                 occupants.computeIfAbsent(player.getPosition(), position -> new ArrayList<>()).add(player);
             }
         }
-        final int currentPosition = this.state.getCurrentPlayer().getPosition();
+        final Optional<Player> highlighted = ViewStyle.playerToHighlight(this.state);
+        final int highlightedPosition = highlighted.map(Player::getPosition).orElse(NO_HIGHLIGHT);
         for (int position = 0; position < this.tilePanels.size(); position++) {
             final TilePanel panel = this.tilePanels.get(position);
             panel.setOccupants(occupants.getOrDefault(position, List.of()));
-            panel.setCurrent(position == currentPosition);
+            panel.setCurrent(position == highlightedPosition);
         }
-        this.turnLabel.setText("Turno di " + this.state.getCurrentPlayer().getName());
+        this.turnLabel.setText(this.state.isGameOver()
+                ? "Partita finita"
+                : "Turno di " + this.state.getCurrentPlayer().getName());
     }
 
     /** Crea un {@link TilePanel} per ogni casella e lo mette nella cella giusta della griglia. */

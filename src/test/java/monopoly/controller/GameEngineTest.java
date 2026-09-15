@@ -16,8 +16,10 @@ import org.junit.jupiter.api.Test;
 import monopoly.model.board.Board;
 import monopoly.model.board.RecordingTile;
 import monopoly.model.board.Tile;
+import monopoly.model.economy.Bank;
 import monopoly.model.game.Dice;
 import monopoly.model.game.GameState;
+import monopoly.model.game.JailManager;
 import monopoly.model.game.RollResult;
 import monopoly.model.player.Player;
 import monopoly.model.player.PlayerStatus;
@@ -60,6 +62,11 @@ class GameEngineTest {
         @Override
         public void onPlayerSentToJail(final Player player) {
             events.add("jail:" + player.getName());
+        }
+
+        @Override
+        public void onPlayerReleasedFromJail(final Player player, final String reason) {
+            events.add("released:" + player.getName());
         }
 
         @Override
@@ -142,6 +149,29 @@ class GameEngineTest {
 
         assertSame(bob, engine.getState().getCurrentPlayer());
         assertEquals(List.of("turn:Bob", "changed"), observer.events);
+    }
+
+    /**
+     * La GUI ridisegna i pannelli solo su {@code onGameStateChanged}: anche il comando
+     * della cauzione, esposto da un pulsante, deve chiudersi con quella notifica, dopo
+     * l'evento del model che annuncia l'uscita di prigione.
+     */
+    @Test
+    void payBailReleasesThePlayerAndNotifiesTheStateChange() {
+        final GameEngine engine = newEngine(RecordingTile.createBoard(), SEED_NO_DOUBLE);
+        engine.getState().getContext().getJail().sendToJail(alice);
+        engine.startGame();
+        observer.events.clear();
+        assertTrue(engine.canPayBail());
+
+        assertTrue(engine.payBail());
+
+        assertEquals(List.of("released:Alice", "changed"), observer.events);
+        assertFalse(alice.isInJail());
+        assertEquals(Bank.STARTING_BALANCE - JailManager.BAIL_AMOUNT, alice.getMoney());
+        // Pagata la cauzione il turno continua normalmente: si lancia, non si paga di nuovo.
+        assertTrue(engine.canRollDice());
+        assertFalse(engine.canPayBail());
     }
 
     @Test

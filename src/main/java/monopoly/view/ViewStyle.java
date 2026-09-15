@@ -6,13 +6,17 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import monopoly.model.board.TileCategory;
+import monopoly.model.game.GameState;
+import monopoly.model.player.Player;
 import monopoly.model.player.PlayerStatus;
 import monopoly.model.player.Token;
 
 /**
- * Aspetto condiviso della GUI: colori, caratteri e formattazione dei numeri.
+ * Aspetto condiviso della GUI: colori, caratteri, formattazione dei numeri e le poche
+ * regole di presentazione che piu' pannelli devono applicare allo stesso modo.
  * <p>
  * Tutte le scelte "estetiche" stanno qui invece di essere sparse nei pannelli, per
  * due motivi. Il primo e' pratico: cambiare la tinta di un tipo di casella o il
@@ -139,6 +143,32 @@ public final class ViewStyle {
      */
     public static String formatMoney(final int amount) {
         return String.format(Locale.ITALY, "%,d", amount);
+    }
+
+    /**
+     * Giocatore da indicare come "di turno" sul tabellone e nel pannello dei giocatori.
+     * <p>
+     * Di norma e' il giocatore corrente, ma {@link GameState#getCurrentPlayer()} non
+     * avanza dopo un fallimento, e in due casi indicarlo sarebbe fuorviante:
+     * <ul>
+     *   <li>a partita finita, quando il "giocatore corrente" e' chi ha appena perso;</li>
+     *   <li>quando il giocatore corrente e' fallito e deve solo passare la mano: la sua
+     *       pedina e' gia' stata tolta dal tabellone.</li>
+     * </ul>
+     * In quei casi non si evidenzia nessuno. La regola sta qui, e non nei singoli
+     * pannelli, perche' {@link BoardPanel} e {@link PlayerInfoPanel} devono dare la
+     * stessa risposta.
+     *
+     * @param state lo stato della partita, usato in sola lettura
+     * @return il giocatore da evidenziare, oppure {@link Optional#empty()} se non va
+     *         evidenziato nessuno
+     */
+    public static Optional<Player> playerToHighlight(final GameState state) {
+        final Player current = state.getCurrentPlayer();
+        if (state.isGameOver() || current.isBankrupt()) {
+            return Optional.empty();
+        }
+        return Optional.of(current);
     }
 
     /** Tabella "famiglia di casella - colore", alternativa a una catena di if nella view. */

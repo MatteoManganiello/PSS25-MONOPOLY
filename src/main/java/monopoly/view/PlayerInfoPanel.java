@@ -5,6 +5,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
@@ -86,11 +87,15 @@ public final class PlayerInfoPanel extends JPanel {
     /**
      * Aggiorna denaro, proprieta', stato ed evidenziazione del turno di tutti i
      * giocatori. Chiamato dal {@link MainWindow} a ogni evento del model.
+     * <p>
+     * A partita finita, o quando il giocatore corrente e' fallito, nessuna scheda viene
+     * evidenziata: la regola e' la stessa del tabellone
+     * ({@link ViewStyle#playerToHighlight(GameState)}).
      */
     public void refresh() {
-        final Player currentPlayer = this.state.getCurrentPlayer();
+        final Optional<Player> highlighted = ViewStyle.playerToHighlight(this.state);
         for (final PlayerCard card : this.cards) {
-            card.refresh(card.isFor(currentPlayer));
+            card.refresh(highlighted.filter(card::isFor).isPresent());
         }
         this.bankLabel.setText("Cassa della banca: "
                 + ViewStyle.formatMoney(this.state.getContext().getBank().getBalance()));
