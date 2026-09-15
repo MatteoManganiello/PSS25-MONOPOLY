@@ -5,24 +5,8 @@ Architettura **MVC**, build con **Gradle (Kotlin DSL)**.
 
 ## Requisiti
 
-- JDK 21 o superiore
+- JDK 21
 - Nessuna installazione di Gradle: il progetto include il **Gradle wrapper**
-
-## Struttura del progetto
-
-```
-src/main/java/monopoly/
-├── MonopolyApp.java          # punto di ingresso (demo testuale di alcuni turni)
-├── model/
-│   ├── board/                # Tile (astratta), PlaceholderTile, Board
-│   ├── player/               # Player, PlayerStatus, Token
-│   ├── economy/              # Bank, Property
-│   └── game/                 # Dice, GamePhase, GameState, TurnManager, RollResult, RollOutcome
-├── controller/               # GameEngine (punto di ingresso), GameObserver (pattern Observer)
-└── view/                     # ConsoleGameObserver (view testuale di esempio)
-
-src/test/java/monopoly/       # test JUnit 5 (model e controller)
-```
 
 ## Comandi Gradle
 
@@ -30,8 +14,8 @@ src/test/java/monopoly/       # test JUnit 5 (model e controller)
 ./gradlew build        # compila, esegue i test e produce il jar
 ./gradlew compileJava  # solo compilazione
 ./gradlew test         # solo test JUnit 5
-./gradlew test --tests TurnManagerTest   # una sola classe di test
-./gradlew run          # avvia l'applicazione
+./gradlew run          # avvia l'interfaccia grafica
+./gradlew run --args="--console"   # demo testuale automatica
 ./gradlew jar          # crea il jar eseguibile in build/libs/
 java -jar build/libs/monopoly-1.0.0.jar
 ./gradlew clean        # ripulisce la cartella build/
