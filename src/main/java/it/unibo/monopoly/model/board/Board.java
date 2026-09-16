@@ -5,17 +5,14 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Tabellone di gioco: sequenza circolare delle 40 caselle.
+ * Il tabellone: le 40 caselle in cerchio.
  * <p>
- * Il tabellone conosce solo il tipo astratto {@link Tile}: non sa (e non deve
- * sapere) se una casella e' una proprieta', una tassa o un imprevisto. Questo
- * permette di sostituire o aggiungere tipi di casella senza modificare
- * una sola riga di questa classe.
+ * Qui dentro si vede solo il tipo {@link Tile}, mai le caselle vere. Cosi' si
+ * possono aggiungere nuovi tipi di casella senza toccare questa classe.
  * <p>
- * Il tabellone non sa nemmeno quali caselle lo compongono: le riceve gia' pronte
- * nel costruttore. A costruirle e' {@link BoardFactory#createStandardBoard}, che e'
- * anche il modo normale di ottenere un tabellone da gioco; il costruttore pubblico
- * resta utile ai test e, in futuro, al caricamento da file.
+ * Le caselle arrivano gia' pronte dal costruttore: di solito le crea
+ * {@link BoardFactory#createStandardBoard}, mentre il costruttore pubblico serve
+ * ai test e al caricamento da file.
  */
 public class Board {
 
@@ -37,26 +34,26 @@ public class Board {
     private final List<Tile> tiles;
 
     /**
-     * Crea un tabellone a partire da un elenco di caselle gia' pronto.
-     * Per il tabellone da gioco si usa {@link BoardFactory#createStandardBoard}.
+     * Crea un tabellone da una lista di caselle gia' pronta.
+     * Per la partita vera si usa {@link BoardFactory#createStandardBoard}.
      *
-     * @param tiles le {@link Board#SIZE} caselle del tabellone, in ordine di posizione
+     * @param tiles le {@link Board#SIZE} caselle, in ordine di posizione
      * @throws IllegalArgumentException se le caselle non sono esattamente {@link Board#SIZE}
      */
     public Board(final List<Tile> tiles) {
         if (tiles == null || tiles.size() != SIZE) {
             throw new IllegalArgumentException("Il tabellone deve avere esattamente " + SIZE + " caselle");
         }
-        // Copia difensiva: la lista interna non puo' essere modificata da fuori.
+        // Copiamo la lista, cosi' nessuno da fuori puo' cambiarla.
         this.tiles = new ArrayList<>(tiles);
     }
 
     /**
-     * Restituisce la casella in una data posizione.
+     * Da' la casella che si trova in una certa posizione.
      *
-     * @param position indice della casella, tra 0 e {@link Board#SIZE} - 1
-     * @return la casella corrispondente
-     * @throws IllegalArgumentException se la posizione non appartiene al tabellone
+     * @param position la posizione, tra 0 e {@link Board#SIZE} - 1
+     * @return la casella che sta li'
+     * @throws IllegalArgumentException se la posizione non esiste sul tabellone
      */
     public Tile getTileAt(final int position) {
         if (position < 0 || position >= SIZE) {
@@ -70,7 +67,7 @@ public class Board {
         return SIZE;
     }
 
-    /** @return tutte le caselle in sola lettura */
+    /** @return tutte le caselle, in sola lettura */
     public List<Tile> getTiles() {
         return Collections.unmodifiableList(this.tiles);
     }
