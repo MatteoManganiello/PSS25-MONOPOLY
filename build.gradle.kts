@@ -5,14 +5,14 @@ plugins {
     application
 }
 
-group = "monopoly"
+group = "it.unibo"
 version = "1.0.0"
 
 java {
-    // La toolchain garantisce che il progetto compili sempre con Java 21,
+    // La toolchain garantisce che il progetto compili sempre con Java 25,
     // indipendentemente dal JDK con cui viene avviato Gradle.
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -30,7 +30,7 @@ dependencies {
 
 application {
     // Classe con il metodo main, usata dal task "run".
-    mainClass = "monopoly.MonopolyApp"
+    mainClass = "it.unibo.monopoly.MonopolyApp"
 }
 
 tasks.withType<JavaCompile>().configureEach {
