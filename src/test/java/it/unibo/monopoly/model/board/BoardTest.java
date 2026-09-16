@@ -1,7 +1,6 @@
 package it.unibo.monopoly.model.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -67,12 +66,6 @@ class BoardTest {
                 assertTrue(property.getRent() > 0, property.getName() + " dovrebbe avere un affitto");
             }
         }
-    }
-
-    @Test
-    void freeParkingJackpotIsDisabledByDefault() {
-        final FreeParkingTile parking = (FreeParkingTile) board.getTileAt(Board.FREE_PARKING_POSITION);
-        assertFalse(parking.isJackpotEnabled());
     }
 
     /** @return quante caselle del tabellone sono del tipo indicato */

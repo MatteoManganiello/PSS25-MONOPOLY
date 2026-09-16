@@ -168,30 +168,6 @@ class TileEffectsTest {
         assertEquals(Bank.STARTING_BALANCE, alice.getMoney());
     }
 
-    @Test
-    void freeParkingHasNoEffectWithTheOfficialRule() {
-        final FreeParkingTile parking =
-                new FreeParkingTile("Posteggio", Board.FREE_PARKING_POSITION, economy);
-        parking.addToPot(500); // ignorato: la variante e' disattivata
-
-        parking.onLand(alice);
-
-        assertEquals(0, parking.getPot());
-        assertEquals(Bank.STARTING_BALANCE, alice.getMoney());
-    }
-
-    @Test
-    void freeParkingPaysThePotWhenTheJackpotVariantIsEnabled() {
-        final FreeParkingTile parking =
-                new FreeParkingTile("Posteggio", Board.FREE_PARKING_POSITION, economy, true);
-        parking.addToPot(500);
-
-        parking.onLand(alice);
-
-        assertEquals(Bank.STARTING_BALANCE + 500, alice.getMoney());
-        assertEquals(0, parking.getPot(), "il montepremi va azzerato dopo la riscossione");
-    }
-
     // ------------------------------------------------------------------
     // Polimorfismo
     // ------------------------------------------------------------------

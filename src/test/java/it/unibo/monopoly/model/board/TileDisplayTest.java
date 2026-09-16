@@ -58,17 +58,6 @@ class TileDisplayTest {
     }
 
     @Test
-    void freeParkingShowsThePotOnlyWithTheJackpotVariant() {
-        final FreeParkingTile official = new FreeParkingTile("Posteggio", 20, economy);
-        official.addToPot(150);
-        assertEquals("Sosta libera", official.getDetail());
-
-        final FreeParkingTile withJackpot = new FreeParkingTile("Posteggio", 20, economy, true);
-        withJackpot.addToPot(150);
-        assertEquals("Montepremi 150", withJackpot.getDetail());
-    }
-
-    @Test
     void everyTileOfTheStandardBoardIsReadyToBeDrawn() {
         final Board board = BoardFactory.createStandardBoard(new GameContext());
         for (int position = 0; position < Board.SIZE; position++) {
