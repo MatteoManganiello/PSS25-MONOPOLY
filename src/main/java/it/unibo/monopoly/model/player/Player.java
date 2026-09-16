@@ -9,23 +9,22 @@ import it.unibo.monopoly.model.economy.Bank;
 import it.unibo.monopoly.model.economy.Property;
 
 /**
- * Giocatore della partita.
+ * Un giocatore della partita.
  * <p>
- * Contiene i dati che descrivono lo stato di un partecipante: nome, pedina,
- * denaro, posizione sul tabellone, proprieta' possedute e stato di gioco.
- * La classe e' volutamente "passiva": conosce i propri dati e li mantiene
- * coerenti, ma non decide le regole (chi le applica sono la {@link Bank},
- * le sottoclassi di {@link it.unibo.monopoly.model.board.Tile Tile} e, dai prossimi giorni, il controller).
+ * Tiene i suoi dati: nome, pedina, soldi, posizione sul tabellone, proprieta' e
+ * stato. E' una classe passiva apposta: si limita a tenere i dati in ordine, le
+ * regole le applicano altri, cioe' la {@link Bank}, le sottoclassi di
+ * {@link it.unibo.monopoly.model.board.Tile Tile} e il controller.
  * <p>
- * L'identita' di un giocatore e' l'oggetto stesso: non si ridefinisce
- * {@code equals}, cosi' due giocatori con lo stesso nome restano distinti.
+ * Non riscriviamo {@code equals}: ogni giocatore e' se' stesso, quindi due giocatori
+ * con lo stesso nome restano due giocatori diversi.
  */
 public class Player {
 
     private final String name;
     private final Token token;
 
-    /** Proprieta' possedute: lista privata, esposta all'esterno solo in sola lettura. */
+    /** Le proprieta' che possiede: la lista e' privata, da fuori si vede in sola lettura. */
     private final List<Property> properties;
 
     private int money;
@@ -33,22 +32,22 @@ public class Player {
     private PlayerStatus status;
 
     /**
-     * Crea un giocatore con il capitale iniziale standard.
+     * Crea un giocatore con i soldi iniziali standard.
      *
      * @param name  nome del giocatore
-     * @param token pedina assegnata al giocatore
+     * @param token la sua pedina
      */
     public Player(final String name, final Token token) {
         this(name, token, Bank.STARTING_BALANCE);
     }
 
     /**
-     * Crea un giocatore specificando il capitale iniziale.
+     * Crea un giocatore scegliendo quanti soldi ha all'inizio.
      *
      * @param name          nome del giocatore
-     * @param token         pedina assegnata al giocatore
-     * @param initialMoney  denaro iniziale, non negativo
-     * @throws IllegalArgumentException se i parametri non sono validi
+     * @param token         la sua pedina
+     * @param initialMoney  soldi iniziali, non possono essere negativi
+     * @throws IllegalArgumentException se i parametri non vanno bene
      */
     public Player(final String name, final Token token, final int initialMoney) {
         if (name == null || name.isBlank()) {
@@ -68,28 +67,25 @@ public class Player {
         this.properties = new ArrayList<>();
     }
 
-    /** @return il nome del giocatore */
     public String getName() {
         return this.name;
     }
 
-    /** @return la pedina del giocatore */
     public Token getToken() {
         return this.token;
     }
 
-    /** @return il denaro attualmente posseduto */
     public int getMoney() {
         return this.money;
     }
 
     /**
-     * Imposta il denaro del giocatore.
+     * Cambia i soldi del giocatore.
      * <p>
-     * Da usare tramite la {@link Bank}, che e' l'unico oggetto responsabile dei
-     * movimenti di denaro: qui si controlla solo che il valore resti valido.
+     * Va chiamato passando dalla {@link Bank}, che e' l'unica che deve muovere soldi:
+     * qui controlliamo solo che il valore sia valido.
      *
-     * @param money nuovo importo, non negativo
+     * @param money i nuovi soldi, non negativi
      * @throws IllegalArgumentException se l'importo e' negativo
      */
     public void setMoney(final int money) {
@@ -99,16 +95,15 @@ public class Player {
         this.money = money;
     }
 
-    /** @return la posizione attuale sul tabellone */
     public int getPosition() {
         return this.position;
     }
 
     /**
-     * Sposta il giocatore su una casella specifica.
+     * Sposta il giocatore su una casella precisa.
      *
-     * @param position indice della casella, tra 0 e {@link Board#SIZE} - 1
-     * @throws IllegalArgumentException se la posizione non appartiene al tabellone
+     * @param position la casella, tra 0 e {@link Board#SIZE} - 1
+     * @throws IllegalArgumentException se la posizione non esiste sul tabellone
      */
     public void setPosition(final int position) {
         if (position < 0 || position >= Board.SIZE) {
@@ -117,15 +112,14 @@ public class Player {
         this.position = position;
     }
 
-    /** @return lo stato attuale del giocatore */
     public PlayerStatus getStatus() {
         return this.status;
     }
 
     /**
-     * Aggiorna lo stato del giocatore (in gioco, in prigione, fallito).
+     * Cambia lo stato del giocatore: in gioco, in prigione o fallito.
      *
-     * @param status il nuovo stato, non nullo
+     * @param status il nuovo stato, non puo' essere null
      */
     public void setStatus(final PlayerStatus status) {
         if (status == null) {
@@ -134,35 +128,34 @@ public class Player {
         this.status = status;
     }
 
-    /** @return true se il giocatore e' ancora in partita */
+    /** @return true se sta ancora giocando */
     public boolean isPlaying() {
         return this.status == PlayerStatus.PLAYING;
     }
 
-    /** @return true se il giocatore e' in prigione */
+    /** @return true se e' in prigione */
     public boolean isInJail() {
         return this.status == PlayerStatus.IN_JAIL;
     }
 
-    /** @return true se il giocatore e' fallito */
+    /** @return true se e' fallito */
     public boolean isBankrupt() {
         return this.status == PlayerStatus.BANKRUPT;
     }
 
     /**
-     * @return le proprieta' possedute, in sola lettura: la lista interna non e'
-     *         modificabile dall'esterno, si passa da {@link #addProperty(Property)}
-     *         e {@link #removeProperty(Property)}
+     * @return le sue proprieta', in sola lettura. Per cambiarle bisogna usare
+     *         {@link #addProperty(Property)} e {@link #removeProperty(Property)}
      */
     public List<Property> getProperties() {
         return Collections.unmodifiableList(this.properties);
     }
 
     /**
-     * Aggiunge una proprieta' al patrimonio del giocatore e ne aggiorna il proprietario,
-     * mantenendo coerenti i due lati della relazione.
+     * Aggiunge una proprieta' al giocatore e segna lui come proprietario, cosi' le due
+     * informazioni restano d'accordo.
      *
-     * @param property la proprieta' acquisita
+     * @param property la proprieta' appena presa
      */
     public void addProperty(final Property property) {
         if (property == null) {
@@ -175,10 +168,10 @@ public class Player {
     }
 
     /**
-     * Rimuove una proprieta' dal patrimonio del giocatore e la riporta alla banca.
+     * Toglie una proprieta' al giocatore e la fa tornare alla banca.
      *
-     * @param property la proprieta' da rimuovere
-     * @return true se la proprieta' era effettivamente posseduta
+     * @param property la proprieta' da togliere
+     * @return true se ce l'aveva davvero
      */
     public boolean removeProperty(final Property property) {
         final boolean removed = this.properties.remove(property);

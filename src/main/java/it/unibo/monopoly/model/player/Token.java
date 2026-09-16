@@ -3,11 +3,11 @@ package it.unibo.monopoly.model.player;
 import java.util.Objects;
 
 /**
- * Pedina di un giocatore: e' l'oggetto fisico che si muove sul tabellone.
+ * La pedina di un giocatore, cioe' quella che si muove sul tabellone.
  * <p>
- * La classe e' immutabile (campi {@code final}, nessun setter): una pedina non
- * cambia mai nome o colore dopo essere stata assegnata, quindi renderla
- * immutabile evita errori e la rende sicura da condividere.
+ * Non si puo' modificare: i campi sono {@code final} e non ci sono setter. Una
+ * pedina non cambia mai nome o colore, quindi tanto vale bloccarla e non rischiare
+ * errori.
  */
 public class Token {
 
@@ -15,11 +15,11 @@ public class Token {
     private final String color;
 
     /**
-     * Crea una nuova pedina.
+     * Crea una pedina.
      *
-     * @param name  nome della pedina (es. "Car", "Dog")
-     * @param color colore associato alla pedina (es. "RED"); sara' usato dalla view
-     * @throws IllegalArgumentException se nome o colore sono nulli o vuoti
+     * @param name  nome della pedina
+     * @param color colore della pedina, lo usa la view per disegnarla
+     * @throws IllegalArgumentException se nome o colore sono null o vuoti
      */
     public Token(final String name, final String color) {
         if (name == null || name.isBlank()) {
@@ -32,12 +32,10 @@ public class Token {
         this.color = color;
     }
 
-    /** @return il nome della pedina */
     public String getName() {
         return this.name;
     }
 
-    /** @return il colore della pedina */
     public String getColor() {
         return this.color;
     }
