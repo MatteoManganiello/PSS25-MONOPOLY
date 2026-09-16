@@ -24,7 +24,6 @@ import it.unibo.monopoly.model.game.JailManager;
 import it.unibo.monopoly.model.game.TurnManager;
 import it.unibo.monopoly.model.persistence.SaveFileException.Problem;
 import it.unibo.monopoly.model.player.Player;
-import it.unibo.monopoly.model.player.PlayerStatus;
 import it.unibo.monopoly.model.player.Token;
 
 /**

@@ -226,11 +226,13 @@ public class EconomyManager {
      * riusare i controlli gia' presenti in {@link Bank} (importo positivo, fondi
      * sufficienti). Il saldo della banca resta invariato, perche' incassa e riversa
      * lo stesso importo.
+     * <p>
+     * <b>Precondizione</b>: chi chiama ha gia' verificato che i fondi bastino, quindi
+     * {@link Bank#charge} non puo' fallire e il suo esito non viene ricontrollato.
      */
     private void transfer(final Player from, final Player to, final int amount) {
-        if (this.bank.charge(from, amount)) {
-            this.bank.pay(to, amount);
-        }
+        this.bank.charge(from, amount);
+        this.bank.pay(to, amount);
     }
 
     /** Controllo comune a tutte le operazioni su una proprieta'. */
