@@ -1,13 +1,18 @@
 package it.unibo.monopoly.view;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.swing.Icon;
+
+import it.unibo.monopoly.controller.SetupProblem;
 import it.unibo.monopoly.model.board.TileCategory;
 import it.unibo.monopoly.model.game.GameState;
 import it.unibo.monopoly.model.player.Player;
@@ -103,6 +108,41 @@ public final class ViewStyle {
     }
 
     /**
+     * Pallino colorato con cui mostrare una pedina in un elenco, per esempio nella
+     * tendina della schermata di setup.
+     * <p>
+     * E' disegnato come le pedine sul tabellone (un cerchio pieno con il bordo scuro),
+     * cosi' chi sceglie la pedina vede gia' come apparira' in partita.
+     *
+     * @param token la pedina da rappresentare
+     * @return un'icona quadrata con il colore della pedina
+     */
+    public static Icon iconOf(final Token token) {
+        return new TokenIcon(colorOf(token));
+    }
+
+    /**
+     * Frase da mostrare all'utente quando la configurazione di inizio partita non va
+     * bene.
+     * <p>
+     * La traduzione sta nella view e non nell'enum del controller per lo stesso motivo
+     * di {@link #describe(PlayerStatus)}: e' un problema di presentazione, e
+     * un'interfaccia diversa potrebbe volerla dire in un altro modo.
+     *
+     * @param problem il problema trovato dalla validazione
+     * @return la spiegazione da mostrare
+     */
+    public static String describe(final SetupProblem problem) {
+        return switch (problem) {
+            case TOO_FEW_PLAYERS -> "Servono almeno " + GameState.MIN_PLAYERS + " giocatori.";
+            case TOO_MANY_PLAYERS -> "Si puo' giocare al massimo in " + GameState.MAX_PLAYERS + ".";
+            case EMPTY_NAME -> "Ogni giocatore deve avere un nome.";
+            case MISSING_TOKEN -> "Ogni giocatore deve scegliere una pedina.";
+            case DUPLICATE_TOKEN -> "Due giocatori hanno scelto la stessa pedina: devono essere tutte diverse.";
+        };
+    }
+
+    /**
      * Colore con cui scrivere lo stato di un giocatore: verde se gioca, arancione se
      * e' in prigione, rosso se e' fallito.
      *
@@ -183,6 +223,42 @@ public final class ViewStyle {
         colors.put(TileCategory.CARD, new Color(0xF7, 0xE9, 0xB0));
         colors.put(TileCategory.OTHER, Color.WHITE);
         return colors;
+    }
+
+    /**
+     * Il pallino colorato restituito da {@link #iconOf(Token)}.
+     * <p>
+     * E' una classe annidata privata perche' non serve a nessun altro: e' solo il modo
+     * di dare a Swing qualcosa da disegnare accanto al nome della pedina.
+     */
+    private static final class TokenIcon implements Icon {
+
+        /** Lato dell'icona, in pixel. */
+        private static final int SIDE = 12;
+
+        private final Color color;
+
+        private TokenIcon(final Color color) {
+            this.color = color;
+        }
+
+        @Override
+        public void paintIcon(final Component component, final Graphics graphics, final int x, final int y) {
+            graphics.setColor(this.color);
+            graphics.fillOval(x, y, SIDE, SIDE);
+            graphics.setColor(OUTLINE);
+            graphics.drawOval(x, y, SIDE, SIDE);
+        }
+
+        @Override
+        public int getIconWidth() {
+            return SIDE;
+        }
+
+        @Override
+        public int getIconHeight() {
+            return SIDE;
+        }
     }
 
     /** Nomi di colore accettati per le pedine. */

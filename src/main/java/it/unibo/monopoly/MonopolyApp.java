@@ -8,9 +8,10 @@ import javax.swing.UnsupportedLookAndFeelException;
 
 import it.unibo.monopoly.controller.GameEngine;
 import it.unibo.monopoly.model.player.Player;
-import it.unibo.monopoly.model.player.Token;
+import it.unibo.monopoly.model.player.TokenCatalog;
 import it.unibo.monopoly.view.ConsoleGameObserver;
 import it.unibo.monopoly.view.MainWindow;
+import it.unibo.monopoly.view.SetupWindow;
 
 /**
  * Da qui parte tutto il programma.
@@ -18,6 +19,13 @@ import it.unibo.monopoly.view.MainWindow;
  * Qui si montano insieme i tre pezzi dell'MVC: i giocatori (model), il motore della
  * partita (controller) e le view che lo guardano. La view principale e' la finestra
  * grafica {@link MainWindow}: si gioca cliccando "Tira i dadi".
+ * <p>
+ * Il gioco non parte pero' subito: prima si apre la {@link SetupWindow}, dove si
+ * decide chi gioca e con che pedina. Il percorso e' sempre lo stesso -
+ * <b>setup, conferma, partita</b> - e lo comanda questa classe: la schermata di setup
+ * si limita a consegnare i giocatori scelti, senza sapere cosa ne verra' fatto, ed e'
+ * qui che nascono il motore e la finestra di gioco. Nessuno dei due conosce l'altro,
+ * il collegamento lo fa il metodo {@code main}.
  * <p>
  * Insieme alla finestra registriamo anche la vecchia view testuale
  * {@link ConsoleGameObserver}, che racconta la partita sul terminale. Non e' un
@@ -54,12 +62,25 @@ public final class MonopolyApp {
         SwingUtilities.invokeLater(MonopolyApp::startGraphicalGame);
     }
 
-    /** Prepara la partita di prova e apre la finestra. */
+    /**
+     * Apre la schermata di setup. La partita vera partira' solo quando l'utente
+     * avra' confermato i giocatori: a quel punto la schermata chiama
+     * {@link #startGameWith(List)}.
+     */
     private static void startGraphicalGame() {
         applySystemLookAndFeel();
+        new SetupWindow(MonopolyApp::startGameWith).setVisible(true);
+    }
 
-        // 1. Model: i giocatori di prova.
-        final GameEngine engine = new GameEngine(createDemoPlayers());
+    /**
+     * Avvia la partita con i giocatori scelti nella schermata di setup e apre la
+     * finestra di gioco.
+     *
+     * @param players i giocatori configurati dall'utente, in ordine di turno
+     */
+    private static void startGameWith(final List<Player> players) {
+        // 1. Controller: il motore costruisce da se' il tabellone standard.
+        final GameEngine engine = new GameEngine(players);
 
         // 2. View: la finestra si registra da sola come osservatrice del motore.
         final MainWindow window = new MainWindow(engine);
@@ -67,7 +88,7 @@ public final class MonopolyApp {
         engine.addObserver(new ConsoleGameObserver());
         window.setVisible(true);
 
-        // 3. Controller: da qui in avanti comanda l'utente, un clic per volta.
+        // 3. Da qui in avanti comanda l'utente, un clic per volta.
         engine.startGame();
     }
 
@@ -85,14 +106,18 @@ public final class MonopolyApp {
     }
 
     /**
-     * @return i giocatori di prova, con pedine di colori diversi. Il colore e' scritto
-     *         come stringa: sara' la view a trasformarlo in un colore vero
+     * I giocatori della demo testuale, che non ha una schermata di setup da cui
+     * prenderli. Le pedine sono le prime del {@link TokenCatalog}, cioe' le stesse
+     * proposte dalla schermata: cosi' l'elenco delle pedine del gioco resta scritto
+     * in un posto solo.
+     *
+     * @return tre giocatori con nomi e pedine fissi
      */
     private static List<Player> createDemoPlayers() {
         return List.of(
-                new Player("Alice", new Token("Car", "RED")),
-                new Player("Bob", new Token("Dog", "BLUE")),
-                new Player("Carol", new Token("Hat", "GREEN")));
+                new Player("Alice", TokenCatalog.defaultTokenFor(0)),
+                new Player("Bob", TokenCatalog.defaultTokenFor(1)),
+                new Player("Carol", TokenCatalog.defaultTokenFor(2)));
     }
 
     /**
