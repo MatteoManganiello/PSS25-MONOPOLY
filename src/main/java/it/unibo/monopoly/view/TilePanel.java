@@ -13,8 +13,8 @@ import java.util.Locale;
 
 import javax.swing.JPanel;
 
+import it.unibo.monopoly.model.board.PropertyTile;
 import it.unibo.monopoly.model.board.Tile;
-import it.unibo.monopoly.model.economy.Property;
 import it.unibo.monopoly.model.player.Player;
 
 /**
@@ -27,10 +27,12 @@ import it.unibo.monopoly.model.player.Player;
  * chiede) se la casella sia una tassa, il "Via" o la prigione: e' la casella a
  * rispondere, e ogni sottoclasse risponde a modo suo.
  * <p>
- * L'unica eccezione e' la striscia del proprietario in alto, che riguarda
- * un'informazione che esiste solo per le caselle acquistabili: li' serve un
- * controllo di tipo su {@link Property}, ma e' uno solo e localizzato, non una
- * catena di {@code instanceof} che elenca tutte le sottoclassi.
+ * L'unica eccezione riguarda le informazioni che esistono solo per le caselle
+ * acquistabili (proprietario e affitto): li' serve un controllo di tipo su
+ * {@link PropertyTile}, ma si ferma a quella classe base, non e' una catena di
+ * {@code instanceof} che elenca terreni, stazioni e societa'. Anche l'affitto
+ * mostrato e' una chiamata polimorfica ({@link PropertyTile#getCurrentRent()}): il
+ * pannello chiede l'importo alla casella senza sapere con che regola lo calcoli.
  * <p>
  * E' un componente passivo: non conosce il {@link it.unibo.monopoly.controller.GameEngine
  * GameEngine} e non modifica nulla. Riceve dal {@link BoardPanel} chi si trova sulla
@@ -136,9 +138,11 @@ public final class TilePanel extends JPanel {
         if (!this.tile.getDetail().isEmpty()) {
             text.append(" - ").append(this.tile.getDetail());
         }
-        if (this.tile instanceof Property property) {
+        if (this.tile instanceof PropertyTile property) {
+            // getCurrentRent() e' l'affitto che si pagherebbe adesso: tiene gia' conto del
+            // monopolio di colore, delle stazioni possedute e dell'ultimo lancio di dadi.
             text.append(property.getOwner()
-                    .map(owner -> " - di " + owner.getName() + ", affitto " + property.getRent())
+                    .map(owner -> " - di " + owner.getName() + ", affitto " + property.getCurrentRent())
                     .orElse(" - in vendita"));
         }
         for (final Player player : this.occupants) {
@@ -182,7 +186,7 @@ public final class TilePanel extends JPanel {
      * @return l'altezza da cui puo' iniziare il testo
      */
     private int paintOwnerBand(final Graphics2D graphics, final int width) {
-        if (!(this.tile instanceof Property property)) {
+        if (!(this.tile instanceof PropertyTile property)) {
             return PADDING;
         }
         graphics.setColor(property.getOwner()

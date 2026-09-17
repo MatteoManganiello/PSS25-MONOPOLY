@@ -23,16 +23,21 @@ import it.unibo.monopoly.model.game.JailManager;
  * Le caselle "Imprevisti" e "Probabilita'" sono ancora {@link PlaceholderTile}:
  * il mazzo di carte non fa parte del Giorno 3, e una casella segnaposto senza effetto
  * permette di avere gia' il tabellone completo e giocabile.
+ * <p>
+ * Le proprieta' non sono piu' tutte uguali: qui si sceglie il tipo concreto giusto
+ * ({@link StreetTile}, {@link StationTile}, {@link UtilityTile}) e, per i terreni, il
+ * {@link ColorGroup} di appartenenza. Sono dati fissi del tabellone, e stanno qui
+ * proprio perche' questa e' la classe che descrive <em>com'e' fatto</em> il tabellone:
+ * le regole dell'affitto restano nelle caselle. Tutti e otto i gruppi sono completi,
+ * cosi' il monopolio di colore e' raggiungibile (e verificabile nei test).
  */
 public final class BoardFactory {
 
-    /** Prezzo e affitto uguali per tutte e quattro le stazioni. */
+    /** Prezzo uguale per tutte e quattro le stazioni (l'affitto e' una regola di {@link StationTile}). */
     private static final int STATION_PRICE = 200;
-    private static final int STATION_RENT = 25;
 
-    /** Prezzo e affitto uguali per le due societa'. */
+    /** Prezzo uguale per le due societa' (l'affitto dipende dai dadi, vedi {@link UtilityTile}). */
     private static final int UTILITY_PRICE = 150;
-    private static final int UTILITY_RENT = 20;
 
     /** Classe di utilita': non deve essere istanziata. */
     private BoardFactory() {
@@ -65,69 +70,69 @@ public final class BoardFactory {
 
         // --- Primo lato: dal Via alla prigione ---
         tiles.add(new StartTile("Via", Board.START_POSITION, economy));
-        tiles.add(street("Vicolo Corto", 1, 60, 2, context));
+        tiles.add(street("Vicolo Corto", 1, 60, 2, ColorGroup.BROWN, context));
         tiles.add(card("Probabilita'", 2));
-        tiles.add(street("Vicolo Stretto", 3, 60, 4, context));
+        tiles.add(street("Vicolo Stretto", 3, 60, 4, ColorGroup.BROWN, context));
         tiles.add(new TaxTile("Tassa patrimoniale", 4, 200, economy));
         tiles.add(station("Stazione Sud", 5, context));
-        tiles.add(street("Bastioni Gran Sasso", 6, 100, 6, context));
+        tiles.add(street("Bastioni Gran Sasso", 6, 100, 6, ColorGroup.LIGHT_BLUE, context));
         tiles.add(card("Imprevisti", 7));
-        tiles.add(street("Viale Monterosa", 8, 100, 6, context));
-        tiles.add(street("Viale Vesuvio", 9, 120, 8, context));
+        tiles.add(street("Viale Monterosa", 8, 100, 6, ColorGroup.LIGHT_BLUE, context));
+        tiles.add(street("Viale Vesuvio", 9, 120, 8, ColorGroup.LIGHT_BLUE, context));
 
         // --- Secondo lato: dalla prigione al posteggio ---
         tiles.add(new JailTile("Prigione", Board.JAIL_POSITION));
-        tiles.add(street("Via Accademia", 11, 140, 10, context));
+        tiles.add(street("Via Accademia", 11, 140, 10, ColorGroup.PINK, context));
         tiles.add(utility("Societa' Elettrica", 12, context));
-        tiles.add(street("Corso Ateneo", 13, 140, 10, context));
-        tiles.add(street("Piazza Universita'", 14, 160, 12, context));
+        tiles.add(street("Corso Ateneo", 13, 140, 10, ColorGroup.PINK, context));
+        tiles.add(street("Piazza Universita'", 14, 160, 12, ColorGroup.PINK, context));
         tiles.add(station("Stazione Ovest", 15, context));
-        tiles.add(street("Via Verdi", 16, 180, 14, context));
+        tiles.add(street("Via Verdi", 16, 180, 14, ColorGroup.ORANGE, context));
         tiles.add(card("Probabilita'", 17));
-        tiles.add(street("Corso Raffaello", 18, 180, 14, context));
-        tiles.add(street("Piazza Dante", 19, 200, 16, context));
+        tiles.add(street("Corso Raffaello", 18, 180, 14, ColorGroup.ORANGE, context));
+        tiles.add(street("Piazza Dante", 19, 200, 16, ColorGroup.ORANGE, context));
 
         // --- Terzo lato: dal posteggio al "Vai in prigione" ---
         tiles.add(new FreeParkingTile("Posteggio gratuito", Board.FREE_PARKING_POSITION, economy));
-        tiles.add(street("Via Marco Polo", 21, 220, 18, context));
+        tiles.add(street("Via Marco Polo", 21, 220, 18, ColorGroup.RED, context));
         tiles.add(card("Imprevisti", 22));
-        tiles.add(street("Corso Magellano", 23, 220, 18, context));
-        tiles.add(street("Largo Colombo", 24, 240, 20, context));
+        tiles.add(street("Corso Magellano", 23, 220, 18, ColorGroup.RED, context));
+        tiles.add(street("Largo Colombo", 24, 240, 20, ColorGroup.RED, context));
         tiles.add(station("Stazione Nord", 25, context));
-        tiles.add(street("Viale Costantino", 26, 260, 22, context));
-        tiles.add(street("Viale Traiano", 27, 260, 22, context));
+        tiles.add(street("Viale Costantino", 26, 260, 22, ColorGroup.YELLOW, context));
+        tiles.add(street("Viale Traiano", 27, 260, 22, ColorGroup.YELLOW, context));
         tiles.add(utility("Societa' Acqua Potabile", 28, context));
-        tiles.add(street("Piazza Giulio Cesare", 29, 280, 24, context));
+        tiles.add(street("Piazza Giulio Cesare", 29, 280, 24, ColorGroup.YELLOW, context));
 
         // --- Quarto lato: dal "Vai in prigione" al Via ---
         tiles.add(new GoToJailTile("Vai in prigione", Board.GO_TO_JAIL_POSITION, jail));
-        tiles.add(street("Via Roma", 31, 300, 26, context));
-        tiles.add(street("Corso Impero", 32, 300, 26, context));
+        tiles.add(street("Via Roma", 31, 300, 26, ColorGroup.GREEN, context));
+        tiles.add(street("Corso Impero", 32, 300, 26, ColorGroup.GREEN, context));
         tiles.add(card("Probabilita'", 33));
-        tiles.add(street("Largo Augusto", 34, 320, 28, context));
+        tiles.add(street("Largo Augusto", 34, 320, 28, ColorGroup.GREEN, context));
         tiles.add(station("Stazione Est", 35, context));
         tiles.add(card("Imprevisti", 36));
-        tiles.add(street("Viale dei Giardini", 37, 350, 35, context));
+        tiles.add(street("Viale dei Giardini", 37, 350, 35, ColorGroup.BLUE, context));
         tiles.add(new TaxTile("Tassa di lusso", 38, 100, economy));
-        tiles.add(street("Parco della Vittoria", 39, 400, 50, context));
+        tiles.add(street("Parco della Vittoria", 39, 400, 50, ColorGroup.BLUE, context));
 
         return tiles;
     }
 
-    /** Terreno acquistabile con prezzo e affitto propri. */
-    private static PropertyTile street(final String name, final int position, final int price,
-                                       final int rent, final GameContext context) {
-        return new PropertyTile(name, position, price, rent, context);
+    /** Terreno acquistabile, con prezzo, affitto base e gruppo di colore propri. */
+    private static StreetTile street(final String name, final int position, final int price,
+                                     final int rent, final ColorGroup group, final GameContext context) {
+        return new StreetTile(name, position, price, rent, group, context);
     }
 
-    /** Stazione: una proprieta' come le altre, con prezzo e affitto uguali per tutte. */
-    private static PropertyTile station(final String name, final int position, final GameContext context) {
-        return new PropertyTile(name, position, STATION_PRICE, STATION_RENT, context);
+    /** Stazione: prezzo uguale per tutte, affitto in base a quante ne ha il proprietario. */
+    private static StationTile station(final String name, final int position, final GameContext context) {
+        return new StationTile(name, position, STATION_PRICE, context);
     }
 
-    /** Societa': anch'essa una proprieta', con valori propri. */
-    private static PropertyTile utility(final String name, final int position, final GameContext context) {
-        return new PropertyTile(name, position, UTILITY_PRICE, UTILITY_RENT, context);
+    /** Societa': prezzo uguale per tutte e due, affitto calcolato sui dadi. */
+    private static UtilityTile utility(final String name, final int position, final GameContext context) {
+        return new UtilityTile(name, position, UTILITY_PRICE, context);
     }
 
     /** Casella "Imprevisti" o "Probabilita'": segnaposto in attesa del mazzo di carte. */
