@@ -17,6 +17,12 @@
  *   <li>la <b>view testuale</b> {@link it.unibo.monopoly.view.ConsoleGameObserver}, che stampa
  *       la cronaca sul terminale.</li>
  * </ul>
+ * Prima della partita c'e' la {@link it.unibo.monopoly.view.SetupWindow}, la schermata
+ * in cui si sceglie chi gioca: mostra una {@link it.unibo.monopoly.view.PlayerSetupRow}
+ * per giocatore, non contiene nessuna regola (le chiede a
+ * {@link it.unibo.monopoly.controller.GameSetup}) e alla conferma consegna i giocatori
+ * a chi avvia il gioco.
+ * <p>
  * Le frasi della cronaca sono scritte una volta sola in
  * {@link it.unibo.monopoly.view.TextGameObserver}, la classe astratta da cui derivano sia la
  * view su console sia il log della GUI; {@link it.unibo.monopoly.view.ViewStyle} raccoglie
