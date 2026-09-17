@@ -105,7 +105,7 @@ class EconomyManagerTest {
         economy.buyProperty(alice, property);
         final int bankBalanceBefore = bank.getBalance();
 
-        assertTrue(economy.payRent(bob, property));
+        assertTrue(economy.payRent(bob, property, property.getRent()));
 
         assertEquals(Bank.STARTING_BALANCE - RENT, bob.getMoney());
         assertEquals(Bank.STARTING_BALANCE - PRICE + RENT, alice.getMoney());
@@ -141,7 +141,7 @@ class EconomyManagerTest {
         debtor.addProperty(small);
         economy.buyProperty(alice, property);
 
-        assertFalse(economy.payRent(debtor, property));
+        assertFalse(economy.payRent(debtor, property, property.getRent()));
 
         assertTrue(debtor.isBankrupt());
         assertEquals(0, debtor.getMoney());
