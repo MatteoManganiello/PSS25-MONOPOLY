@@ -27,6 +27,16 @@ public class GameContext {
     private final EconomyManager economy;
     private final JailManager jail;
 
+    /**
+     * La partita a cui appartiene questo contesto.
+     * <p>
+     * Serve alle caselle: quando un giocatore si ferma su una proprieta' libera, la
+     * casella deve registrare la decisione di acquisto in sospeso, e quella vive nel
+     * {@link GameState}. Il collegamento lo fa il costruttore di {@code GameState}, che
+     * e' anche l'unico momento in cui il contesto e la partita si conoscono.
+     */
+    private GameState state;
+
     /** Crea un contesto con una banca nuova e i relativi servizi. */
     public GameContext() {
         this(new Bank());
@@ -47,6 +57,29 @@ public class GameContext {
         this.events = new GameEventSupport();
         this.economy = new EconomyManager(bank, this.events);
         this.jail = new JailManager(this.economy, this.events);
+    }
+
+    /**
+     * Collega il contesto alla partita che lo usa. Lo chiama il costruttore di
+     * {@link GameState}: non va usato da nessun altro.
+     *
+     * @param state la partita a cui appartiene questo contesto
+     */
+    void attachState(final GameState state) {
+        this.state = state;
+    }
+
+    /**
+     * @return la partita a cui appartiene questo contesto
+     * @throws IllegalStateException se il contesto non e' ancora stato collegato a una
+     *                               partita, cioe' se le caselle sono state costruite
+     *                               senza creare poi un {@link GameState}
+     */
+    public GameState getState() {
+        if (this.state == null) {
+            throw new IllegalStateException("Il contesto non e' collegato a nessuna partita");
+        }
+        return this.state;
     }
 
     /** @return la cassa della partita */

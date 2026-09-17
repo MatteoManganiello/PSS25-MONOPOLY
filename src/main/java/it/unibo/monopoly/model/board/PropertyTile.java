@@ -2,6 +2,7 @@ package it.unibo.monopoly.model.board;
 
 import it.unibo.monopoly.model.economy.EconomyManager;
 import it.unibo.monopoly.model.economy.Property;
+import it.unibo.monopoly.model.game.GameContext;
 import it.unibo.monopoly.model.player.Player;
 
 /**
@@ -28,45 +29,75 @@ import it.unibo.monopoly.model.player.Player;
  */
 public class PropertyTile extends Property {
 
+    private final GameContext context;
     private final EconomyManager economy;
 
     /**
      * Crea una casella acquistabile.
+     * <p>
+     * Riceve tutto il {@link GameContext} e non solo le regole economiche perche', per
+     * offrire l'acquisto, deve poter registrare la decisione in sospeso nella partita e
+     * annunciare l'offerta sul canale degli eventi.
      *
      * @param name     nome della proprieta' (es. "Vicolo Corto")
      * @param position posizione sul tabellone
      * @param price    prezzo di acquisto dalla banca
      * @param rent     affitto dovuto da chi ci si ferma
-     * @param economy  le regole economiche della partita
-     * @throws IllegalArgumentException se i valori non sono validi o l'economia e' null
+     * @param context  banca, regole economiche ed eventi della partita
+     * @throws IllegalArgumentException se i valori non sono validi o il contesto e' null
      */
     public PropertyTile(final String name, final int position, final int price,
-                        final int rent, final EconomyManager economy) {
+                        final int rent, final GameContext context) {
         super(name, position, price, rent);
-        if (economy == null) {
-            throw new IllegalArgumentException("Le regole economiche non possono essere null");
+        if (context == null) {
+            throw new IllegalArgumentException("Il contesto della partita non puo' essere null");
         }
-        this.economy = economy;
+        this.context = context;
+        this.economy = context.getEconomy();
     }
 
     /**
-     * Applica le tre regole della casella proprieta'.
+     * Applica le regole della casella proprieta'.
      * <p>
-     * L'acquisto e' automatico quando il giocatore puo' permetterselo: finche' non
-     * c'e' un'interfaccia con cui rispondere "compro / non compro" non ha senso
-     * chiedere. Quando al Giorno 4 arrivera' la GUI bastera' sostituire la chiamata
-     * a {@code buyProperty} con la richiesta di una decisione al giocatore: le
-     * regole economiche resteranno le stesse.
+     * L'acquisto non e' piu' automatico: e' una scelta del giocatore. Se la casella e'
+     * libera e lui se la puo' permettere, qui non si compra niente, si registra solo
+     * l'offerta nella partita e la si annuncia alle view. La partita non si blocca ad
+     * aspettare la risposta: resta in attesa nella fase
+     * {@link it.unibo.monopoly.model.game.GamePhase#AWAITING_PURCHASE_DECISION
+     * AWAITING_PURCHASE_DECISION} finche' il giocatore non risponde passando dal
+     * {@link it.unibo.monopoly.controller.GameEngine GameEngine}.
+     * <p>
+     * Affitto e tasse invece restano automatici, perche' non sono scelte: sono
+     * obblighi.
      *
      * @param player il giocatore che si e' fermato sulla casella
      */
     @Override
     public void onLand(final Player player) {
         if (this.isAvailable()) {
-            this.economy.buyProperty(player, this);
-        } else if (!this.isOwnedBy(player)) {
+            this.offerTo(player);
+            return;
+        }
+        if (!this.isOwnedBy(player)) {
             this.economy.payRent(player, this);
         }
         // Se la casella e' gia' sua non succede nulla: non si paga l'affitto a se' stessi.
+    }
+
+    /**
+     * Propone l'acquisto al giocatore, se se lo puo' permettere.
+     * <p>
+     * A chi non ha abbastanza soldi non si chiede niente: la proprieta' resta libera e
+     * il turno va avanti come se la casella non avesse alcun effetto. Cosi' la GUI non
+     * deve mostrare una domanda a cui il giocatore non potrebbe comunque rispondere di
+     * si'.
+     */
+    private void offerTo(final Player player) {
+        final int price = this.getPrice();
+        if (!this.economy.getBank().canAfford(player, price)) {
+            return;
+        }
+        this.context.getState().offerPurchase(player, this);
+        this.context.getEvents().fire(listener -> listener.onPurchaseOffered(player, this, price));
     }
 }

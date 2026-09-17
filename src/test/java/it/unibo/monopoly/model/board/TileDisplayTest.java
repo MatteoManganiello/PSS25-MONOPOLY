@@ -22,12 +22,13 @@ import it.unibo.monopoly.model.game.JailManager;
  */
 class TileDisplayTest {
 
+    private GameContext context;
     private EconomyManager economy;
     private JailManager jail;
 
     @BeforeEach
     void setUp() {
-        final GameContext context = new GameContext();
+        context = new GameContext();
         economy = context.getEconomy();
         jail = context.getJail();
     }
@@ -36,7 +37,7 @@ class TileDisplayTest {
     void eachTileTypeDeclaresItsOwnCategory() {
         assertEquals(TileCategory.START, new StartTile("Via", 0, economy).getCategory());
         assertEquals(TileCategory.PROPERTY,
-                new PropertyTile("Vicolo Corto", 1, 60, 2, economy).getCategory());
+                new PropertyTile("Vicolo Corto", 1, 60, 2, context).getCategory());
         assertEquals(TileCategory.TAX, new TaxTile("Tassa", 4, 200, economy).getCategory());
         assertEquals(TileCategory.JAIL, new JailTile("Prigione", 10).getCategory());
         assertEquals(TileCategory.GO_TO_JAIL,
@@ -48,7 +49,7 @@ class TileDisplayTest {
 
     @Test
     void propertiesShowTheirPrice() {
-        assertEquals("60", new PropertyTile("Vicolo Corto", 1, 60, 2, economy).getDetail());
+        assertEquals("60", new PropertyTile("Vicolo Corto", 1, 60, 2, context).getDetail());
     }
 
     @Test

@@ -58,15 +58,18 @@ class TurnManagerEconomyTest {
     }
 
     @Test
-    void landingOnAFreePropertyBuysItThroughTheBank() {
+    void landingOnAFreePropertyOffersItAndStopsTheTurn() {
         final GameState state = newGame(List.of(alice, bob));
 
         new TurnManager(state).rollDice(); // 4 + 5 -> casella 9
 
         final PropertyTile vesuvio = (PropertyTile) state.getBoard().getTileAt(VESUVIO);
         assertEquals(VESUVIO, alice.getPosition());
-        assertEquals(Bank.STARTING_BALANCE - VESUVIO_PRICE, alice.getMoney());
-        assertSame(alice, vesuvio.getOwner().orElseThrow());
+        // Nessun addebito: l'acquisto ora e' una scelta e il turno si ferma ad aspettarla.
+        assertEquals(Bank.STARTING_BALANCE, alice.getMoney());
+        assertTrue(vesuvio.isAvailable());
+        assertEquals(GamePhase.AWAITING_PURCHASE_DECISION, state.getPhase());
+        assertSame(vesuvio, state.getPendingPurchaseProperty().orElseThrow());
     }
 
     @Test
@@ -151,12 +154,26 @@ class TurnManagerEconomyTest {
         // Il contante rimasto va al creditore.
         assertEquals(Bank.STARTING_BALANCE - VESUVIO_PRICE + VESUVIO_RENT - 1, bob.getMoney());
 
-        // Da qui in avanti Alice non riceve piu' il turno.
+        // Da qui in avanti Alice non riceve piu' il turno. Gli altri possono fermarsi su
+        // proprieta' libere: rifiutiamo le offerte, cosi' il turno si chiude.
         assertSame(bob, turnManager.endTurn());
         turnManager.rollDice();
+        declineAnyOffer(state);
         assertSame(carol, turnManager.endTurn());
         turnManager.rollDice();
+        declineAnyOffer(state);
         assertSame(bob, turnManager.endTurn(), "il turno salta Alice e torna a Bob");
         assertFalse(state.getActivePlayers().contains(alice));
+    }
+
+    /**
+     * Rifiuta l'eventuale offerta di acquisto, cosi' il turno puo' chiudersi.
+     * Qui non c'e' nessun giocatore vero che risponda: e' il GameEngine a
+     * offrire i comandi veri, questo e' solo il minimo per far scorrere i turni.
+     */
+    private static void declineAnyOffer(final GameState state) {
+        if (state.hasPendingPurchase()) {
+            state.resolvePendingPurchase();
+        }
     }
 }

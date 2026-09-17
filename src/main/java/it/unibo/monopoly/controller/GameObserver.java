@@ -1,6 +1,7 @@
 package it.unibo.monopoly.controller;
 
 import it.unibo.monopoly.model.board.Tile;
+import it.unibo.monopoly.model.economy.Property;
 import it.unibo.monopoly.model.game.GameEventListener;
 import it.unibo.monopoly.model.game.GameState;
 import it.unibo.monopoly.model.game.RollResult;
@@ -94,6 +95,21 @@ public interface GameObserver extends GameEventListener {
      * @param state lo stato aggiornato della partita
      */
     default void onGameStateChanged(final GameState state) {
+    }
+
+    /**
+     * Il giocatore ha risposto all'offerta di acquisto e il turno puo' ripartire.
+     * <p>
+     * Arriva sia quando compra sia quando rifiuta: {@code bought} dice com'e' andata.
+     * L'evento con i soldi che cambiano mano resta
+     * {@link it.unibo.monopoly.model.game.GameEventListener#onPropertyBought onPropertyBought},
+     * questo serve alla view per togliere la domanda dallo schermo.
+     *
+     * @param player   il giocatore che ha risposto
+     * @param property la proprieta' che gli era stata offerta
+     * @param bought   true se l'ha comprata, false se ha rifiutato o non ce l'ha fatta
+     */
+    default void onPurchaseResolved(final Player player, final Property property, final boolean bought) {
     }
 
     /**

@@ -101,9 +101,14 @@ public class TurnManager {
      * Chiude il turno corrente e passa la mano al giocatore successivo, saltando i falliti.
      *
      * @return il nuovo giocatore di turno
-     * @throws IllegalStateException se la partita e' finita o se il turno non e' ancora concluso
+     * @throws IllegalStateException se la partita e' finita, se il turno non e' ancora
+     *                               concluso o se c'e' ancora una decisione di acquisto
+     *                               da prendere
      */
     public Player endTurn() {
+        if (this.state.hasPendingPurchase()) {
+            throw new IllegalStateException("Il turno non puo' finire: c'e' una proprieta' da decidere");
+        }
         this.requirePhase(GamePhase.END_TURN);
         return this.state.advanceToNextPlayer();
     }
@@ -125,10 +130,27 @@ public class TurnManager {
         // lo ha mandato in prigione o lo ha fatto fallire, il turno finisce qui.
         if (dice.isDouble() && player.isPlaying()) {
             this.state.setPhase(GamePhase.ROLL);
+            this.pauseIfPurchaseOffered();
             return this.createResult(player, dice, from, destination, RollOutcome.ROLL_AGAIN);
         }
         this.state.setPhase(GamePhase.END_TURN);
+        this.pauseIfPurchaseOffered();
         return this.createResult(player, dice, from, destination, RollOutcome.MOVED);
+    }
+
+    /**
+     * Se la casella di arrivo ha offerto una proprieta', mette il turno in pausa.
+     * <p>
+     * Va chiamato <em>dopo</em> aver deciso la fase normale di fine lancio, perche' e'
+     * quella la fase in cui si tornera' quando il giocatore avra' risposto: cosi' chi ha
+     * fatto doppio tira ancora una volta scelto se comprare, e chi non l'ha fatto passa
+     * la mano. La regola dei doppi resta quindi quella di sempre, solo che la scelta di
+     * acquisto viene prima del tiro successivo.
+     */
+    private void pauseIfPurchaseOffered() {
+        if (this.state.hasPendingPurchase()) {
+            this.state.suspendForPurchase();
+        }
     }
 
     /**
@@ -142,6 +164,8 @@ public class TurnManager {
             this.jail.releaseWithDouble(player);
             final int destination = this.moveAndLand(player, dice.getTotal());
             this.state.setPhase(GamePhase.END_TURN);
+            // Anche chi esce di prigione puo' fermarsi su una proprieta' libera.
+            this.pauseIfPurchaseOffered();
             return this.createResult(player, dice, from, destination, RollOutcome.RELEASED_FROM_JAIL);
         }
 

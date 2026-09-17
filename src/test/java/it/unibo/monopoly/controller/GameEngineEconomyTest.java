@@ -49,8 +49,18 @@ class GameEngineEconomyTest {
         }
 
         @Override
+        public void onPurchaseOffered(final Player player, final Property property, final int price) {
+            events.add("offered:" + player.getName() + ":" + property.getName() + ":" + price);
+        }
+
+        @Override
         public void onPropertyBought(final Player buyer, final Property property, final int price) {
             events.add("bought:" + buyer.getName() + ":" + property.getName() + ":" + price);
+        }
+
+        @Override
+        public void onPurchaseResolved(final Player player, final Property property, final boolean bought) {
+            events.add("resolved:" + player.getName() + ":" + property.getName() + ":" + bought);
         }
 
         @Override
@@ -93,7 +103,7 @@ class GameEngineEconomyTest {
     }
 
     @Test
-    void thePurchaseIsAnnouncedAfterTheMovementAndBeforeTheStateChange() {
+    void theOfferIsAnnouncedAfterTheMovementAndBeforeTheStateChange() {
         final Player alice = new Player("Alice", new Token("Car", "RED"));
         final GameEngine engine = newEngine(alice);
         engine.startGame();
@@ -101,8 +111,37 @@ class GameEngineEconomyTest {
 
         engine.rollDice(); // 4 + 5 -> casella 9, "Viale Vesuvio", libera
 
-        assertEquals(List.of("dice:4+5", "moved:Alice:0->9", "bought:Alice:Viale Vesuvio:120", "changed"),
+        // Il tiro viene raccontato prima dell'offerta, e l'acquisto non c'e' ancora:
+        // adesso tocca al giocatore decidere.
+        assertEquals(List.of("dice:4+5", "moved:Alice:0->9", "offered:Alice:Viale Vesuvio:120", "changed"),
                 observer.events);
+    }
+
+    @Test
+    void acceptingTheOfferAnnouncesThePurchaseAndTheResolution() {
+        final Player alice = new Player("Alice", new Token("Car", "RED"));
+        final GameEngine engine = newEngine(alice);
+        engine.startGame();
+        engine.rollDice(); // 4 + 5 -> casella 9, "Viale Vesuvio", libera
+        observer.events.clear();
+
+        engine.buyOfferedProperty();
+
+        assertEquals(List.of("bought:Alice:Viale Vesuvio:120", "resolved:Alice:Viale Vesuvio:true", "changed"),
+                observer.events);
+    }
+
+    @Test
+    void refusingTheOfferAnnouncesOnlyTheResolution() {
+        final Player alice = new Player("Alice", new Token("Car", "RED"));
+        final GameEngine engine = newEngine(alice);
+        engine.startGame();
+        engine.rollDice(); // 4 + 5 -> casella 9, "Viale Vesuvio", libera
+        observer.events.clear();
+
+        engine.declineOfferedProperty();
+
+        assertEquals(List.of("resolved:Alice:Viale Vesuvio:false", "changed"), observer.events);
     }
 
     @Test
@@ -134,7 +173,8 @@ class GameEngineEconomyTest {
         engine.rollDice();
 
         assertTrue(observer.events.isEmpty());
-        // L'acquisto e' comunque avvenuto: gli eventi servono solo a raccontarlo.
-        assertEquals(Bank.STARTING_BALANCE - 120, alice.getMoney());
+        // L'offerta c'e' comunque stata: gli eventi servono solo a raccontarla.
+        assertTrue(engine.canBuyOfferedProperty());
+        assertEquals(Bank.STARTING_BALANCE, alice.getMoney());
     }
 }
