@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 
 import it.unibo.monopoly.model.board.Board;
 import it.unibo.monopoly.model.board.Tile;
+import it.unibo.monopoly.model.economy.Property;
 import it.unibo.monopoly.model.game.Dice;
 import it.unibo.monopoly.model.game.GameEventSupport;
 import it.unibo.monopoly.model.game.GamePhase;
@@ -214,20 +215,82 @@ public class GameEngine {
     }
 
     /**
+     * Il giocatore di turno accetta l'offerta e compra la proprieta' su cui si e'
+     * fermato: paga il prezzo, diventa il proprietario e il turno riparte da dove era
+     * rimasto.
+     * <p>
+     * Se il giocatore nel frattempo non se la potesse piu' permettere l'acquisto non
+     * viene fatto, ma l'offerta si chiude comunque: la proprieta' resta libera.
+     *
+     * @return true se l'acquisto e' andato a buon fine
+     * @throws IllegalStateException se non c'e' nessuna offerta a cui rispondere
+     */
+    public boolean buyOfferedProperty() {
+        final Property offered = this.requireOfferedProperty();
+        final Player buyer = this.state.getPendingPurchasePlayer().orElseThrow();
+        final boolean bought = this.state.getContext().getEconomy().buyProperty(buyer, offered);
+        this.state.resolvePendingPurchase();
+        this.modelEvents.publishPending();
+        this.notifyObservers(observer -> observer.onPurchaseResolved(buyer, offered, bought));
+        this.notifyObservers(observer -> observer.onGameStateChanged(this.state));
+        return bought;
+    }
+
+    /**
+     * Il giocatore di turno rifiuta l'offerta: non paga niente e la proprieta' resta
+     * libera, cosi' potra' comprarla qualcun altro piu' avanti. Il turno riparte da dove
+     * era rimasto.
+     * <p>
+     * Nel gioco vero a questo punto partirebbe un'asta fra gli altri giocatori: qui
+     * l'abbiamo lasciata fuori, e' una possibile aggiunta futura.
+     *
+     * @throws IllegalStateException se non c'e' nessuna offerta a cui rispondere
+     */
+    public void declineOfferedProperty() {
+        final Property offered = this.requireOfferedProperty();
+        final Player player = this.state.getPendingPurchasePlayer().orElseThrow();
+        this.state.resolvePendingPurchase();
+        this.modelEvents.publishPending();
+        this.notifyObservers(observer -> observer.onPurchaseResolved(player, offered, false));
+        this.notifyObservers(observer -> observer.onGameStateChanged(this.state));
+    }
+
+    /**
      * Gioca automaticamente un turno intero: lancia finche' e' consentito (i doppi
      * fanno rilanciare) e poi passa la mano. Utile per la demo testuale e per i test;
      * la GUI usera' invece {@link #rollDice()} ed {@link #endTurn()} in risposta ai pulsanti.
+     * <p>
+     * Qui non c'e' nessuno a cui chiedere se comprare, quindi le offerte vengono
+     * accettate in automatico: la demo si comporta come prima che l'acquisto diventasse
+     * una scelta.
      *
      * @throws IllegalStateException se la partita non e' in corso
      */
     public void playTurn() {
         this.requireGameInProgress();
-        while (this.canRollDice()) {
-            this.rollDice();
+        while (this.canRollDice() || this.canBuyOfferedProperty()) {
+            if (this.canBuyOfferedProperty()) {
+                this.buyOfferedProperty();
+            } else {
+                this.rollDice();
+            }
         }
         if (this.canEndTurn()) {
             this.endTurn();
         }
+    }
+
+    /**
+     * @return la proprieta' offerta in questo momento
+     * @throws IllegalStateException se non c'e' nessuna offerta aperta
+     */
+    private Property requireOfferedProperty() {
+        this.requireGameInProgress();
+        if (this.state.getPhase() != GamePhase.AWAITING_PURCHASE_DECISION) {
+            throw new IllegalStateException("Non c'e' nessuna proprieta' da decidere");
+        }
+        return this.state.getPendingPurchaseProperty()
+                .orElseThrow(() -> new IllegalStateException("Non c'e' nessuna proprieta' da decidere"));
     }
 
     // ------------------------------------------------------------------
@@ -358,6 +421,39 @@ public class GameEngine {
     /** @return true se ora il giocatore di turno puo' (e deve) passare la mano */
     public boolean canEndTurn() {
         return this.isInProgress() && this.state.getPhase() == GamePhase.END_TURN;
+    }
+
+    /**
+     * @return true se c'e' un'offerta aperta e il giocatore puo' ancora permettersi la
+     *         proprieta' (per abilitare il pulsante "Compra")
+     */
+    public boolean canBuyOfferedProperty() {
+        return this.isAwaitingPurchaseDecision()
+                && this.state.getPendingPurchaseProperty()
+                        .map(property -> this.state.getContext().getBank()
+                                .canAfford(this.state.getCurrentPlayer(), property.getPrice()))
+                        .orElse(false);
+    }
+
+    /**
+     * @return true se c'e' un'offerta aperta da rifiutare (per abilitare il pulsante
+     *         "Non comprare"). Rifiutare si puo' sempre, anche quando i soldi non
+     *         bastassero piu'
+     */
+    public boolean canDeclineOfferedProperty() {
+        return this.isAwaitingPurchaseDecision();
+    }
+
+    /** @return la proprieta' offerta in acquisto, se c'e' un'offerta aperta */
+    public Optional<Property> getOfferedProperty() {
+        return this.isAwaitingPurchaseDecision() ? this.state.getPendingPurchaseProperty() : Optional.empty();
+    }
+
+    /** @return true se la partita e' ferma in attesa di una decisione di acquisto */
+    private boolean isAwaitingPurchaseDecision() {
+        return this.isInProgress()
+                && this.state.getPhase() == GamePhase.AWAITING_PURCHASE_DECISION
+                && this.state.hasPendingPurchase();
     }
 
     /** @return true se la partita e' terminata */

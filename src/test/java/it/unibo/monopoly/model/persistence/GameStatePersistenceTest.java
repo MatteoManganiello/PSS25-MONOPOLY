@@ -157,6 +157,10 @@ class GameStatePersistenceTest {
         final Player carol = loaded.getPlayers().get(2);
 
         propertyAt(loaded, VIALE_MONTEROSA).onLand(carol);
+        // L'atterraggio ora si limita a offrire: l'offerta finisce nella partita caricata,
+        // altra prova che il tabellone ricostruito e' collegato a quella e non all'originale.
+        assertSame(carol, loaded.getPendingPurchasePlayer().orElseThrow());
+        acceptOffer(loaded);
 
         assertSame(carol, propertyAt(loaded, VIALE_MONTEROSA).getOwner().orElseThrow());
         assertEquals(loadedBalance + propertyAt(loaded, VIALE_MONTEROSA).getPrice(),
@@ -248,12 +252,30 @@ class GameStatePersistenceTest {
         final GameState state = GameState.createStandardGame(newPlayers(), newDice());
         final TurnManager turns = new TurnManager(state);
         for (int turn = 0; turn < TURNS; turn++) {
-            while (state.getPhase() == GamePhase.ROLL) {
-                turns.rollDice();
+            while (state.getPhase() == GamePhase.ROLL || state.hasPendingPurchase()) {
+                if (state.hasPendingPurchase()) {
+                    acceptOffer(state);
+                } else {
+                    turns.rollDice();
+                }
             }
             turns.endTurn();
         }
         return state;
+    }
+
+    /**
+     * Accetta l'offerta di acquisto, come farebbe un giocatore che compra sempre.
+     * <p>
+     * Serve a ottenere una partita con delle proprieta' gia' assegnate, che e' proprio
+     * quello che questi test vogliono salvare e ricaricare. E' il minimo indispensabile
+     * per far scorrere i turni senza passare dal GameEngine.
+     */
+    private static void acceptOffer(final GameState state) {
+        final Player buyer = state.getPendingPurchasePlayer().orElseThrow();
+        final Property property = state.getPendingPurchaseProperty().orElseThrow();
+        state.getContext().getEconomy().buyProperty(buyer, property);
+        state.resolvePendingPurchase();
     }
 
     /**

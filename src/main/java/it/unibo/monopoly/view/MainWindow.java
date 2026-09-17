@@ -10,6 +10,7 @@ import javax.swing.SwingUtilities;
 
 import it.unibo.monopoly.controller.GameEngine;
 import it.unibo.monopoly.controller.GameObserver;
+import it.unibo.monopoly.model.economy.Property;
 import it.unibo.monopoly.model.game.GameState;
 import it.unibo.monopoly.model.game.RollResult;
 import it.unibo.monopoly.model.player.Player;
@@ -194,6 +195,35 @@ public final class MainWindow extends JFrame implements GameObserver {
      */
     @Override
     public void onGameStateChanged(final GameState state) {
+        this.refreshAll();
+    }
+
+    /**
+     * Al giocatore viene chiesto se vuole comprare la proprieta' su cui si e' fermato.
+     * <p>
+     * La finestra non risponde e non blocca niente: si limita a ridisegnare i pannelli,
+     * cosi' si accendono "Compra" e "Non comprare" mentre "Tira i dadi" e "Passa il
+     * turno" restano spenti. La partita aspetta il clic, ma il model non e' fermo ad
+     * aspettare nessuno: e' solo in una fase in cui le altre mosse non sono permesse.
+     *
+     * @param player   il giocatore a cui tocca decidere
+     * @param property la proprieta' che puo' comprare
+     * @param price    quanto costa
+     */
+    @Override
+    public void onPurchaseOffered(final Player player, final Property property, final int price) {
+        this.refreshAll();
+    }
+
+    /**
+     * Il giocatore ha risposto: la domanda sparisce e il turno riprende.
+     *
+     * @param player   il giocatore che ha risposto
+     * @param property la proprieta' che gli era stata offerta
+     * @param bought   true se l'ha comprata
+     */
+    @Override
+    public void onPurchaseResolved(final Player player, final Property property, final boolean bought) {
         this.refreshAll();
     }
 

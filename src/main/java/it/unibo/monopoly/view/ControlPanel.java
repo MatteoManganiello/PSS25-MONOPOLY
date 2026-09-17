@@ -59,6 +59,8 @@ public final class ControlPanel extends JPanel {
     private final JButton rollButton;
     private final JButton endTurnButton;
     private final JButton bailButton;
+    private final JButton buyButton;
+    private final JButton declineButton;
     private final DiceView diceView;
     private final JLabel statusLabel;
     private final JTextArea logArea;
@@ -77,6 +79,8 @@ public final class ControlPanel extends JPanel {
         this.rollButton = new JButton("Tira i dadi");
         this.endTurnButton = new JButton("Passa il turno");
         this.bailButton = new JButton("Paga la cauzione (" + JailManager.BAIL_AMOUNT + ")");
+        this.buyButton = new JButton("Compra");
+        this.declineButton = new JButton("Non comprare");
         this.diceView = new DiceView();
         this.statusLabel = new JLabel();
         this.logArea = new JTextArea(LOG_ROWS, 40);
@@ -128,9 +132,14 @@ public final class ControlPanel extends JPanel {
      * saperle mostrare.
      */
     public void refresh() {
+        // Mentre c'e' una proprieta' da decidere, canRollDice() e canEndTurn() sono gia'
+        // false: i pulsanti del turno si spengono da soli e restano accesi solo Compra e
+        // Non comprare.
         this.rollButton.setEnabled(this.engine.canRollDice());
         this.endTurnButton.setEnabled(this.engine.canEndTurn());
         this.bailButton.setEnabled(this.engine.canPayBail());
+        this.buyButton.setEnabled(this.engine.canBuyOfferedProperty());
+        this.declineButton.setEnabled(this.engine.canDeclineOfferedProperty());
         this.statusLabel.setText(this.describeSituation());
     }
 
@@ -143,7 +152,10 @@ public final class ControlPanel extends JPanel {
         }
         final Player current = this.engine.getState().getCurrentPlayer();
         final String action;
-        if (this.engine.canRollDice()) {
+        final var offered = this.engine.getOfferedProperty();
+        if (offered.isPresent()) {
+            action = "compri \"" + offered.get().getName() + "\" per " + offered.get().getPrice() + "?";
+        } else if (this.engine.canRollDice()) {
             action = current.isInJail() ? "tenta l'uscita di prigione" : "lancia i dadi";
         } else if (this.engine.canEndTurn()) {
             action = "passa il turno";
@@ -162,6 +174,8 @@ public final class ControlPanel extends JPanel {
         actions.setBackground(ViewStyle.PANEL_BACKGROUND);
         actions.setBorder(BorderFactory.createTitledBorder("Azioni"));
         actions.add(this.bailButton);
+        actions.add(this.buyButton);
+        actions.add(this.declineButton);
 
         this.statusLabel.setFont(ViewStyle.PLAYER_NAME_FONT);
         this.statusLabel.setForeground(ViewStyle.TEXT);
@@ -195,6 +209,8 @@ public final class ControlPanel extends JPanel {
         this.rollButton.addActionListener(event -> this.engine.rollDice());
         this.endTurnButton.addActionListener(event -> this.engine.endTurn());
         this.bailButton.addActionListener(event -> this.engine.payBail());
+        this.buyButton.addActionListener(event -> this.engine.buyOfferedProperty());
+        this.declineButton.addActionListener(event -> this.engine.declineOfferedProperty());
     }
 
     /**

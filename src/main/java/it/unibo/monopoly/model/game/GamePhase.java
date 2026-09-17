@@ -21,6 +21,21 @@ public enum GamePhase {
     /** Applicazione dell'effetto della casella su cui il giocatore si e' fermato. */
     ACTION,
 
+    /**
+     * Il gioco e' fermo in attesa che il giocatore decida se comprare la proprieta'
+     * libera su cui si e' fermato.
+     * <p>
+     * E' la fase che permette al model di non bloccarsi aspettando l'utente: invece di
+     * fermare il thread finche' non arriva una risposta, la partita registra una
+     * decisione in sospeso e resta in questa fase. Il giocatore risponde quando vuole,
+     * passando da {@link it.unibo.monopoly.controller.GameEngine#buyOfferedProperty()
+     * buyOfferedProperty()} o
+     * {@link it.unibo.monopoly.controller.GameEngine#declineOfferedProperty()
+     * declineOfferedProperty()}; finche' non risponde non si puo' ne' tirare i dadi ne'
+     * passare il turno.
+     */
+    AWAITING_PURCHASE_DECISION,
+
     /** Chiusura del turno e passaggio al giocatore successivo. */
     END_TURN
 }

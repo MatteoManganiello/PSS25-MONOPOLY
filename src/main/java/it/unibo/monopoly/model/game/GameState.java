@@ -5,9 +5,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import it.unibo.monopoly.model.board.Board;
 import it.unibo.monopoly.model.board.BoardFactory;
+import it.unibo.monopoly.model.economy.Property;
 import it.unibo.monopoly.model.player.Player;
 
 /**
@@ -45,6 +47,24 @@ public class GameState {
     private boolean gameOver;
 
     /**
+     * Il giocatore a cui e' stato offerto di comprare una proprieta', oppure null se in
+     * questo momento non c'e' nessuna offerta aperta.
+     */
+    private Player pendingPurchasePlayer;
+
+    /** La proprieta' offerta in acquisto, oppure null se non c'e' nessuna offerta. */
+    private Property pendingPurchaseProperty;
+
+    /**
+     * La fase in cui tornare quando il giocatore avra' risposto all'offerta.
+     * <p>
+     * Serve a non perdere il filo del turno: se il giocatore aveva fatto doppio, dopo
+     * aver scelto deve poter tirare di nuovo, altrimenti il turno e' finito. La fase
+     * giusta la calcola il {@link TurnManager} prima di mettere il turno in pausa.
+     */
+    private GamePhase phaseAfterPurchase;
+
+    /**
      * Crea una partita nuova: inizia il primo giocatore della lista, che deve ancora
      * tirare i dadi.
      *
@@ -71,6 +91,9 @@ public class GameState {
      * @param context banca, regole sui soldi, prigione e canale degli eventi
      * @throws IllegalArgumentException se un parametro e' null o la lista dei giocatori non va bene
      */
+    // attachState si limita a memorizzare il riferimento, non chiama nessun metodo su
+    // "this": l'oggetto a meta' costruzione non viene mai usato davvero.
+    @SuppressWarnings("this-escape")
     public GameState(final Board board, final List<Player> players, final Dice dice,
                      final GameContext context) {
         if (board == null || dice == null || context == null) {
@@ -86,6 +109,9 @@ public class GameState {
         this.phase = GamePhase.ROLL;
         this.consecutiveDoubles = 0;
         this.gameOver = false;
+        // Da qui in poi le caselle possono arrivare alla partita passando dal contesto:
+        // serve a PropertyTile per registrare una decisione di acquisto in sospeso.
+        context.attachState(this);
     }
 
     /**
@@ -225,6 +251,10 @@ public class GameState {
         if (this.getActivePlayers().isEmpty()) {
             throw new IllegalStateException("Nessun giocatore e' ancora in partita");
         }
+        if (this.hasPendingPurchase()) {
+            throw new IllegalStateException("Prima bisogna decidere se comprare "
+                    + this.pendingPurchaseProperty.getName());
+        }
         int next = this.currentPlayerIndex;
         // Il ciclo prima o poi finisce, perche' almeno un giocatore non e' fallito.
         do {
@@ -235,6 +265,74 @@ public class GameState {
         this.consecutiveDoubles = 0;
         this.phase = GamePhase.ROLL;
         return this.getCurrentPlayer();
+    }
+
+    /**
+     * Segna che a un giocatore e' stata offerta una proprieta' da comprare.
+     * <p>
+     * La chiama la casella ({@link it.unibo.monopoly.model.board.PropertyTile PropertyTile})
+     * quando qualcuno si ferma su una proprieta' libera che si puo' permettere. Qui si
+     * salva solo la decisione: a mettere in pausa il turno ci pensa poi
+     * {@link #suspendForPurchase()}, perche' solo il {@link TurnManager} sa in che fase
+     * bisognera' tornare dopo la risposta.
+     *
+     * @param player   il giocatore a cui viene offerta la proprieta'
+     * @param property la proprieta' offerta
+     * @throws IllegalArgumentException se giocatore o proprieta' sono null
+     * @throws IllegalStateException    se c'e' gia' un'offerta aperta
+     */
+    public void offerPurchase(final Player player, final Property property) {
+        if (player == null || property == null) {
+            throw new IllegalArgumentException("Giocatore e proprieta' offerta non possono essere null");
+        }
+        if (this.hasPendingPurchase()) {
+            throw new IllegalStateException("C'e' gia' una decisione di acquisto in sospeso");
+        }
+        this.pendingPurchasePlayer = player;
+        this.pendingPurchaseProperty = property;
+    }
+
+    /** @return true se c'e' un'offerta di acquisto che aspetta una risposta */
+    public boolean hasPendingPurchase() {
+        return this.pendingPurchaseProperty != null;
+    }
+
+    /** @return il giocatore a cui e' stata offerta la proprieta', se l'offerta e' aperta */
+    public Optional<Player> getPendingPurchasePlayer() {
+        return Optional.ofNullable(this.pendingPurchasePlayer);
+    }
+
+    /** @return la proprieta' offerta in acquisto, se l'offerta e' aperta */
+    public Optional<Property> getPendingPurchaseProperty() {
+        return Optional.ofNullable(this.pendingPurchaseProperty);
+    }
+
+    /**
+     * Mette il turno in pausa aspettando la risposta: si ricorda la fase di adesso e
+     * passa a {@link GamePhase#AWAITING_PURCHASE_DECISION}.
+     *
+     * @throws IllegalStateException se non c'e' nessuna offerta aperta
+     */
+    public void suspendForPurchase() {
+        if (!this.hasPendingPurchase()) {
+            throw new IllegalStateException("Non c'e' nessuna decisione di acquisto da aspettare");
+        }
+        this.phaseAfterPurchase = this.phase;
+        this.phase = GamePhase.AWAITING_PURCHASE_DECISION;
+    }
+
+    /**
+     * Chiude l'offerta e fa ripartire il turno dalla fase in cui era stato messo in
+     * pausa. La chiama il {@link it.unibo.monopoly.controller.GameEngine GameEngine}
+     * dopo che il giocatore ha comprato o ha rifiutato.
+     */
+    public void resolvePendingPurchase() {
+        this.pendingPurchasePlayer = null;
+        this.pendingPurchaseProperty = null;
+        if (this.phaseAfterPurchase != null) {
+            this.phase = this.phaseAfterPurchase;
+            this.phaseAfterPurchase = null;
+        }
     }
 
     /** Controlla che con questa lista di giocatori si possa davvero giocare. */

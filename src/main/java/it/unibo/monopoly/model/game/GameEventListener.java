@@ -26,6 +26,24 @@ import it.unibo.monopoly.model.player.Player;
 public interface GameEventListener {
 
     /**
+     * A un giocatore viene chiesto se vuole comprare la proprieta' libera su cui si e'
+     * fermato.
+     * <p>
+     * La partita si ferma qui e aspetta: nessuno ha ancora pagato niente e la proprieta'
+     * e' ancora libera. La risposta arriva dai comandi
+     * {@link it.unibo.monopoly.controller.GameEngine#buyOfferedProperty() buyOfferedProperty()}
+     * e {@link it.unibo.monopoly.controller.GameEngine#declineOfferedProperty()
+     * declineOfferedProperty()}, quindi una view che riceve questo evento deve solo
+     * mostrare la domanda, non rispondere da sola.
+     *
+     * @param player   il giocatore a cui viene fatta l'offerta
+     * @param property la proprieta' che puo' comprare
+     * @param price    quanto costa
+     */
+    default void onPurchaseOffered(final Player player, final Property property, final int price) {
+    }
+
+    /**
      * Un giocatore ha comprato una proprieta' dalla banca.
      *
      * @param buyer    l'acquirente, gia' registrato come nuovo proprietario

@@ -96,6 +96,19 @@ public abstract class TextGameObserver implements GameObserver {
     }
 
     @Override
+    public void onPurchaseOffered(final Player player, final Property property, final int price) {
+        this.write("  " + player.getName() + " puo' comprare \"" + property.getName()
+                + "\" per " + price + ": deve decidere");
+    }
+
+    @Override
+    public void onPurchaseResolved(final Player player, final Property property, final boolean bought) {
+        if (!bought) {
+            this.write("  " + player.getName() + " lascia \"" + property.getName() + "\": resta libera");
+        }
+    }
+
+    @Override
     public void onPropertyBought(final Player buyer, final Property property, final int price) {
         this.write("  " + buyer.getName() + " compra \"" + property.getName()
                 + "\" per " + price + " (gli restano " + buyer.getMoney() + ")");
