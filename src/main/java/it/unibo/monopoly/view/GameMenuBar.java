@@ -34,7 +34,7 @@ import it.unibo.monopoly.model.persistence.SaveFileException;
  * osservatori, e la finestra si aggiorna come dopo qualunque altro comando. Da qui parte
  * solo il feedback all'utente: una riga nel log e una finestra di dialogo con l'esito.
  * <p>
- * <b>Thread.</b> Vale la regola del Giorno 4: i comandi al motore e gli aggiornamenti di
+ * <b>Thread.</b> Vale la regola di tutta la GUI: i comandi al motore e gli aggiornamenti di
  * Swing avvengono sull'Event Dispatch Thread.
  * <ul>
  *   <li>Il <em>salvataggio</em> resta interamente sull'EDT: la fotografia della partita va

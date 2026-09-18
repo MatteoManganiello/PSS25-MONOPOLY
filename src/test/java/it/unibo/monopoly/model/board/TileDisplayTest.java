@@ -15,9 +15,8 @@ import it.unibo.monopoly.model.game.JailManager;
  * Test delle informazioni che ogni casella espone alla view: la categoria
  * ({@link Tile#getCategory()}) e la riga di dettaglio ({@link Tile#getDetail()}).
  * <p>
- * Sono le due chiamate polimorfiche su cui si basa il disegno del tabellone del
- * Giorno 4: grazie a queste la GUI non ha bisogno di sapere di che tipo sia una
- * casella. I test verificano proprio questo, cioe' che ogni sottoclasse risponda
+ * Sono le due chiamate polimorfiche su cui si basa il disegno del tabellone:
+ * grazie a queste la GUI non ha bisogno di sapere di che tipo sia una casella. I test verificano proprio questo, cioe' che ogni sottoclasse risponda
  * per conto proprio senza che nessuno debba interrogarne il tipo.
  */
 class TileDisplayTest {
@@ -37,19 +36,19 @@ class TileDisplayTest {
     void eachTileTypeDeclaresItsOwnCategory() {
         assertEquals(TileCategory.START, new StartTile("Via", 0, economy).getCategory());
         assertEquals(TileCategory.PROPERTY,
-                new PropertyTile("Vicolo Corto", 1, 60, 2, context).getCategory());
+                new FixedRentPropertyTile("Vicolo Corto", 1, 60, 2, context).getCategory());
         assertEquals(TileCategory.TAX, new TaxTile("Tassa", 4, 200, economy).getCategory());
         assertEquals(TileCategory.JAIL, new JailTile("Prigione", 10).getCategory());
         assertEquals(TileCategory.GO_TO_JAIL,
                 new GoToJailTile("Vai in prigione", 30, jail).getCategory());
         assertEquals(TileCategory.FREE_PARKING,
-                new FreeParkingTile("Posteggio", 20, economy).getCategory());
+                new FreeParkingTile("Posteggio", 20).getCategory());
         assertEquals(TileCategory.CARD, new PlaceholderTile("Imprevisti", 7).getCategory());
     }
 
     @Test
     void propertiesShowTheirPrice() {
-        assertEquals("60", new PropertyTile("Vicolo Corto", 1, 60, 2, context).getDetail());
+        assertEquals("60", new FixedRentPropertyTile("Vicolo Corto", 1, 60, 2, context).getDetail());
     }
 
     @Test

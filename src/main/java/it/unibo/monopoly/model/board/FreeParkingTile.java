@@ -1,6 +1,5 @@
 package it.unibo.monopoly.model.board;
 
-import it.unibo.monopoly.model.economy.EconomyManager;
 import it.unibo.monopoly.model.player.Player;
 
 /**
@@ -14,14 +13,9 @@ public class FreeParkingTile extends Tile {
      *
      * @param name     nome della casella (es. "Posteggio gratuito")
      * @param position posizione sul tabellone, normalmente {@link Board#FREE_PARKING_POSITION}
-     * @param economy  le regole economiche della partita
-     * @throws IllegalArgumentException se le regole economiche sono null
      */
-    public FreeParkingTile(final String name, final int position, final EconomyManager economy) {
+    public FreeParkingTile(final String name, final int position) {
         super(name, position);
-        if (economy == null) {
-            throw new IllegalArgumentException("Le regole economiche non possono essere null");
-        }
     }
 
     /** @return {@link TileCategory#FREE_PARKING}: e' il posteggio gratuito */

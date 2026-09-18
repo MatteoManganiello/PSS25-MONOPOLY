@@ -10,7 +10,7 @@ import it.unibo.monopoly.model.player.Player;
 /**
  * Casella acquistabile: terreno, stazione o societa'.
  * <p>
- * Estende {@link Property} del Giorno 1 e ne aggiunge l'unica cosa che le mancava:
+ * Estende {@link Property} e ne aggiunge l'unica cosa che le mancava:
  * il comportamento quando un giocatore ci si ferma sopra. La divisione dei compiti
  * e' voluta:
  * <ul>
@@ -32,10 +32,11 @@ import it.unibo.monopoly.model.player.Player;
  * <b>Affitto</b>: {@link #computeRent(Board, Dice)} e' il punto di estensione
  * polimorfico delle tre proprieta' vere del tabellone ({@link StreetTile},
  * {@link StationTile}, {@link UtilityTile}), che lo calcolano ognuna a modo suo.
- * Qui l'implementazione di base restituisce l'affitto fisso scritto sulla casella,
- * cosi' una proprieta' senza regole particolari resta utilizzabile com'e'.
+ * La classe e' astratta perche' sul tabellone esistono solo quelle tre. L'implementazione
+ * di base di {@code computeRent} restituisce comunque l'affitto fisso scritto sulla
+ * casella, cosi' una sottoclasse senza regole particolari non deve ridefinirla.
  */
-public class PropertyTile extends Property {
+public abstract class PropertyTile extends Property {
 
     private final GameContext context;
     private final EconomyManager economy;

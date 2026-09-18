@@ -9,7 +9,7 @@ import it.unibo.monopoly.model.player.Player;
  * Ascoltatore dei fatti concreti che accadono dentro il model: passaggi di denaro,
  * cambi di proprietario, ingressi e uscite di prigione, fallimenti.
  * <p>
- * E' il lato "model" del pattern Observer gia' usato al Giorno 2: le caselle, la
+ * E' il lato "model" del pattern Observer usato dalle view: le caselle, la
  * {@link it.unibo.monopoly.model.economy.EconomyManager EconomyManager} e il
  * {@link JailManager} devono poter raccontare cosa hanno fatto, ma non devono
  * conoscere ne' la view ne' il controller. Per questo l'interfaccia sta nel model
@@ -85,7 +85,7 @@ public interface GameEventListener {
     }
 
     /**
-     * Un giocatore ha ricevuto denaro dalla banca (stipendio del "Via", jackpot).
+     * Un giocatore ha ricevuto denaro dalla banca (stipendio del "Via").
      *
      * @param player il giocatore che ha incassato
      * @param reason motivo dell'accredito, gia' pronto per essere mostrato

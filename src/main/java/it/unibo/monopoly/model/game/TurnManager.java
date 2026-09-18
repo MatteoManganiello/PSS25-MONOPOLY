@@ -28,7 +28,7 @@ import it.unibo.monopoly.model.player.Player;
  * <p>
  * La classe non ha uno stato proprio: fase, doppi consecutivi e giocatore di turno
  * stanno tutti nel {@link GameState}, che resta cosi' l'unica descrizione completa
- * della partita (facile da mostrare, testare e, in futuro, salvare).
+ * della partita (facile da mostrare, testare e salvare).
  * <p>
  * Sta nel model, e non nel controller, perche' contiene regole del gioco: valgono
  * allo stesso modo qualunque sia l'interfaccia che comanda la partita.
@@ -143,7 +143,7 @@ public class TurnManager {
      * <p>
      * Va chiamato <em>dopo</em> aver deciso la fase normale di fine lancio, perche' e'
      * quella la fase in cui si tornera' quando il giocatore avra' risposto: cosi' chi ha
-     * fatto doppio tira ancora una volta scelto se comprare, e chi non l'ha fatto passa
+     * fatto doppio tira ancora una volta dopo aver scelto se comprare, e chi non l'ha fatto passa
      * la mano. La regola dei doppi resta quindi quella di sempre, solo che la scelta di
      * acquisto viene prima del tiro successivo.
      */

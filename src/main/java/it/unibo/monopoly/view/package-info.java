@@ -6,7 +6,7 @@
  * model e inoltrano i comandi dell'utente al controller, senza contenere regole di
  * gioco e senza modificare direttamente il model.
  * <p>
- * Dal Giorno 4 il pacchetto contiene due view, che possono anche osservare la stessa
+ * Il pacchetto contiene due view, che possono anche osservare la stessa
  * partita insieme:
  * <ul>
  *   <li>la <b>GUI Swing</b>, composta dalla finestra {@link it.unibo.monopoly.view.MainWindow}

@@ -2,7 +2,6 @@ package it.unibo.monopoly.view;
 
 import java.util.Optional;
 
-import it.unibo.monopoly.controller.GameEngine;
 import it.unibo.monopoly.controller.GameObserver;
 import it.unibo.monopoly.model.board.Tile;
 import it.unibo.monopoly.model.economy.Property;
@@ -13,14 +12,14 @@ import it.unibo.monopoly.model.player.Player;
 
 /**
  * Cronaca testuale della partita: trasforma in righe di testo tutto cio' che il
- * {@link GameEngine} annuncia.
+ * {@link it.unibo.monopoly.controller.GameEngine GameEngine} annuncia.
  * <p>
  * E' una classe astratta perche' sa <em>cosa</em> raccontare ma non <em>dove</em>
  * scriverlo: l'unico metodo non implementato e' {@link #write(String)}, e sono le
  * sottoclassi a deciderne la destinazione. Oggi ce ne sono due, e usano le stesse
  * identiche frasi:
  * <ul>
- *   <li>{@link ConsoleGameObserver}, che scrive sulla console (la view del Giorno 2);</li>
+ *   <li>{@link ConsoleGameObserver}, che scrive sulla console;</li>
  *   <li>il log della GUI, creato da {@link MainWindow}, che scrive nell'area di
  *       testo del {@link ControlPanel}.</li>
  * </ul>

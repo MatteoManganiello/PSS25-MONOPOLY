@@ -51,7 +51,7 @@ class TileEffectsTest {
     }
 
     private PropertyTile newProperty(final int position) {
-        return new PropertyTile("Vicolo di prova", position, PRICE, RENT, context);
+        return new FixedRentPropertyTile("Vicolo di prova", position, PRICE, RENT, context);
     }
 
     // ------------------------------------------------------------------
