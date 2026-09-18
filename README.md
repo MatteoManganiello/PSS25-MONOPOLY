@@ -11,6 +11,7 @@ Autore: Matteo Manganiello
 - Turni con i doppi: chi fa doppio rilancia, al terzo doppio consecutivo va in prigione
 - Acquisto delle proprietà deciso dal giocatore
 - Affitti proporzionali: monopolio di colore ×2, stazioni 25/50/100/200, società ×4/×10 dei dadi
+- Imprevisti e Probabilità: si pesca una carta che fa incassare o pagare denaro alla banca
 - Prigione
 - Fallimento
 - Salvataggio e caricamento della partita

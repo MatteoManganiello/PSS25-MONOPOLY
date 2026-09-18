@@ -75,7 +75,8 @@ public final class ViewStyle {
      * interamente del colore del loro mazzo - arancione la prima, azzurro la seconda,
      * come nel gioco vero.
      * <p>
-     * Nel model le due caselle sono la stessa cosa, un segnaposto della categoria
+     * Nel model le due caselle sono la stessa classe
+     * ({@link it.unibo.monopoly.model.board.CardTile CardTile}), della categoria
      * {@link TileCategory#CARD}: l'unica differenza e' il nome stampato sopra, ed e' da
      * quello che la view le distingue. Una casella di quella categoria con un nome
      * diverso prende il colore di Probabilita'.
