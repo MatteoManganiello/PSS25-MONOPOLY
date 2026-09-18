@@ -6,6 +6,7 @@ import java.awt.Rectangle;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import it.unibo.monopoly.controller.GameEngine;
@@ -23,7 +24,9 @@ import it.unibo.monopoly.model.player.Player;
  * tavolo: il {@link BoardPanel} al centro, il {@link PlayerInfoPanel} sul lato
  * destro e il {@link ControlPanel} in basso; in alto il {@link GameMenuBar} con
  * salvataggio e caricamento. Ogni pannello ha una sola responsabilita' e non conosce
- * gli altri: e' la finestra a comporli e a dire a ciascuno quando aggiornarsi.
+ * gli altri: e' la finestra a comporli e a dire a ciascuno quando aggiornarsi. Sotto i
+ * pannelli c'e' il verde del tavolo ({@link Theme#TABLE_GREEN}), con gli stessi
+ * margini su tutti i lati.
  * <p>
  * <b>Partite caricate.</b> Quando il motore mette in gioco una partita caricata da
  * file, la finestra riceve l'evento di avvio con uno stato nuovo. Non viene ricreata e
@@ -134,7 +137,7 @@ public final class MainWindow extends JFrame implements GameObserver {
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setJMenuBar(new GameMenuBar(engine, this, this.controlPanel::appendLog));
-        this.setLayout(new BorderLayout(6, 6));
+        this.setContentPane(createTable());
         this.add(this.boardPanel, BorderLayout.CENTER);
         this.add(this.playerInfoPanel, BorderLayout.EAST);
         this.add(this.controlPanel, BorderLayout.SOUTH);
@@ -264,6 +267,14 @@ public final class MainWindow extends JFrame implements GameObserver {
         this.engine.removeObserver(this);
         this.engine.removeObserver(this.logObserver);
         super.dispose();
+    }
+
+    /** @return il fondo della finestra: il verde del tavolo, su cui poggiano i pannelli */
+    private static JPanel createTable() {
+        final JPanel table = new JPanel(new BorderLayout(Theme.PADDING, Theme.PADDING));
+        table.setBackground(Theme.TABLE_GREEN);
+        table.setBorder(Theme.padding(Theme.PADDING));
+        return table;
     }
 
     /**

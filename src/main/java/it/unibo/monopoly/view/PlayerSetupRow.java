@@ -13,7 +13,6 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import it.unibo.monopoly.controller.PlayerSetup;
@@ -35,11 +34,14 @@ import it.unibo.monopoly.model.player.Token;
  * finestra a decidere. E' lo stesso modo di lavorare del {@link ControlPanel} con il
  * motore: il componente chiede, qualcun altro decide.
  * <p>
+ * Ha la forma di una scheda crema ({@link CardPanel}), come quelle dei giocatori nella
+ * finestra di gioco: e' lo stesso giocatore, prima e durante la partita.
+ * <p>
  * La classe e' {@code final} per lo stesso motivo degli altri pannelli: e' un
  * componente concreto e il costruttore puo' configurarsi senza rischiare di chiamare
  * metodi ridefiniti da una sottoclasse non ancora pronta.
  */
-final class PlayerSetupRow extends JPanel {
+final class PlayerSetupRow extends CardPanel {
 
     /** Vedi {@link TilePanel#serialVersionUID}. */
     private static final long serialVersionUID = 1L;
@@ -83,22 +85,21 @@ final class PlayerSetupRow extends JPanel {
      */
     PlayerSetupRow(final String initialName, final Token initialToken,
                    final Runnable onTokenChosen, final Consumer<PlayerSetupRow> onRemoveRequested) {
-        super(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        this.setBackground(ViewStyle.PANEL_BACKGROUND);
-        this.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
+        super(new FlowLayout(FlowLayout.LEFT, Theme.GAP, Theme.GAP / 2), null, 0);
+        this.setBackground(Theme.CREAM);
+        this.setBorder(BorderFactory.createEmptyBorder(Theme.GAP / 2, Theme.PADDING, Theme.GAP / 2, Theme.PADDING));
 
-        this.numberLabel = new JLabel();
-        this.numberLabel.setFont(ViewStyle.PLAYER_NAME_FONT);
-        this.numberLabel.setForeground(ViewStyle.TEXT);
+        this.numberLabel = Theme.label("", Theme.NAME_FONT, Theme.TEXT_DARK);
         this.numberLabel.setPreferredSize(new Dimension(24, 20));
 
         this.proposedName = initialName;
         this.nameField = new JTextField(initialName, NAME_COLUMNS);
-        this.nameField.setFont(ViewStyle.PLAYER_INFO_FONT);
+        this.nameField.setFont(Theme.BODY_FONT);
+        Theme.styleSelection(this.nameField);
 
         this.tokenChooser = new JComboBox<>(new DefaultComboBoxModel<>(new Token[] {initialToken}));
         this.tokenChooser.setSelectedItem(initialToken);
-        this.tokenChooser.setFont(ViewStyle.PLAYER_INFO_FONT);
+        this.tokenChooser.setFont(Theme.BODY_FONT);
         this.tokenChooser.setPreferredSize(CHOOSER_SIZE);
         this.tokenChooser.setRenderer(new TokenRenderer());
         this.tokenChooser.addActionListener(event -> {
@@ -108,13 +109,14 @@ final class PlayerSetupRow extends JPanel {
         });
 
         this.removeButton = new JButton("Togli");
+        Theme.styleSecondary(this.removeButton);
         this.removeButton.setToolTipText("Toglie questo giocatore dalla partita");
         this.removeButton.addActionListener(event -> onRemoveRequested.accept(this));
 
         this.add(this.numberLabel);
-        this.add(new JLabel("Nome:"));
+        this.add(Theme.label("Nome:", Theme.BODY_BOLD_FONT, Theme.TEXT_DARK));
         this.add(this.nameField);
-        this.add(new JLabel("Pedina:"));
+        this.add(Theme.label("Pedina:", Theme.BODY_BOLD_FONT, Theme.TEXT_DARK));
         this.add(this.tokenChooser);
         this.add(this.removeButton);
     }

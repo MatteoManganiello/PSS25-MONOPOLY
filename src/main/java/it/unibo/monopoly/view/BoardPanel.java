@@ -1,5 +1,6 @@
 package it.unibo.monopoly.view;
 
+import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Point;
@@ -25,8 +26,8 @@ import it.unibo.monopoly.model.player.Player;
  * <p>
  * Le caselle sono sistemate su una griglia 11x11 ({@link GridBagLayout}): i quattro
  * angoli e le dieci posizioni per lato riempiono esattamente il bordo, e il quadrato
- * centrale 9x9 - una cella sola che ne occupa nove per lato - ospita il titolo e
- * l'indicazione del giocatore di turno. La conversione fra la posizione sul
+ * centrale 9x9 - una cella sola che ne occupa nove per lato - ospita il titolo, su
+ * una fascia rossa come il marchio del gioco, e l'indicazione del giocatore di turno. La conversione fra la posizione sul
  * tabellone (0-39) e la cella della griglia sta tutta in {@link #gridCellOf(int)}.
  * <p>
  * Il pannello costruisce un {@link TilePanel} per casella una volta sola, alla
@@ -77,11 +78,11 @@ public final class BoardPanel extends JPanel {
         }
         this.state = state;
         this.tilePanels = new ArrayList<>(Board.SIZE);
-        this.turnLabel = new JLabel("", JLabel.CENTER);
+        this.turnLabel = Theme.label("", Theme.HEADING_FONT, Theme.TEXT_LIGHT);
 
         this.setLayout(new GridBagLayout());
-        this.setBackground(ViewStyle.BOARD_BACKGROUND);
-        this.setBorder(BorderFactory.createLineBorder(ViewStyle.OUTLINE, 2));
+        this.setBackground(Theme.TABLE_GREEN);
+        this.setBorder(Theme.boardBorder());
         this.createTiles();
         this.add(this.createCenter(), centerConstraints());
         this.refresh();
@@ -115,9 +116,14 @@ public final class BoardPanel extends JPanel {
             panel.setOccupants(occupants.getOrDefault(position, List.of()));
             panel.setCurrent(position == highlightedPosition);
         }
-        this.turnLabel.setText(this.state.isGameOver()
-                ? "Partita finita"
-                : "Turno di " + this.state.getCurrentPlayer().getName());
+        if (this.state.isGameOver()) {
+            this.turnLabel.setText("Partita finita");
+            this.turnLabel.setIcon(null);
+        } else {
+            final Player current = this.state.getCurrentPlayer();
+            this.turnLabel.setText("Turno di " + current.getName());
+            this.turnLabel.setIcon(ViewStyle.iconOf(current.getToken()));
+        }
     }
 
     /** Crea un {@link TilePanel} per ogni casella e lo mette nella cella giusta della griglia. */
@@ -130,27 +136,41 @@ public final class BoardPanel extends JPanel {
         }
     }
 
-    /** Il quadrato centrale: titolo del gioco e giocatore di turno. */
+    /** Il quadrato centrale: titolo del gioco e giocatore di turno, sul verde del tavolo. */
     private JPanel createCenter() {
         final JPanel center = new JPanel();
         center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
-        center.setBackground(ViewStyle.BOARD_BACKGROUND);
+        center.setBackground(Theme.TABLE_GREEN);
 
-        final JLabel title = new JLabel("MONOPOLY", JLabel.CENTER);
-        title.setFont(ViewStyle.TITLE_FONT);
-        title.setForeground(ViewStyle.OUTLINE);
-        title.setAlignmentX(CENTER_ALIGNMENT);
-
-        this.turnLabel.setFont(ViewStyle.PLAYER_NAME_FONT);
-        this.turnLabel.setForeground(ViewStyle.TEXT);
+        this.turnLabel.setIconTextGap(Theme.GAP);
         this.turnLabel.setAlignmentX(CENTER_ALIGNMENT);
 
+        final JPanel banner = createTitleBanner();
         center.add(Box.createVerticalGlue());
-        center.add(title);
-        center.add(Box.createVerticalStrut(8));
+        center.add(banner);
+        center.add(Box.createVerticalStrut(2 * Theme.GAP));
         center.add(this.turnLabel);
         center.add(Box.createVerticalGlue());
         return center;
+    }
+
+    /**
+     * La fascia con il nome del gioco: rossa con la cornice oro e la scritta crema,
+     * come il marchio stampato sui tabelloni veri.
+     */
+    private static JPanel createTitleBanner() {
+        final CardPanel banner = new CardPanel(new BorderLayout(), Theme.GOLD, 2);
+        banner.setBackground(Theme.MONOPOLY_RED);
+        banner.setBorder(Theme.padding(Theme.GAP));
+        final JLabel title = Theme.label("MONOPOLY", Theme.TITLE_FONT, Theme.TEXT_LIGHT);
+        title.setHorizontalAlignment(JLabel.CENTER);
+        title.setBorder(BorderFactory.createEmptyBorder(0, 2 * Theme.GAP, 0, 2 * Theme.GAP));
+        banner.add(title, BorderLayout.CENTER);
+        banner.setAlignmentX(CENTER_ALIGNMENT);
+        // Nel BoxLayout un pannello si allargherebbe a tutta la larghezza: la fascia
+        // deve restare delle dimensioni della scritta.
+        banner.setMaximumSize(banner.getPreferredSize());
+        return banner;
     }
 
     /**

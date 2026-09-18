@@ -3,6 +3,7 @@ package it.unibo.monopoly.view;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -11,7 +12,6 @@ import java.util.function.Consumer;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -46,6 +46,10 @@ import it.unibo.monopoly.model.player.TokenCatalog;
  * {@link it.unibo.monopoly.MonopolyApp MonopolyApp}, che da li' in poi avvia il gioco.
  * Cosi' la finestra resta una view: raccoglie dati e li passa, senza decidere niente.
  * <p>
+ * <b>Aspetto.</b> Lo stesso della finestra di gioco: il verde del tavolo come fondo,
+ * un'intestazione verde scuro con il titolo in oro, una scheda crema per ogni
+ * giocatore e i pulsanti del {@link Theme} ("Inizia partita" e' l'azione principale).
+ * <p>
  * La classe e' {@code final} come le altre finestre e pannelli del progetto.
  */
 public final class SetupWindow extends JFrame {
@@ -68,7 +72,7 @@ public final class SetupWindow extends JFrame {
      * Si danno a lei e non alla finestra: cosi' {@code pack()} calcola il resto e
      * titolo e pulsanti ci stanno sempre, comunque siano larghe le righe.
      */
-    private static final Dimension ROWS_AREA_SIZE = new Dimension(560, 210);
+    private static final Dimension ROWS_AREA_SIZE = new Dimension(620, 240);
 
     /** Le righe dei giocatori, nello stesso ordine in cui sono mostrate. */
     private final transient List<PlayerSetupRow> rows = new ArrayList<>();
@@ -97,13 +101,18 @@ public final class SetupWindow extends JFrame {
         }
         this.onConfirm = onConfirm;
 
-        this.rowsPanel.setLayout(new BoxLayout(this.rowsPanel, BoxLayout.Y_AXIS));
-        this.rowsPanel.setBackground(ViewStyle.PANEL_BACKGROUND);
+        // Una colonna di schede tutte alte uguali, separate dallo spazio standard.
+        this.rowsPanel.setLayout(new GridLayout(0, 1, 0, Theme.GAP));
+        this.rowsPanel.setOpaque(false);
+        Theme.styleSecondary(this.addButton);
+        Theme.stylePrimary(this.startButton);
 
         this.addButton.addActionListener(event -> this.addPlayerRow());
         this.startButton.addActionListener(event -> this.confirm());
 
-        this.setLayout(new BorderLayout());
+        final JPanel table = new JPanel(new BorderLayout());
+        table.setBackground(Theme.TABLE_GREEN);
+        this.setContentPane(table);
         this.add(this.createHeader(), BorderLayout.NORTH);
         this.add(this.createRowsArea(), BorderLayout.CENTER);
         this.add(this.createButtons(), BorderLayout.SOUTH);
@@ -123,20 +132,20 @@ public final class SetupWindow extends JFrame {
     // Composizione della finestra
     // ------------------------------------------------------------------
 
-    /** Il titolo e la riga di istruzioni in cima alla finestra. */
+    /** Il titolo e la riga di istruzioni in cima alla finestra, su una fascia verde scuro. */
     private JPanel createHeader() {
-        final JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(ViewStyle.PANEL_BACKGROUND);
-        header.setBorder(BorderFactory.createEmptyBorder(12, 12, 8, 12));
+        final JPanel header = new JPanel(new BorderLayout(0, Theme.GAP / 2));
+        header.setBackground(Theme.DARK_GREEN);
+        // Il filo d'oro in basso separa l'intestazione dal tavolo, come la cornice del tabellone.
+        header.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 2, 0, Theme.GOLD),
+                BorderFactory.createEmptyBorder(Theme.PADDING + 4, 2 * Theme.PADDING,
+                        Theme.PADDING, 2 * Theme.PADDING)));
 
-        final JLabel title = new JLabel("Chi gioca?");
-        title.setFont(ViewStyle.TITLE_FONT);
-        title.setForeground(ViewStyle.TEXT);
-
-        final JLabel hint = new JLabel("Da " + GameState.MIN_PLAYERS + " a " + GameState.MAX_PLAYERS
-                + " giocatori. Ogni pedina puo' essere scelta da un giocatore solo.");
-        hint.setFont(ViewStyle.PLAYER_INFO_FONT);
-        hint.setForeground(ViewStyle.TEXT);
+        final JLabel title = Theme.label("Chi gioca?", Theme.TITLE_FONT, Theme.GOLD);
+        final JLabel hint = Theme.label("Da " + GameState.MIN_PLAYERS + " a " + GameState.MAX_PLAYERS
+                + " giocatori. Ogni pedina puo' essere scelta da un giocatore solo.",
+                Theme.BODY_FONT, Theme.TEXT_LIGHT);
 
         header.add(title, BorderLayout.NORTH);
         header.add(hint, BorderLayout.SOUTH);
@@ -151,22 +160,25 @@ public final class SetupWindow extends JFrame {
      */
     private JScrollPane createRowsArea() {
         final JPanel holder = new JPanel(new BorderLayout());
-        holder.setBackground(ViewStyle.PANEL_BACKGROUND);
+        holder.setBackground(Theme.TABLE_GREEN);
         holder.add(this.rowsPanel, BorderLayout.NORTH);
 
         final JScrollPane scroller = new JScrollPane(holder);
         scroller.setPreferredSize(ROWS_AREA_SIZE);
-        scroller.getViewport().setBackground(ViewStyle.PANEL_BACKGROUND);
-        scroller.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
+        scroller.getViewport().setBackground(Theme.TABLE_GREEN);
+        scroller.setBorder(BorderFactory.createEmptyBorder(Theme.PADDING + 4, 2 * Theme.PADDING,
+                0, 2 * Theme.PADDING));
+        scroller.setBackground(Theme.TABLE_GREEN);
         return scroller;
     }
 
     /** La barra in basso con i due pulsanti. */
     private JPanel createButtons() {
-        final JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
-        buttons.setBackground(ViewStyle.PANEL_BACKGROUND);
+        final JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, Theme.GAP, Theme.PADDING));
+        buttons.setBackground(Theme.TABLE_GREEN);
+        buttons.setBorder(BorderFactory.createEmptyBorder(0, Theme.PADDING, Theme.GAP, Theme.PADDING));
         buttons.add(this.addButton);
-        buttons.add(Box.createHorizontalStrut(16));
+        buttons.add(Box.createHorizontalStrut(2 * Theme.GAP));
         buttons.add(this.startButton);
         return buttons;
     }

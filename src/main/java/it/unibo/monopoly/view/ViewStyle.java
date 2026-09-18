@@ -2,8 +2,8 @@ package it.unibo.monopoly.view;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Locale;
@@ -13,6 +13,7 @@ import java.util.Optional;
 import javax.swing.Icon;
 
 import it.unibo.monopoly.controller.SetupProblem;
+import it.unibo.monopoly.model.board.ColorGroup;
 import it.unibo.monopoly.model.board.TileCategory;
 import it.unibo.monopoly.model.game.GameState;
 import it.unibo.monopoly.model.player.Player;
@@ -20,62 +21,27 @@ import it.unibo.monopoly.model.player.PlayerStatus;
 import it.unibo.monopoly.model.player.Token;
 
 /**
- * Aspetto condiviso della GUI: colori, caratteri, formattazione dei numeri e le poche
- * regole di presentazione che piu' pannelli devono applicare allo stesso modo.
+ * Presentazione dei dati del model: come si mostra una casella, una pedina, lo stato
+ * di un giocatore, un importo, e le poche regole di presentazione che piu' pannelli
+ * devono applicare allo stesso modo.
  * <p>
- * Tutte le scelte "estetiche" stanno qui invece di essere sparse nei pannelli, per
- * due motivi. Il primo e' pratico: cambiare la tinta di un tipo di casella o il
- * carattere delle etichette si fa in un punto solo. Il secondo riguarda l'MVC: e'
- * qui che i dati del model vengono tradotti in qualcosa di grafico (la stringa
- * "RED" della pedina diventa un {@link Color}, la {@link TileCategory} di una
- * casella diventa uno sfondo), cosi' il model non ha bisogno di conoscere Swing e
- * la view non ha bisogno di sapere di che classe sia una casella.
+ * I valori grafici veri e propri (tavolozza, caratteri, bordi) stanno in {@link Theme};
+ * questa classe fa da ponte fra il model e il tema, ed e' il motivo per cui esiste
+ * nell'MVC: qui i dati del model vengono tradotti in qualcosa di grafico (la stringa
+ * "RED" della pedina diventa un {@link Color}, la {@link TileCategory} di una casella
+ * diventa uno sfondo, il {@link ColorGroup} di un terreno il colore della sua banda),
+ * cosi' il model non ha bisogno di conoscere Swing e la view non ha bisogno di sapere
+ * di che classe sia una casella.
  * <p>
  * Classe di sola utilita': tutti i membri sono statici e non e' istanziabile.
  */
 public final class ViewStyle {
-
-    /** Verde del panno su cui e' appoggiato il tabellone. */
-    public static final Color BOARD_BACKGROUND = new Color(0xC8, 0xE0, 0xC8);
-
-    /** Sfondo neutro dei pannelli laterali e dei comandi. */
-    public static final Color PANEL_BACKGROUND = new Color(0xF2, 0xF2, 0xEE);
-
-    /** Colore delle cornici e del testo delle caselle. */
-    public static final Color OUTLINE = new Color(0x33, 0x33, 0x33);
-
-    /** Evidenziazione della casella su cui si trova il giocatore di turno. */
-    public static final Color HIGHLIGHT = new Color(0xF5, 0xA6, 0x23);
-
-    /** Colore del testo delle etichette informative. */
-    public static final Color TEXT = new Color(0x22, 0x22, 0x22);
-
-    /** Carattere del nome della casella. */
-    public static final Font TILE_NAME_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 9);
-
-    /** Carattere della riga di dettaglio della casella. */
-    public static final Font TILE_DETAIL_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 9);
-
-    /** Carattere del nome dei giocatori nel pannello laterale. */
-    public static final Font PLAYER_NAME_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 13);
-
-    /** Carattere delle informazioni secondarie (denaro, stato, proprieta'). */
-    public static final Font PLAYER_INFO_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 11);
-
-    /** Carattere del titolo al centro del tabellone. */
-    public static final Font TITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 28);
-
-    /** Carattere a spaziatura fissa del log, cosi' le colonne del riepilogo restano allineate. */
-    public static final Font LOG_FONT = new Font(Font.MONOSPACED, Font.PLAIN, 12);
 
     /** Sfondo di ogni famiglia di caselle. */
     private static final Map<TileCategory, Color> CATEGORY_COLORS = createCategoryColors();
 
     /** Traduzione dei nomi di colore usati dalle pedine ({@link Token#getColor()}). */
     private static final Map<String, Color> TOKEN_COLORS = createTokenColors();
-
-    /** Colore usato quando il nome indicato da una pedina non e' riconosciuto. */
-    private static final Color UNKNOWN_TOKEN_COLOR = new Color(0x60, 0x60, 0x60);
 
     /** Classe di utilita': non deve essere istanziata. */
     private ViewStyle() {
@@ -88,7 +54,27 @@ public final class ViewStyle {
      * @return il colore con cui disegnarla
      */
     public static Color colorOf(final TileCategory category) {
-        return CATEGORY_COLORS.getOrDefault(category, Color.WHITE);
+        return CATEGORY_COLORS.getOrDefault(category, Theme.TILE_PLAIN);
+    }
+
+    /**
+     * Colore della banda di un terreno: quello del suo gruppo, come sul tabellone vero.
+     *
+     * @param group il gruppo di colore del terreno
+     * @return il colore della banda
+     */
+    public static Color colorOf(final ColorGroup group) {
+        // Lo switch su enum e' esaustivo: aggiungendo un gruppo il compilatore avvisa.
+        return switch (group) {
+            case BROWN -> Theme.GROUP_BROWN;
+            case LIGHT_BLUE -> Theme.GROUP_LIGHT_BLUE;
+            case PINK -> Theme.GROUP_PINK;
+            case ORANGE -> Theme.GROUP_ORANGE;
+            case RED -> Theme.GROUP_RED;
+            case YELLOW -> Theme.GROUP_YELLOW;
+            case GREEN -> Theme.GROUP_GREEN;
+            case BLUE -> Theme.GROUP_BLUE;
+        };
     }
 
     /**
@@ -102,16 +88,16 @@ public final class ViewStyle {
      */
     public static Color colorOf(final Token token) {
         if (token == null) {
-            return UNKNOWN_TOKEN_COLOR;
+            return Theme.TOKEN_UNKNOWN;
         }
-        return TOKEN_COLORS.getOrDefault(token.getColor().trim().toUpperCase(Locale.ROOT), UNKNOWN_TOKEN_COLOR);
+        return TOKEN_COLORS.getOrDefault(token.getColor().trim().toUpperCase(Locale.ROOT), Theme.TOKEN_UNKNOWN);
     }
 
     /**
      * Pallino colorato con cui mostrare una pedina in un elenco, per esempio nella
      * tendina della schermata di setup.
      * <p>
-     * E' disegnato come le pedine sul tabellone (un cerchio pieno con il bordo scuro),
+     * E' disegnato come le pedine sul tabellone (un cerchio pieno con il bordo verde scuro),
      * cosi' chi sceglie la pedina vede gia' come apparira' in partita.
      *
      * @param token la pedina da rappresentare
@@ -143,8 +129,8 @@ public final class ViewStyle {
     }
 
     /**
-     * Colore con cui scrivere lo stato di un giocatore: verde se gioca, arancione se
-     * e' in prigione, rosso se e' fallito.
+     * Colore con cui scrivere lo stato di un giocatore: verde se gioca, ambra se e' in
+     * prigione, rosso se e' fallito. Sono tutti leggibili sul crema delle schede.
      *
      * @param status lo stato del giocatore
      * @return il colore del testo
@@ -152,9 +138,9 @@ public final class ViewStyle {
     public static Color colorOf(final PlayerStatus status) {
         // Lo switch su enum e' esaustivo: aggiungendo uno stato il compilatore avvisa.
         return switch (status) {
-            case PLAYING -> new Color(0x1B, 0x7F, 0x3B);
-            case IN_JAIL -> new Color(0xC2, 0x6A, 0x00);
-            case BANKRUPT -> new Color(0xB0, 0x1C, 0x1C);
+            case PLAYING -> Theme.STATUS_PLAYING;
+            case IN_JAIL -> Theme.STATUS_IN_JAIL;
+            case BANKRUPT -> Theme.STATUS_BANKRUPT;
         };
     }
 
@@ -214,14 +200,14 @@ public final class ViewStyle {
     /** Tabella "famiglia di casella - colore", alternativa a una catena di if nella view. */
     private static Map<TileCategory, Color> createCategoryColors() {
         final Map<TileCategory, Color> colors = new EnumMap<>(TileCategory.class);
-        colors.put(TileCategory.START, new Color(0xB6, 0xE3, 0xB6));
-        colors.put(TileCategory.PROPERTY, new Color(0xFA, 0xFA, 0xF5));
-        colors.put(TileCategory.TAX, new Color(0xF3, 0xC7, 0xC7));
-        colors.put(TileCategory.JAIL, new Color(0xD8, 0xC8, 0xB0));
-        colors.put(TileCategory.GO_TO_JAIL, new Color(0xE8, 0xB0, 0x90));
-        colors.put(TileCategory.FREE_PARKING, new Color(0xBF, 0xD8, 0xEE));
-        colors.put(TileCategory.CARD, new Color(0xF7, 0xE9, 0xB0));
-        colors.put(TileCategory.OTHER, Color.WHITE);
+        colors.put(TileCategory.START, Theme.TILE_START);
+        colors.put(TileCategory.PROPERTY, Theme.TILE_PLAIN);
+        colors.put(TileCategory.TAX, Theme.TILE_TAX);
+        colors.put(TileCategory.JAIL, Theme.TILE_JAIL);
+        colors.put(TileCategory.GO_TO_JAIL, Theme.TILE_GO_TO_JAIL);
+        colors.put(TileCategory.FREE_PARKING, Theme.TILE_FREE_PARKING);
+        colors.put(TileCategory.CARD, Theme.TILE_CARD);
+        colors.put(TileCategory.OTHER, Theme.TILE_PLAIN);
         return colors;
     }
 
@@ -243,11 +229,17 @@ public final class ViewStyle {
         }
 
         @Override
-        public void paintIcon(final Component component, final Graphics graphics, final int x, final int y) {
-            graphics.setColor(this.color);
-            graphics.fillOval(x, y, SIDE, SIDE);
-            graphics.setColor(OUTLINE);
-            graphics.drawOval(x, y, SIDE, SIDE);
+        public void paintIcon(final Component component, final Graphics g, final int x, final int y) {
+            final Graphics2D graphics = (Graphics2D) g.create();
+            try {
+                Theme.antialias(graphics);
+                graphics.setColor(this.color);
+                graphics.fillOval(x, y, SIDE, SIDE);
+                graphics.setColor(Theme.DARK_GREEN);
+                graphics.drawOval(x, y, SIDE, SIDE);
+            } finally {
+                graphics.dispose();
+            }
         }
 
         @Override
@@ -264,18 +256,18 @@ public final class ViewStyle {
     /** Nomi di colore accettati per le pedine. */
     private static Map<String, Color> createTokenColors() {
         final Map<String, Color> colors = new HashMap<>();
-        colors.put("RED", new Color(0xD0, 0x27, 0x27));
-        colors.put("BLUE", new Color(0x1E, 0x5A, 0xC8));
-        colors.put("GREEN", new Color(0x1E, 0x8C, 0x3A));
-        colors.put("YELLOW", new Color(0xE0, 0xB0, 0x00));
-        colors.put("ORANGE", new Color(0xE8, 0x7A, 0x14));
-        colors.put("PURPLE", new Color(0x7B, 0x3F, 0xA8));
-        colors.put("MAGENTA", new Color(0xC0, 0x2A, 0x8F));
-        colors.put("CYAN", new Color(0x11, 0x9A, 0xA8));
-        colors.put("BROWN", new Color(0x8B, 0x5A, 0x2B));
-        colors.put("BLACK", new Color(0x22, 0x22, 0x22));
-        colors.put("GRAY", new Color(0x70, 0x70, 0x70));
-        colors.put("PINK", new Color(0xE0, 0x6A, 0x9C));
+        colors.put("RED", Theme.TOKEN_RED);
+        colors.put("BLUE", Theme.TOKEN_BLUE);
+        colors.put("GREEN", Theme.TOKEN_GREEN);
+        colors.put("YELLOW", Theme.TOKEN_YELLOW);
+        colors.put("ORANGE", Theme.TOKEN_ORANGE);
+        colors.put("PURPLE", Theme.TOKEN_PURPLE);
+        colors.put("MAGENTA", Theme.TOKEN_MAGENTA);
+        colors.put("CYAN", Theme.TOKEN_CYAN);
+        colors.put("BROWN", Theme.TOKEN_BROWN);
+        colors.put("BLACK", Theme.TOKEN_BLACK);
+        colors.put("GRAY", Theme.TOKEN_GRAY);
+        colors.put("PINK", Theme.TOKEN_PINK);
         return colors;
     }
 }

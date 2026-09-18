@@ -1,6 +1,5 @@
 package it.unibo.monopoly.view;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.util.ArrayList;
@@ -12,7 +11,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 
 import it.unibo.monopoly.model.economy.Property;
 import it.unibo.monopoly.model.game.GameState;
@@ -25,8 +24,13 @@ import it.unibo.monopoly.model.player.Player;
  * Ogni giocatore ha la sua "scheda" ({@link PlayerCard}), creata una volta sola alla
  * costruzione del pannello: {@link #refresh()} non ricostruisce nulla, aggiorna solo
  * il testo delle etichette. La scheda del giocatore di turno viene evidenziata con
- * una cornice del colore della sua pedina e un triangolino accanto al nome, cosi' di
- * chi sia il turno si capisce a colpo d'occhio.
+ * una cornice oro, uno sfondo appena piu' caldo e un triangolino accanto al nome, cosi'
+ * di chi sia il turno si capisce a colpo d'occhio, anche senza distinguere i colori.
+ * <p>
+ * Il pannello e' una scheda verde scuro con il titolo in oro; le schede dei giocatori
+ * sono crema con il testo scuro. Il nome e' sempre scuro: il colore della pedina e'
+ * nel pallino accanto, perche' scritto in giallo o in ciano sul crema non si
+ * leggerebbe.
  * <p>
  * Come gli altri pannelli legge il {@link GameState} e non lo modifica mai.
  * <p>
@@ -35,16 +39,19 @@ import it.unibo.monopoly.model.player.Player;
  * (layout, dimensioni, bordi) senza il rischio di chiamare metodi ridefiniti da una
  * sottoclasse non ancora inizializzata.
  */
-public final class PlayerInfoPanel extends JPanel {
+public final class PlayerInfoPanel extends CardPanel {
 
     /** Vedi {@link TilePanel#serialVersionUID}. */
     private static final long serialVersionUID = 1L;
 
     /** Larghezza preferita della colonna laterale, in pixel. */
-    private static final int PREFERRED_WIDTH = 250;
+    private static final int PREFERRED_WIDTH = 260;
 
-    /** Larghezza a cui mandare a capo l'elenco delle proprieta', in pixel. */
-    private static final int TEXT_WIDTH = PREFERRED_WIDTH - 60;
+    /**
+     * Larghezza a cui mandare a capo l'elenco delle proprieta', in pixel: la colonna
+     * meno i margini interni del pannello e della scheda.
+     */
+    private static final int TEXT_WIDTH = PREFERRED_WIDTH - 4 * Theme.PADDING - 30;
 
     private final transient GameState state;
     private final transient List<PlayerCard> cards;
@@ -57,6 +64,7 @@ public final class PlayerInfoPanel extends JPanel {
      * @throws IllegalArgumentException se lo stato e' null
      */
     public PlayerInfoPanel(final GameState state) {
+        super(null, Theme.GOLD, 1);
         if (state == null) {
             throw new IllegalArgumentException("Lo stato della partita non puo' essere null");
         }
@@ -65,20 +73,23 @@ public final class PlayerInfoPanel extends JPanel {
         this.bankLabel = new JLabel();
 
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        this.setBackground(ViewStyle.PANEL_BACKGROUND);
-        this.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder("Giocatori"),
-                BorderFactory.createEmptyBorder(4, 4, 4, 4)));
+        this.setBackground(Theme.DARK_GREEN);
+        this.setBorder(Theme.padding(Theme.PADDING));
         this.setPreferredSize(new Dimension(PREFERRED_WIDTH, 0));
 
+        final JLabel title = Theme.label("Giocatori", Theme.HEADING_FONT, Theme.GOLD);
+        title.setAlignmentX(Component.LEFT_ALIGNMENT);
+        this.add(title);
+        this.add(Box.createVerticalStrut(Theme.GAP));
         for (final Player player : state.getPlayers()) {
             final PlayerCard card = new PlayerCard(player);
             this.cards.add(card);
             this.add(card);
-            this.add(Box.createVerticalStrut(6));
+            this.add(Box.createVerticalStrut(Theme.GAP));
         }
         this.add(Box.createVerticalGlue());
-        this.bankLabel.setFont(ViewStyle.PLAYER_INFO_FONT);
+        this.bankLabel.setFont(Theme.BODY_FONT);
+        this.bankLabel.setForeground(Theme.TEXT_LIGHT);
         this.bankLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         this.add(this.bankLabel);
         this.refresh();
@@ -110,7 +121,7 @@ public final class PlayerInfoPanel extends JPanel {
      * di etichette nel pannello padre. E' {@code static} perche' le basta il proprio
      * giocatore: non ha bisogno del pannello che la contiene.
      */
-    private static final class PlayerCard extends JPanel {
+    private static final class PlayerCard extends CardPanel {
 
         /** Vedi {@link TilePanel#serialVersionUID}. */
         private static final long serialVersionUID = 1L;
@@ -122,6 +133,7 @@ public final class PlayerInfoPanel extends JPanel {
         private final JLabel propertiesLabel;
 
         PlayerCard(final Player player) {
+            super(null, null, 0);
             this.player = player;
             this.nameLabel = new JLabel();
             this.moneyLabel = new JLabel();
@@ -133,10 +145,17 @@ public final class PlayerInfoPanel extends JPanel {
             // che le serve invece di riceverne una uguale per tutte.
             this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             this.setAlignmentX(Component.LEFT_ALIGNMENT);
-            this.nameLabel.setFont(ViewStyle.PLAYER_NAME_FONT);
-            for (final JLabel label : List.of(this.moneyLabel, this.statusLabel, this.propertiesLabel)) {
-                label.setFont(ViewStyle.PLAYER_INFO_FONT);
-            }
+            this.setBorder(BorderFactory.createEmptyBorder(Theme.GAP, Theme.PADDING, Theme.GAP, Theme.PADDING));
+            this.nameLabel.setFont(Theme.NAME_FONT);
+            this.nameLabel.setForeground(Theme.TEXT_DARK);
+            // Il pallino della pedina segue il suo nome: "Alice (Cappello) ●".
+            this.nameLabel.setIcon(ViewStyle.iconOf(player.getToken()));
+            this.nameLabel.setHorizontalTextPosition(SwingConstants.LEADING);
+            this.moneyLabel.setFont(Theme.BODY_BOLD_FONT);
+            this.moneyLabel.setForeground(Theme.ACCENT_BLUE);
+            this.statusLabel.setFont(Theme.BODY_BOLD_FONT);
+            this.propertiesLabel.setFont(Theme.BODY_FONT);
+            this.propertiesLabel.setForeground(Theme.TEXT_DARK);
             for (final JLabel label : List.of(this.nameLabel, this.moneyLabel,
                     this.statusLabel, this.propertiesLabel)) {
                 label.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -160,22 +179,16 @@ public final class PlayerInfoPanel extends JPanel {
          * @param current true se e' il suo turno: la scheda viene evidenziata
          */
         void refresh(final boolean current) {
-            final Color tokenColor = ViewStyle.colorOf(this.player.getToken());
             this.nameLabel.setText((current ? "▶ " : "") + this.player.getName()
                     + "  (" + this.player.getToken().getName() + ")");
-            this.nameLabel.setForeground(tokenColor);
             this.moneyLabel.setText("Denaro: " + ViewStyle.formatMoney(this.player.getMoney()));
-            this.moneyLabel.setForeground(ViewStyle.TEXT);
             this.statusLabel.setText("Stato: " + ViewStyle.describe(this.player.getStatus()));
             this.statusLabel.setForeground(ViewStyle.colorOf(this.player.getStatus()));
             this.propertiesLabel.setText(describeProperties(this.player));
 
-            // Il turno si legge dalla cornice (colore della pedina) e dallo sfondo.
-            this.setBackground(current ? new Color(0xFF, 0xF3, 0xD6) : ViewStyle.PANEL_BACKGROUND);
-            this.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(current ? tokenColor : new Color(0xCC, 0xCC, 0xCC),
-                            current ? 2 : 1),
-                    BorderFactory.createEmptyBorder(4, 6, 4, 6)));
+            // Il turno si legge dalla cornice oro e dallo sfondo appena piu' caldo.
+            this.setBackground(current ? Theme.CURRENT_CARD : Theme.CREAM);
+            this.setOutline(current ? Theme.GOLD : null, current ? Theme.HIGHLIGHT_WIDTH : 0);
         }
 
         /**

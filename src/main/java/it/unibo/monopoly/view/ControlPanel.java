@@ -1,12 +1,10 @@
 package it.unibo.monopoly.view;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -40,12 +38,17 @@ import it.unibo.monopoly.model.player.Player;
  * Il riquadro "Azioni" raccoglie le azioni contestuali, attive solo quando servono:
  * il pagamento della cauzione e la decisione di acquisto ("Compra" / "Non comprare").
  * <p>
+ * <b>Aspetto.</b> Le due azioni che fanno avanzare la partita, "Tira i dadi" e
+ * "Compra", sono pulsanti principali (rossi); le altre sono secondarie (verdi con la
+ * cornice oro). La riga di stato ha una riga tutta sua, sopra i pulsanti, cosi' resta
+ * leggibile per intero anche quando la finestra e' stretta.
+ * <p>
  * La classe e' {@code final}: e' un componente grafico concreto, non un punto di
  * estensione, e dichiararlo esplicitamente permette al costruttore di configurarsi
  * (layout, dimensioni, bordi) senza il rischio di chiamare metodi ridefiniti da una
  * sottoclasse non ancora inizializzata.
  */
-public final class ControlPanel extends JPanel {
+public final class ControlPanel extends CardPanel {
 
     /** Vedi {@link TilePanel#serialVersionUID}. */
     private static final long serialVersionUID = 1L;
@@ -70,6 +73,7 @@ public final class ControlPanel extends JPanel {
      * @throws IllegalArgumentException se il motore e' null
      */
     public ControlPanel(final GameEngine engine) {
+        super(new BorderLayout(0, Theme.GAP), Theme.GOLD, 1);
         if (engine == null) {
             throw new IllegalArgumentException("Il motore della partita non puo' essere null");
         }
@@ -83,10 +87,9 @@ public final class ControlPanel extends JPanel {
         this.statusLabel = new JLabel();
         this.logArea = new JTextArea(LOG_ROWS, 40);
 
-        this.setLayout(new BorderLayout(0, 4));
-        this.setBackground(ViewStyle.PANEL_BACKGROUND);
-        this.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-        this.add(this.createCommandsRow(), BorderLayout.NORTH);
+        this.setBackground(Theme.DARK_GREEN);
+        this.setBorder(Theme.padding(Theme.PADDING));
+        this.add(this.createCommandsArea(), BorderLayout.NORTH);
         this.add(this.createLogArea(), BorderLayout.CENTER);
         this.connectButtons();
         this.refresh();
@@ -163,38 +166,73 @@ public final class ControlPanel extends JPanel {
         return "Tocca a " + current.getName() + ": " + action;
     }
 
-    /** La riga superiore: pulsanti, azioni contestuali, dadi e stato. */
-    private JPanel createCommandsRow() {
-        final JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        row.setBackground(ViewStyle.PANEL_BACKGROUND);
+    /** La parte superiore: la riga di stato e, sotto, pulsanti, azioni contestuali e dadi. */
+    private JPanel createCommandsArea() {
+        this.statusLabel.setFont(Theme.NAME_FONT);
+        this.statusLabel.setForeground(Theme.TEXT_LIGHT);
 
-        final JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
-        actions.setBackground(ViewStyle.PANEL_BACKGROUND);
-        actions.setBorder(BorderFactory.createTitledBorder("Azioni"));
+        Theme.stylePrimary(this.rollButton);
+        Theme.styleSecondary(this.endTurnButton);
+        Theme.styleSecondary(this.bailButton);
+        Theme.stylePrimary(this.buyButton);
+        Theme.styleSecondary(this.declineButton);
+
+        final JPanel actions = transparentRow();
+        actions.setBorder(Theme.sectionBorder("Azioni"));
         actions.add(this.bailButton);
         actions.add(this.buyButton);
         actions.add(this.declineButton);
 
-        this.statusLabel.setFont(ViewStyle.PLAYER_NAME_FONT);
-        this.statusLabel.setForeground(ViewStyle.TEXT);
+        final JPanel buttons = transparentRow();
+        buttons.add(this.rollButton);
+        buttons.add(this.endTurnButton);
+        buttons.add(actions);
 
-        row.add(this.rollButton);
-        row.add(this.endTurnButton);
-        row.add(actions);
-        row.add(this.diceView);
-        row.add(this.statusLabel);
-        return row;
+        final JPanel area = new JPanel(new BorderLayout(Theme.GAP, Theme.GAP));
+        area.setOpaque(false);
+        area.add(this.statusLabel, BorderLayout.NORTH);
+        area.add(buttons, BorderLayout.CENTER);
+        area.add(this.diceView, BorderLayout.EAST);
+        return area;
     }
 
-    /** L'area di testo in cui il {@link MainWindow} riversa la cronaca della partita. */
-    private JScrollPane createLogArea() {
+    /**
+     * L'area di testo in cui il {@link MainWindow} riversa la cronaca della partita: una
+     * scheda crema con il testo scuro, sotto il proprio titolo.
+     */
+    private JPanel createLogArea() {
         this.logArea.setEditable(false);
-        this.logArea.setFont(ViewStyle.LOG_FONT);
+        this.logArea.setFont(Theme.LOG_FONT);
         this.logArea.setLineWrap(true);
         this.logArea.setWrapStyleWord(true);
+        this.logArea.setBackground(Theme.CREAM);
+        this.logArea.setForeground(Theme.TEXT_DARK);
+        this.logArea.setBorder(BorderFactory.createEmptyBorder(0, Theme.GAP / 2, 0, Theme.GAP / 2));
+        Theme.styleSelection(this.logArea);
+
         final JScrollPane scroll = new JScrollPane(this.logArea);
-        scroll.setBorder(BorderFactory.createTitledBorder("Cosa e' successo"));
-        return scroll;
+        scroll.setBorder(BorderFactory.createEmptyBorder());
+        scroll.setBackground(Theme.CREAM);
+        scroll.getViewport().setBackground(Theme.CREAM);
+
+        // Il margine lascia agli angoli arrotondati della scheda lo spazio per vedersi.
+        final CardPanel card = new CardPanel(new BorderLayout(), null, 0);
+        card.setBackground(Theme.CREAM);
+        card.setBorder(Theme.padding(Theme.GAP / 2));
+        card.add(scroll, BorderLayout.CENTER);
+
+        final JPanel section = new JPanel(new BorderLayout(0, Theme.GAP / 2));
+        section.setOpaque(false);
+        section.add(Theme.label("Cosa e' successo", Theme.BODY_BOLD_FONT, Theme.GOLD), BorderLayout.NORTH);
+        section.add(card, BorderLayout.CENTER);
+        return section;
+    }
+
+    /** @return una riga trasparente di componenti affiancati, con lo spazio standard fra l'uno e l'altro */
+    private static JPanel transparentRow() {
+        final JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, Theme.GAP, 0));
+        row.setOpaque(false);
+        return row;
     }
 
     /**
@@ -260,30 +298,33 @@ public final class ControlPanel extends JPanel {
         protected void paintComponent(final Graphics g) {
             final Graphics2D graphics = (Graphics2D) g.create();
             try {
-                graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                this.paintDie(graphics, 0, this.firstValue);
-                this.paintDie(graphics, DIE_SIDE + GAP, this.secondValue);
+                Theme.antialias(graphics);
+                // I dadi stanno al centro dello spazio ricevuto, che puo' essere piu' alto di loro.
+                final int y = Math.max(1, (this.getHeight() - DIE_SIDE) / 2);
+                this.paintDie(graphics, 0, y, this.firstValue);
+                this.paintDie(graphics, DIE_SIDE + GAP, y, this.secondValue);
             } finally {
                 graphics.dispose();
             }
         }
 
-        /** Disegna un dado con la faccia richiesta; con 0 il dado resta vuoto. */
-        private void paintDie(final Graphics2D graphics, final int x, final int value) {
-            graphics.setColor(Color.WHITE);
-            graphics.fillRoundRect(x, 1, DIE_SIDE, DIE_SIDE, 8, 8);
-            graphics.setColor(ViewStyle.OUTLINE);
-            graphics.drawRoundRect(x, 1, DIE_SIDE, DIE_SIDE, 8, 8);
+        /** Disegna un dado crema con la faccia richiesta; con 0 il dado resta vuoto. */
+        private void paintDie(final Graphics2D graphics, final int x, final int y, final int value) {
+            graphics.setColor(Theme.CREAM);
+            graphics.fillRoundRect(x, y, DIE_SIDE, DIE_SIDE, Theme.SMALL_RADIUS, Theme.SMALL_RADIUS);
+            graphics.setColor(Theme.GOLD);
+            graphics.drawRoundRect(x, y, DIE_SIDE, DIE_SIDE, Theme.SMALL_RADIUS, Theme.SMALL_RADIUS);
             if (value < 1) {
                 return;
             }
+            graphics.setColor(Theme.TEXT_DARK);
             // Le facce dei dadi si compongono da tre posizioni orizzontali e tre verticali.
             final int low = x + DIE_SIDE / 4 - PIP / 2;
             final int middleX = x + DIE_SIDE / 2 - PIP / 2;
             final int high = x + 3 * DIE_SIDE / 4 - PIP / 2;
-            final int top = 1 + DIE_SIDE / 4 - PIP / 2;
-            final int middleY = 1 + DIE_SIDE / 2 - PIP / 2;
-            final int bottom = 1 + 3 * DIE_SIDE / 4 - PIP / 2;
+            final int top = y + DIE_SIDE / 4 - PIP / 2;
+            final int middleY = y + DIE_SIDE / 2 - PIP / 2;
+            final int bottom = y + 3 * DIE_SIDE / 4 - PIP / 2;
 
             if (value % 2 == 1) {
                 // 1, 3 e 5 hanno il pallino centrale.

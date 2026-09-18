@@ -25,8 +25,12 @@
  * <p>
  * Le frasi della cronaca sono scritte una volta sola in
  * {@link it.unibo.monopoly.view.TextGameObserver}, la classe astratta da cui derivano sia la
- * view su console sia il log della GUI; {@link it.unibo.monopoly.view.ViewStyle} raccoglie
- * invece colori, caratteri e formattazione, cioe' la traduzione dei dati del model in
- * qualcosa di disegnabile.
+ * view su console sia il log della GUI. L'aspetto sta in due classi di utilita':
+ * {@link it.unibo.monopoly.view.Theme} contiene la tavolozza, i caratteri, i bordi e lo
+ * stile dei pulsanti, e nessun altro componente scrive un colore a mano;
+ * {@link it.unibo.monopoly.view.ViewStyle} traduce i dati del model (categorie di
+ * casella, gruppi di colore, pedine, stati dei giocatori, importi) in quei colori e in
+ * testo da mostrare. Le superfici arrotondate - pannelli, schede, righe del setup -
+ * sono tutte {@link it.unibo.monopoly.view.CardPanel}.
  */
 package it.unibo.monopoly.view;
