@@ -180,7 +180,7 @@ public class EconomyManager {
     }
 
     /**
-     * Fa incassare al giocatore un importo dalla banca (stipendio del "Via", jackpot).
+     * Fa incassare al giocatore un importo dalla banca (stipendio del "Via").
      *
      * @param player il giocatore che incassa
      * @param reason motivo dell'accredito, usato nei messaggi della view

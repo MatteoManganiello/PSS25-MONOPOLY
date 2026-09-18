@@ -11,10 +11,10 @@ import it.unibo.monopoly.model.player.Player;
  * Casella finta per i test: ricorda chi ci si e' fermato sopra ed esegue un
  * effetto configurabile.
  * <p>
- * E' una sottoclasse di {@link Tile} come lo saranno le caselle vere: il
+ * E' una sottoclasse di {@link Tile} come le caselle vere: il
  * TurnManager la usa senza accorgersi della differenza, ed e' proprio questo che
  * i test vogliono verificare (polimorfismo di {@link Tile#onLand(Player)}).
- * L'effetto permette di simulare le caselle del Giorno 3 (prigione, fallimento, ...).
+ * L'effetto permette di simulare le caselle vere (prigione, fallimento, ...).
  */
 public class RecordingTile extends Tile {
 

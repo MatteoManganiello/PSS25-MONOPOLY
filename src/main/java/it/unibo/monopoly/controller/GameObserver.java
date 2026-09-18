@@ -10,9 +10,9 @@ import it.unibo.monopoly.model.player.Player;
 /**
  * Osservatore degli eventi di una partita (ruolo "Observer" dell'omonimo pattern).
  * <p>
- * Chi vuole essere informato di cio' che accade in partita (la view testuale di
- * oggi, la GUI del Giorno 4, un eventuale log) implementa questa interfaccia e si
- * registra con {@link GameEngine#addObserver(GameObserver)}. Il {@link GameEngine}
+ * Chi vuole essere informato di cio' che accade in partita (la view testuale, la
+ * GUI, un eventuale log) implementa questa interfaccia e si registra con
+ * {@link GameEngine#addObserver(GameObserver)}. Il {@link GameEngine}
  * conosce solo questa interfaccia e ne invoca i metodi in modo polimorfico, senza
  * sapere quale classe concreta ci sia dall'altra parte.
  * <p>

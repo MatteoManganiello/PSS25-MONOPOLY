@@ -44,10 +44,11 @@ public abstract class Tile {
     /**
      * Effetto della casella sul giocatore che vi si ferma sopra.
      * <p>
-     * E' il punto di estensione polimorfico del modello: il controller chiamera'
-     * sempre e solo {@code tile.onLand(player)} senza sapere di che casella si tratti,
-     * e sara' la sottoclasse concreta a decidere cosa fare (far pagare l'affitto,
-     * proporre l'acquisto, mandare in prigione, pescare una carta, ...).
+     * E' il punto di estensione polimorfico del modello: il
+     * {@link it.unibo.monopoly.model.game.TurnManager TurnManager} chiama sempre e solo
+     * {@code tile.onLand(player)} senza sapere di che casella si tratti, ed e' la
+     * sottoclasse concreta a decidere cosa fare (far pagare l'affitto,
+     * proporre l'acquisto, mandare in prigione, ...).
      *
      * @param player il giocatore che si e' fermato sulla casella
      */

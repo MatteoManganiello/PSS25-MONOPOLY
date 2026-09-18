@@ -23,7 +23,7 @@ import it.unibo.monopoly.model.player.Player;
 
 /**
  * Motore della partita: coordinatore di alto livello e unico punto di ingresso
- * per chi comanda il gioco (oggi la demo testuale, dal Giorno 4 la GUI).
+ * per chi comanda il gioco (la GUI e la demo testuale).
  * <p>
  * Nell'architettura MVC e' il controller: riceve i comandi ({@link #startGame()},
  * {@link #rollDice()}, {@link #endTurn()}), li fa eseguire al model (il
@@ -89,7 +89,8 @@ public class GameEngine {
 
     /**
      * Prepara una partita a partire da uno stato gia' pronto: per esempio con dadi
-     * a seme fisso nei test o, in futuro, con una partita ricaricata da file.
+     * a seme fisso nei test. Una partita caricata da file passa invece da
+     * {@link #resumeGame(GameState)}.
      *
      * @param state lo stato della partita da gestire
      * @throws IllegalArgumentException se lo stato e' null
@@ -258,7 +259,7 @@ public class GameEngine {
     /**
      * Gioca automaticamente un turno intero: lancia finche' e' consentito (i doppi
      * fanno rilanciare) e poi passa la mano. Utile per la demo testuale e per i test;
-     * la GUI usera' invece {@link #rollDice()} ed {@link #endTurn()} in risposta ai pulsanti.
+     * la GUI usa invece {@link #rollDice()} ed {@link #endTurn()} in risposta ai pulsanti.
      * <p>
      * Qui non c'e' nessuno a cui chiedere se comprare, quindi le offerte vengono
      * accettate in automatico: la demo si comporta come prima che l'acquisto diventasse
@@ -496,8 +497,7 @@ public class GameEngine {
     /**
      * Chiude la partita quando resta un solo giocatore non fallito.
      * <p>
-     * Dal Giorno 3 il fallimento e' reale: chi non riesce a pagare un affitto o una
-     * tassa esce dalla partita. I giocatori falliscono uno alla volta, quindi ne resta
+     * Chi non riesce a pagare un affitto o una tassa fallisce ed esce dalla partita. I giocatori falliscono uno alla volta, quindi ne resta
      * sempre almeno uno.
      */
     private void checkGameOver() {

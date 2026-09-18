@@ -1,13 +1,12 @@
 package it.unibo.monopoly.controller;
 
-import it.unibo.monopoly.model.player.Player;
 import it.unibo.monopoly.model.player.Token;
 
 /**
  * Quello che l'utente ha scritto e scelto per un giocatore nella schermata iniziale:
  * un nome e una pedina.
  * <p>
- * Non e' ancora un {@link Player}, ed e' voluto. Un {@code Player} e' un giocatore
+ * Non e' ancora un {@link it.unibo.monopoly.model.player.Player Player}, ed e' voluto. Un {@code Player} e' un giocatore
  * vero e non accetta dati sbagliati (nome vuoto, pedina mancante); questo invece e'
  * il modulo appena compilato, che <em>puo'</em> essere incompleto: il nome puo'
  * essere vuoto e la pedina puo' mancare, perche' e' esattamente la situazione in cui
