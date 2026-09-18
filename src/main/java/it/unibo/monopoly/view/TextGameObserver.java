@@ -2,7 +2,6 @@ package it.unibo.monopoly.view;
 
 import java.util.Optional;
 
-import it.unibo.monopoly.controller.GameEngine;
 import it.unibo.monopoly.controller.GameObserver;
 import it.unibo.monopoly.model.board.Tile;
 import it.unibo.monopoly.model.economy.Property;
@@ -13,20 +12,19 @@ import it.unibo.monopoly.model.player.Player;
 
 /**
  * Cronaca testuale della partita: trasforma in righe di testo tutto cio' che il
- * {@link GameEngine} annuncia.
+ * {@link it.unibo.monopoly.controller.GameEngine GameEngine} annuncia.
  * <p>
  * E' una classe astratta perche' sa <em>cosa</em> raccontare ma non <em>dove</em>
  * scriverlo: l'unico metodo non implementato e' {@link #write(String)}, e sono le
- * sottoclassi a deciderne la destinazione. Oggi ce ne sono due, e usano le stesse
- * identiche frasi:
- * <ul>
- *   <li>{@link ConsoleGameObserver}, che scrive sulla console (la view del Giorno 2);</li>
- *   <li>il log della GUI, creato da {@link MainWindow}, che scrive nell'area di
- *       testo del {@link ControlPanel}.</li>
- * </ul>
+ * sottoclassi a deciderne la destinazione. Oggi la destinazione e' la console
+ * ({@link ConsoleGameObserver}); la GUI non ha un'area di log, perche' cosa e'
+ * successo si vede gia' sul tabellone e nelle schede dei giocatori.
+ * <p>
  * E' l'esempio piu' diretto di riuso per ereditarieta' di questo progetto: la
- * formattazione dei messaggi e' scritta una volta sola qui, e aggiungere una terza
- * destinazione (un file di log, per esempio) costa una sottoclasse di due righe.
+ * formattazione dei messaggi e' scritta una volta sola qui, e aggiungere un'altra
+ * destinazione (un file di log, per esempio) costa una sottoclasse di due righe. Gli
+ * importi sono scritti in euro, nello stesso formato della GUI
+ * ({@link ViewStyle#formatMoney(int)}).
  * <p>
  * Come ogni {@link GameObserver}, riceve gli oggetti del model in sola lettura: si
  * limita a descriverli, non li modifica.
@@ -48,6 +46,23 @@ public abstract class TextGameObserver implements GameObserver {
         this.write("=== Partita iniziata con " + state.getPlayers().size() + " giocatori ===");
         for (final Player player : state.getPlayers()) {
             this.write("  " + player.getName() + " (pedina: " + player.getToken().getName() + ")");
+        }
+    }
+
+    /**
+     * Racconta una partita caricata: a differenza di un avvio, i giocatori hanno gia'
+     * denaro, proprieta' e uno stato, e vale la pena ricordarli.
+     *
+     * @param state lo stato della partita caricata
+     */
+    @Override
+    public void onGameLoaded(final GameState state) {
+        this.write("");
+        this.write("=== Partita caricata con " + state.getPlayers().size() + " giocatori ===");
+        for (final Player player : state.getPlayers()) {
+            this.write("  " + player.getName() + " (pedina: " + player.getToken().getName() + "): "
+                    + ViewStyle.formatMoney(player.getMoney()) + ", proprieta': " + player.getProperties().size()
+                    + ", " + ViewStyle.describe(player.getStatus()));
         }
     }
 
@@ -79,31 +94,45 @@ public abstract class TextGameObserver implements GameObserver {
     }
 
     @Override
+    public void onPurchaseOffered(final Player player, final Property property, final int price) {
+        this.write("  " + player.getName() + " puo' comprare \"" + property.getName()
+                + "\" per " + ViewStyle.formatMoney(price) + ": deve decidere");
+    }
+
+    @Override
+    public void onPurchaseResolved(final Player player, final Property property, final boolean bought) {
+        if (!bought) {
+            this.write("  " + player.getName() + " lascia \"" + property.getName() + "\": resta libera");
+        }
+    }
+
+    @Override
     public void onPropertyBought(final Player buyer, final Property property, final int price) {
         this.write("  " + buyer.getName() + " compra \"" + property.getName()
-                + "\" per " + price + " (gli restano " + buyer.getMoney() + ")");
+                + "\" per " + ViewStyle.formatMoney(price)
+                + " (gli restano " + ViewStyle.formatMoney(buyer.getMoney()) + ")");
     }
 
     @Override
     public void onPropertySold(final Player seller, final Property property, final int price) {
         this.write("  " + seller.getName() + " rivende \"" + property.getName()
-                + "\" alla banca per " + price);
+                + "\" alla banca per " + ViewStyle.formatMoney(price));
     }
 
     @Override
     public void onRentPaid(final Player tenant, final Player owner, final Property property, final int amount) {
-        this.write("  " + tenant.getName() + " paga " + amount + " di affitto a "
+        this.write("  " + tenant.getName() + " paga " + ViewStyle.formatMoney(amount) + " di affitto a "
                 + owner.getName() + " per \"" + property.getName() + "\"");
     }
 
     @Override
     public void onMoneyPaidToBank(final Player player, final String reason, final int amount) {
-        this.write("  " + player.getName() + " paga " + amount + " alla banca (" + reason + ")");
+        this.write("  " + player.getName() + " paga " + ViewStyle.formatMoney(amount) + " alla banca (" + reason + ")");
     }
 
     @Override
     public void onMoneyReceivedFromBank(final Player player, final String reason, final int amount) {
-        this.write("  " + player.getName() + " incassa " + amount + " dalla banca (" + reason + ")");
+        this.write("  " + player.getName() + " incassa " + ViewStyle.formatMoney(amount) + " dalla banca (" + reason + ")");
     }
 
     @Override
@@ -127,7 +156,7 @@ public abstract class TextGameObserver implements GameObserver {
      * Scrive la situazione patrimoniale di tutti i giocatori.
      * <p>
      * Non e' un evento: e' un riepilogo che l'applicazione puo' chiedere quando vuole
-     * (a fine demo testuale, oppure a fine partita nel log della GUI). Lo stato dei
+     * (per esempio a fine demo testuale). Lo stato dei
      * giocatori e' scritto con le stesse parole del pannello grafico
      * ({@link ViewStyle#describe(it.unibo.monopoly.model.player.PlayerStatus)}), non con il nome
      * della costante dell'enum.
@@ -138,11 +167,12 @@ public abstract class TextGameObserver implements GameObserver {
         this.write("");
         this.write("=== Situazione ===");
         for (final Player player : state.getPlayers()) {
-            this.write(String.format("  %-6s %5d  proprieta': %2d  stato: %s",
-                    player.getName(), player.getMoney(), player.getProperties().size(),
+            this.write(String.format("  %-6s %7s  proprieta': %2d  stato: %s",
+                    player.getName(), ViewStyle.formatMoney(player.getMoney()), player.getProperties().size(),
                     ViewStyle.describe(player.getStatus())));
         }
-        this.write("  Cassa della banca: " + state.getContext().getBank().getBalance());
+        this.write("  Cassa della banca: "
+                + ViewStyle.formatMoney(state.getContext().getBank().getBalance()));
     }
 
     /**

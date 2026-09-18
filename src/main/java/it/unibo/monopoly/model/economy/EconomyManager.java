@@ -113,25 +113,39 @@ public class EconomyManager {
     /**
      * Fa pagare a un giocatore l'affitto della proprieta' su cui si e' fermato.
      * <p>
-     * L'importo e' chiesto a {@link Property#getRent()}: e' una chiamata polimorfica,
-     * quindi una futura sottoclasse (terreno con case, stazione, societa') cambiera'
-     * il calcolo dell'affitto senza che questo metodo debba essere modificato.
+     * L'importo arriva gia' calcolato: chi paga chi resta una regola economica e sta
+     * qui, ma <em>quanto</em> si paga e' una regola della casella, che lo decide in
+     * modo polimorfico con
+     * {@link it.unibo.monopoly.model.board.PropertyTile#computeRent computeRent} (il
+     * monopolio di colore, il numero di stazioni o il lancio dei dadi delle societa').
+     * Cosi' questo metodo non deve conoscere nessuna delle sottoclassi di
+     * {@link Property} e non cambiera' piu' a ogni nuova regola sugli affitti.
+     * <p>
      * Se il denaro non basta, il giocatore fallisce verso il proprietario.
      *
      * @param tenant   il giocatore fermatosi sulla casella
      * @param property la proprieta' su cui si e' fermato, con un proprietario diverso da lui
+     * @param rent     l'affitto dovuto, calcolato dalla casella; zero significa "niente da pagare"
      * @return true se l'affitto e' stato pagato per intero, false se ha causato il fallimento
-     * @throws IllegalArgumentException se un parametro e' null o la proprieta' non ha proprietario
+     * @throws IllegalArgumentException se un parametro e' null, se l'affitto e' negativo
+     *                                  o se la proprieta' non ha proprietario
      */
-    public boolean payRent(final Player tenant, final Property property) {
+    public boolean payRent(final Player tenant, final Property property, final int rent) {
         checkNotNull(tenant, property);
+        if (rent < 0) {
+            throw new IllegalArgumentException("L'affitto non puo' essere negativo");
+        }
         final Player owner = property.getOwner()
                 .orElseThrow(() -> new IllegalArgumentException("La proprieta' non ha un proprietario"));
         if (owner.equals(tenant)) {
             // Nessuno paga l'affitto a se' stesso: la casella lo esclude gia', qui e' solo una difesa.
             return true;
         }
-        final int rent = property.getRent();
+        if (rent == 0) {
+            // Puo' succedere solo con una societa' prima che i dadi siano stati lanciati:
+            // non c'e' niente da spostare, e la banca rifiuterebbe un importo nullo.
+            return true;
+        }
         if (!this.bank.canAfford(tenant, rent)) {
             this.declareBankruptcy(tenant, owner);
             return false;
@@ -166,7 +180,7 @@ public class EconomyManager {
     }
 
     /**
-     * Fa incassare al giocatore un importo dalla banca (stipendio del "Via", jackpot).
+     * Fa incassare al giocatore un importo dalla banca (stipendio del "Via").
      *
      * @param player il giocatore che incassa
      * @param reason motivo dell'accredito, usato nei messaggi della view
@@ -226,11 +240,13 @@ public class EconomyManager {
      * riusare i controlli gia' presenti in {@link Bank} (importo positivo, fondi
      * sufficienti). Il saldo della banca resta invariato, perche' incassa e riversa
      * lo stesso importo.
+     * <p>
+     * <b>Precondizione</b>: chi chiama ha gia' verificato che i fondi bastino, quindi
+     * {@link Bank#charge} non puo' fallire e il suo esito non viene ricontrollato.
      */
     private void transfer(final Player from, final Player to, final int amount) {
-        if (this.bank.charge(from, amount)) {
-            this.bank.pay(to, amount);
-        }
+        this.bank.charge(from, amount);
+        this.bank.pay(to, amount);
     }
 
     /** Controllo comune a tutte le operazioni su una proprieta'. */

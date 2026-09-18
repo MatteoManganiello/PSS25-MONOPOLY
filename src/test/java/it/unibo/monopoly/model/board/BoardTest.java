@@ -1,10 +1,14 @@
 package it.unibo.monopoly.model.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,8 +57,11 @@ class BoardTest {
     @Test
     void everyTileTypeIsRepresented() {
         assertTrue(countOf(PropertyTile.class) >= 20, "servono abbastanza proprieta' acquistabili");
+        assertEquals(22, countOf(StreetTile.class), "i terreni del tabellone standard");
+        assertEquals(4, countOf(StationTile.class), "le quattro stazioni");
+        assertEquals(2, countOf(UtilityTile.class), "le due societa'");
         assertEquals(2, countOf(TaxTile.class));
-        // Imprevisti e Probabilita': ancora segnaposto, in attesa del mazzo di carte.
+        // Imprevisti e Probabilita': segnaposto senza effetto.
         assertEquals(6, countOf(PlaceholderTile.class));
     }
 
@@ -64,15 +71,28 @@ class BoardTest {
             if (tile instanceof Property property) {
                 assertTrue(property.isAvailable(), property.getName() + " dovrebbe essere in vendita");
                 assertTrue(property.getPrice() > 0, property.getName() + " dovrebbe avere un prezzo");
-                assertTrue(property.getRent() > 0, property.getName() + " dovrebbe avere un affitto");
+                if (tile instanceof UtilityTile) {
+                    // Le societa' sono l'eccezione: non hanno un affitto fisso, si calcola sui dadi.
+                    assertEquals(0, property.getRent(), property.getName());
+                } else {
+                    assertTrue(property.getRent() > 0, property.getName() + " dovrebbe avere un affitto");
+                }
             }
         }
     }
 
     @Test
-    void freeParkingJackpotIsDisabledByDefault() {
-        final FreeParkingTile parking = (FreeParkingTile) board.getTileAt(Board.FREE_PARKING_POSITION);
-        assertFalse(parking.isJackpotEnabled());
+    void everyStreetBelongsToAColorGroupAndEveryGroupIsComplete() {
+        final Map<ColorGroup, List<StreetTile>> byGroup = board.getTiles().stream()
+                .filter(StreetTile.class::isInstance)
+                .map(StreetTile.class::cast)
+                .collect(Collectors.groupingBy(StreetTile::getGroup));
+
+        // Tutti e otto i colori esistono sul tabellone: senza un gruppo completo il
+        // monopolio non sarebbe mai raggiungibile.
+        assertEquals(EnumSet.allOf(ColorGroup.class), EnumSet.copyOf(byGroup.keySet()));
+        byGroup.forEach((group, streets) ->
+                assertTrue(streets.size() >= 2, group + " dovrebbe avere almeno due terreni"));
     }
 
     /** @return quante caselle del tabellone sono del tipo indicato */

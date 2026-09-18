@@ -9,7 +9,7 @@ import it.unibo.monopoly.model.player.Player;
  * Ascoltatore dei fatti concreti che accadono dentro il model: passaggi di denaro,
  * cambi di proprietario, ingressi e uscite di prigione, fallimenti.
  * <p>
- * E' il lato "model" del pattern Observer gia' usato al Giorno 2: le caselle, la
+ * E' il lato "model" del pattern Observer usato dalle view: le caselle, la
  * {@link it.unibo.monopoly.model.economy.EconomyManager EconomyManager} e il
  * {@link JailManager} devono poter raccontare cosa hanno fatto, ma non devono
  * conoscere ne' la view ne' il controller. Per questo l'interfaccia sta nel model
@@ -24,6 +24,24 @@ import it.unibo.monopoly.model.player.Player;
  * Gli oggetti ricevuti come parametro vanno usati in sola lettura.
  */
 public interface GameEventListener {
+
+    /**
+     * A un giocatore viene chiesto se vuole comprare la proprieta' libera su cui si e'
+     * fermato.
+     * <p>
+     * La partita si ferma qui e aspetta: nessuno ha ancora pagato niente e la proprieta'
+     * e' ancora libera. La risposta arriva dai comandi
+     * {@link it.unibo.monopoly.controller.GameEngine#buyOfferedProperty() buyOfferedProperty()}
+     * e {@link it.unibo.monopoly.controller.GameEngine#declineOfferedProperty()
+     * declineOfferedProperty()}, quindi una view che riceve questo evento deve solo
+     * mostrare la domanda, non rispondere da sola.
+     *
+     * @param player   il giocatore a cui viene fatta l'offerta
+     * @param property la proprieta' che puo' comprare
+     * @param price    quanto costa
+     */
+    default void onPurchaseOffered(final Player player, final Property property, final int price) {
+    }
 
     /**
      * Un giocatore ha comprato una proprieta' dalla banca.
@@ -67,7 +85,7 @@ public interface GameEventListener {
     }
 
     /**
-     * Un giocatore ha ricevuto denaro dalla banca (stipendio del "Via", jackpot).
+     * Un giocatore ha ricevuto denaro dalla banca (stipendio del "Via").
      *
      * @param player il giocatore che ha incassato
      * @param reason motivo dell'accredito, gia' pronto per essere mostrato

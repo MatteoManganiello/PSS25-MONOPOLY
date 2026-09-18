@@ -168,7 +168,7 @@ class TurnManagerTest {
 
     @Test
     void doubleDoesNotGrantAnotherRollIfTheTileSendsThePlayerToJail() {
-        // Simula la futura casella "Vai in prigione" del Giorno 3.
+        // Simula la casella "Vai in prigione".
         board = RecordingTile.createBoard(player -> {
             player.setPosition(Board.JAIL_POSITION);
             player.setStatus(PlayerStatus.IN_JAIL);

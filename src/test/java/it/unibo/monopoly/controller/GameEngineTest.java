@@ -190,7 +190,7 @@ class GameEngineTest {
 
     @Test
     void gameEndsWhenOnlyOnePlayerIsLeft() {
-        // Simula il fallimento che dal Giorno 3 potra' causare una casella (affitto, tassa).
+        // Simula il fallimento che puo' causare una casella (affitto, tassa).
         final Board ruinousBoard = RecordingTile.createBoard(player -> player.setStatus(PlayerStatus.BANKRUPT));
         final GameEngine engine = newEngine(ruinousBoard, SEED_NO_DOUBLE);
         engine.startGame();

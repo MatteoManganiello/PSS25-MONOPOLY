@@ -2,24 +2,20 @@ package it.unibo.monopoly.view;
 
 import java.io.PrintStream;
 
-import it.unibo.monopoly.controller.GameEngine;
-import it.unibo.monopoly.controller.GameObserver;
-
 /**
  * View testuale: stampa su console la cronaca della partita.
  * <p>
- * E' un esempio concreto di {@link GameObserver}: riceve le notifiche dal
- * {@link GameEngine} e si limita a mostrarle, senza conoscere le regole e senza
- * modificare il model.
+ * E' un esempio concreto di {@link it.unibo.monopoly.controller.GameObserver GameObserver}:
+ * riceve le notifiche dal {@link it.unibo.monopoly.controller.GameEngine GameEngine} e si
+ * limita a mostrarle, senza conoscere le regole e senza modificare il model.
  * <p>
- * Dal Giorno 4 tutte le frasi della cronaca vivono in {@link TextGameObserver}, la
- * classe astratta da cui questa deriva: qui resta solo la <em>destinazione</em> del
- * testo, cioe' lo stream su cui scrivere. La GUI usa la stessa classe base per
- * riempire la propria area di log, quindi i due racconti sono identici parola per
- * parola e non c'e' un solo messaggio duplicato.
+ * Tutte le frasi della cronaca vivono in {@link TextGameObserver}, la classe astratta
+ * da cui questa deriva: qui resta solo la <em>destinazione</em> del testo, cioe' lo
+ * stream su cui scrivere. Una nuova destinazione riuserebbe le stesse frasi parola per
+ * parola, senza un solo messaggio duplicato.
  * <p>
- * La GUI del Giorno 4 non ha sostituito questa view: le due possono osservare la
- * stessa partita contemporaneamente, ed e' proprio cio' che fa
+ * La GUI non sostituisce questa view: le due possono osservare la stessa partita
+ * contemporaneamente, ed e' proprio cio' che fa
  * {@link it.unibo.monopoly.MonopolyApp MonopolyApp} registrandole entrambe sul motore.
  */
 public class ConsoleGameObserver extends TextGameObserver {

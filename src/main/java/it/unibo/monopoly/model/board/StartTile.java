@@ -53,11 +53,6 @@ public class StartTile extends Tile {
         this.economy = economy;
     }
 
-    /** @return lo stipendio versato dalla banca */
-    public int getSalary() {
-        return this.salary;
-    }
-
     /** @return {@link TileCategory#START}: e' la casella di partenza */
     @Override
     public TileCategory getCategory() {

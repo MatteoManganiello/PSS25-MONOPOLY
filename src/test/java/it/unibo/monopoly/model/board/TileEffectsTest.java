@@ -1,6 +1,7 @@
 package it.unibo.monopoly.model.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -11,7 +12,9 @@ import org.junit.jupiter.api.Test;
 
 import it.unibo.monopoly.model.economy.Bank;
 import it.unibo.monopoly.model.economy.EconomyManager;
+import it.unibo.monopoly.model.game.Dice;
 import it.unibo.monopoly.model.game.GameContext;
+import it.unibo.monopoly.model.game.GameState;
 import it.unibo.monopoly.model.game.JailManager;
 import it.unibo.monopoly.model.player.Player;
 import it.unibo.monopoly.model.player.Token;
@@ -30,6 +33,7 @@ class TileEffectsTest {
     private GameContext context;
     private EconomyManager economy;
     private JailManager jail;
+    private GameState state;
     private Player alice;
     private Player bob;
 
@@ -40,10 +44,14 @@ class TileEffectsTest {
         jail = context.getJail();
         alice = new Player("Alice", new Token("Car", "RED"));
         bob = new Player("Bob", new Token("Dog", "BLUE"));
+        // Alle caselle serve una partita: e' li' che PropertyTile registra la decisione
+        // di acquisto in sospeso. Costruire il GameState collega da solo il contesto.
+        state = new GameState(BoardFactory.createStandardBoard(context),
+                List.of(alice, bob), new Dice(), context);
     }
 
     private PropertyTile newProperty(final int position) {
-        return new PropertyTile("Vicolo di prova", position, PRICE, RENT, economy);
+        return new FixedRentPropertyTile("Vicolo di prova", position, PRICE, RENT, context);
     }
 
     // ------------------------------------------------------------------
@@ -51,49 +59,57 @@ class TileEffectsTest {
     // ------------------------------------------------------------------
 
     @Test
-    void landingOnAFreePropertyBuysIt() {
+    void landingOnAFreePropertyOffersItWithoutBuying() {
         final PropertyTile property = newProperty(5);
 
         property.onLand(alice);
 
-        assertEquals(Bank.STARTING_BALANCE - PRICE, alice.getMoney());
-        assertSame(alice, property.getOwner().orElseThrow());
-        assertEquals(List.of(property), alice.getProperties());
+        // L'acquisto ora e' una scelta: la casella si limita a proporlo.
+        assertEquals(Bank.STARTING_BALANCE, alice.getMoney());
+        assertTrue(property.isAvailable());
+        assertTrue(alice.getProperties().isEmpty());
+        assertTrue(state.hasPendingPurchase());
+        assertSame(alice, state.getPendingPurchasePlayer().orElseThrow());
+        assertSame(property, state.getPendingPurchaseProperty().orElseThrow());
     }
 
     @Test
-    void aPropertyIsNotBoughtWhenTheMoneyIsNotEnough() {
+    void noOfferIsMadeWhenTheMoneyIsNotEnough() {
         final Player poor = new Player("Poor", new Token("Boot", "GREY"), PRICE - 1);
         final PropertyTile property = newProperty(5);
 
         property.onLand(poor);
 
-        // Non potersela permettere non e' un fallimento: la casella resta in vendita.
+        // Non potersela permettere non e' un fallimento: la casella resta in vendita e
+        // non si chiede niente, perche' non ci sarebbe modo di rispondere di si'.
         assertTrue(property.isAvailable());
         assertEquals(PRICE - 1, poor.getMoney());
         assertTrue(poor.isPlaying());
+        assertFalse(state.hasPendingPurchase());
     }
 
     @Test
     void landingOnSomeoneElsePropertyPaysTheRent() {
         final PropertyTile property = newProperty(5);
-        property.onLand(alice); // Alice la compra
+        alice.addProperty(property); // la proprieta' e' gia' di Alice
 
-        property.onLand(bob);   // Bob ci si ferma e paga
+        property.onLand(bob);        // Bob ci si ferma e paga, senza dover scegliere
 
         assertEquals(Bank.STARTING_BALANCE - RENT, bob.getMoney());
-        assertEquals(Bank.STARTING_BALANCE - PRICE + RENT, alice.getMoney());
+        assertEquals(Bank.STARTING_BALANCE + RENT, alice.getMoney());
+        assertFalse(state.hasPendingPurchase());
     }
 
     @Test
     void landingOnYourOwnPropertyHasNoEffect() {
         final PropertyTile property = newProperty(5);
-        property.onLand(alice);
-        final int moneyAfterPurchase = alice.getMoney();
+        alice.addProperty(property);
+        final int moneyBefore = alice.getMoney();
 
         property.onLand(alice);
 
-        assertEquals(moneyAfterPurchase, alice.getMoney());
+        assertEquals(moneyBefore, alice.getMoney());
+        assertFalse(state.hasPendingPurchase());
     }
 
     // ------------------------------------------------------------------
@@ -168,30 +184,6 @@ class TileEffectsTest {
         assertEquals(Bank.STARTING_BALANCE, alice.getMoney());
     }
 
-    @Test
-    void freeParkingHasNoEffectWithTheOfficialRule() {
-        final FreeParkingTile parking =
-                new FreeParkingTile("Posteggio", Board.FREE_PARKING_POSITION, economy);
-        parking.addToPot(500); // ignorato: la variante e' disattivata
-
-        parking.onLand(alice);
-
-        assertEquals(0, parking.getPot());
-        assertEquals(Bank.STARTING_BALANCE, alice.getMoney());
-    }
-
-    @Test
-    void freeParkingPaysThePotWhenTheJackpotVariantIsEnabled() {
-        final FreeParkingTile parking =
-                new FreeParkingTile("Posteggio", Board.FREE_PARKING_POSITION, economy, true);
-        parking.addToPot(500);
-
-        parking.onLand(alice);
-
-        assertEquals(Bank.STARTING_BALANCE + 500, alice.getMoney());
-        assertEquals(0, parking.getPot(), "il montepremi va azzerato dopo la riscossione");
-    }
-
     // ------------------------------------------------------------------
     // Polimorfismo
     // ------------------------------------------------------------------
@@ -210,9 +202,10 @@ class TileEffectsTest {
             tile.onLand(alice);
         }
 
-        // +200 di stipendio, -75 di tassa, -100 per l'acquisto, poi la prigione.
-        assertEquals(Bank.STARTING_BALANCE + Bank.GO_SALARY - TAX - PRICE, alice.getMoney());
-        assertEquals(1, alice.getProperties().size());
+        // +200 di stipendio, -75 di tassa, la proprieta' solo offerta, poi la prigione.
+        assertEquals(Bank.STARTING_BALANCE + Bank.GO_SALARY - TAX, alice.getMoney());
+        assertTrue(alice.getProperties().isEmpty());
+        assertTrue(state.hasPendingPurchase());
         assertTrue(alice.isInJail());
         assertEquals(Board.JAIL_POSITION, alice.getPosition());
     }

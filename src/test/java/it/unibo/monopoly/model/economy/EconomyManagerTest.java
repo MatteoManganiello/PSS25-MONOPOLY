@@ -15,8 +15,9 @@ import it.unibo.monopoly.model.player.Token;
 /**
  * Test delle regole economiche: acquisti, affitti, tasse e fallimento.
  * <p>
- * Qui le proprieta' sono semplici {@link Property}: le regole sul denaro non
- * dipendono dal fatto che la proprieta' sia anche una casella del tabellone.
+ * Qui le proprieta' sono semplici {@link Property}, create con il test double
+ * {@link TestProperty}: le regole sul denaro non dipendono dal fatto che la
+ * proprieta' sia anche una casella del tabellone.
  */
 class EconomyManagerTest {
 
@@ -37,7 +38,7 @@ class EconomyManagerTest {
         bank = context.getBank();
         alice = new Player("Alice", new Token("Car", "RED"));
         bob = new Player("Bob", new Token("Dog", "BLUE"));
-        property = new Property("Viale di prova", 5, PRICE, RENT);
+        property = new TestProperty("Viale di prova", 5, PRICE, RENT);
     }
 
     // ------------------------------------------------------------------
@@ -105,7 +106,7 @@ class EconomyManagerTest {
         economy.buyProperty(alice, property);
         final int bankBalanceBefore = bank.getBalance();
 
-        assertTrue(economy.payRent(bob, property));
+        assertTrue(economy.payRent(bob, property, property.getRent()));
 
         assertEquals(Bank.STARTING_BALANCE - RENT, bob.getMoney());
         assertEquals(Bank.STARTING_BALANCE - PRICE + RENT, alice.getMoney());
@@ -137,11 +138,11 @@ class EconomyManagerTest {
     @Test
     void aTenantWhoCannotPayGivesEverythingToTheOwnerAndIsOut() {
         final Player debtor = new Player("Debtor", new Token("Hat", "GREEN"), RENT - 1);
-        final Property small = new Property("Vicolo di prova", 6, 10, 5);
+        final Property small = new TestProperty("Vicolo di prova", 6, 10, 5);
         debtor.addProperty(small);
         economy.buyProperty(alice, property);
 
-        assertFalse(economy.payRent(debtor, property));
+        assertFalse(economy.payRent(debtor, property, property.getRent()));
 
         assertTrue(debtor.isBankrupt());
         assertEquals(0, debtor.getMoney());
@@ -154,7 +155,7 @@ class EconomyManagerTest {
 
     @Test
     void aPlayerWhoCannotPayATaxFailsTowardsTheBank() {
-        final Property owned = new Property("Vicolo di prova", 6, 10, 5);
+        final Property owned = new TestProperty("Vicolo di prova", 6, 10, 5);
         alice.addProperty(owned);
 
         assertFalse(economy.payToBank(alice, "Tassa patrimoniale", Bank.STARTING_BALANCE + 1));
@@ -163,5 +164,16 @@ class EconomyManagerTest {
         assertEquals(0, alice.getMoney());
         // Senza un creditore le proprieta' tornano in vendita.
         assertTrue(owned.isAvailable());
+    }
+
+    /**
+     * Proprieta' minima per i test: {@link Property} e' astratta, e alle regole sul
+     * denaro basta una proprieta' qualsiasi, senza comportamento sul tabellone.
+     */
+    private static final class TestProperty extends Property {
+
+        TestProperty(final String name, final int position, final int price, final int rent) {
+            super(name, position, price, rent);
+        }
     }
 }

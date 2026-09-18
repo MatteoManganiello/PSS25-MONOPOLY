@@ -1,22 +1,24 @@
 package it.unibo.monopoly.view;
 
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import it.unibo.monopoly.model.board.Board;
 import it.unibo.monopoly.model.game.GameState;
+import it.unibo.monopoly.model.game.RollResult;
 import it.unibo.monopoly.model.player.Player;
 
 /**
@@ -25,9 +27,18 @@ import it.unibo.monopoly.model.player.Player;
  * <p>
  * Le caselle sono sistemate su una griglia 11x11 ({@link GridBagLayout}): i quattro
  * angoli e le dieci posizioni per lato riempiono esattamente il bordo, e il quadrato
- * centrale 9x9 - una cella sola che ne occupa nove per lato - ospita il titolo e
- * l'indicazione del giocatore di turno. La conversione fra la posizione sul
- * tabellone (0-39) e la cella della griglia sta tutta in {@link #gridCellOf(int)}.
+ * centrale - una cella sola che ne occupa nove per lato - ospita, sul verde scuro che
+ * stacca il tabellone dal tavolo, la scritta "MONOPOLY" e sotto di lei i dadi
+ * dell'ultimo lancio ({@link DiceView}). Tutto attorno corre la cornice gialla
+ * ({@link Theme#boardBorder()}). La conversione fra la posizione sul tabellone (0-39) e
+ * la cella della griglia sta tutta in {@link #gridCellOf(int)}.
+ * <p>
+ * Di chi sia il turno lo dice la casella su cui si trova il giocatore di turno,
+ * evidenziata da un anello giallo "acceso" ({@link Theme#paintHighlight(Graphics2D, int,
+ * int, int, int)}), lo stesso della sua scheda nel {@link PlayerInfoPanel}. L'anello sta
+ * appena fuori dalla casella, sul bordo delle vicine, cosi' non copre la banda del
+ * gruppo, il nome ne' le pedine: per questo lo disegna il tabellone, sopra le caselle, e
+ * non la casella, che non puo' dipingere fuori dai propri confini.
  * <p>
  * Il pannello costruisce un {@link TilePanel} per casella una volta sola, alla
  * creazione: muovere una pedina non ricostruisce nulla, {@link #refresh()} si limita
@@ -62,8 +73,11 @@ public final class BoardPanel extends JPanel {
     /** Un pannello per casella, all'indice corrispondente alla posizione sul tabellone. */
     private final transient List<TilePanel> tilePanels;
 
-    /** Etichetta centrale con il giocatore di turno. */
-    private final JLabel turnLabel;
+    /** La casella del giocatore di turno, oppure {@link #NO_HIGHLIGHT}. */
+    private int highlightedPosition;
+
+    /** I dadi al centro del tabellone, vuoti fino al primo lancio di questa partita. */
+    private final DiceView diceView;
 
     /**
      * Costruisce il tabellone a partire dallo stato della partita.
@@ -77,24 +91,35 @@ public final class BoardPanel extends JPanel {
         }
         this.state = state;
         this.tilePanels = new ArrayList<>(Board.SIZE);
-        this.turnLabel = new JLabel("", JLabel.CENTER);
+        this.highlightedPosition = NO_HIGHLIGHT;
+        this.diceView = new DiceView();
 
         this.setLayout(new GridBagLayout());
-        this.setBackground(ViewStyle.BOARD_BACKGROUND);
-        this.setBorder(BorderFactory.createLineBorder(ViewStyle.OUTLINE, 2));
+        this.setBackground(Theme.DARK_GREEN);
+        this.setBorder(Theme.boardBorder());
         this.createTiles();
         this.add(this.createCenter(), centerConstraints());
         this.refresh();
     }
 
     /**
+     * Mostra sui dadi al centro i valori dell'ultimo lancio.
+     * <p>
+     * Non serve un metodo per svuotarli: quando la finestra passa a un'altra partita (per
+     * esempio caricata da file) crea un tabellone nuovo, con i dadi vuoti.
+     *
+     * @param result il risultato comunicato dal motore
+     */
+    public void showRoll(final RollResult result) {
+        this.diceView.setValues(result.firstDie(), result.secondDie());
+    }
+
+    /**
      * Riporta il disegno in linea con lo stato della partita: sposta le pedine sulle
-     * caselle in cui si trovano ora, evidenzia la casella del giocatore di turno e
-     * aggiorna la scritta centrale.
+     * caselle in cui si trovano ora ed evidenzia la casella del giocatore di turno.
      * <p>
      * A partita finita, o quando il giocatore corrente e' fallito, nessuna casella
-     * viene evidenziata (vedi {@link ViewStyle#playerToHighlight(GameState)}); a partita
-     * finita la scritta centrale diventa "Partita finita".
+     * viene evidenziata (vedi {@link ViewStyle#playerToHighlight(GameState)}).
      * <p>
      * E' l'unico metodo che il {@link MainWindow} deve chiamare dopo un evento del
      * model: il pannello ricava tutto il resto dal {@link GameState}.
@@ -108,16 +133,77 @@ public final class BoardPanel extends JPanel {
                 occupants.computeIfAbsent(player.getPosition(), position -> new ArrayList<>()).add(player);
             }
         }
-        final Optional<Player> highlighted = ViewStyle.playerToHighlight(this.state);
-        final int highlightedPosition = highlighted.map(Player::getPosition).orElse(NO_HIGHLIGHT);
         for (int position = 0; position < this.tilePanels.size(); position++) {
-            final TilePanel panel = this.tilePanels.get(position);
-            panel.setOccupants(occupants.getOrDefault(position, List.of()));
-            panel.setCurrent(position == highlightedPosition);
+            this.tilePanels.get(position).setOccupants(occupants.getOrDefault(position, List.of()));
         }
-        this.turnLabel.setText(this.state.isGameOver()
-                ? "Partita finita"
-                : "Turno di " + this.state.getCurrentPlayer().getName());
+        this.highlightedPosition = ViewStyle.playerToHighlight(this.state)
+                .map(Player::getPosition)
+                .orElse(NO_HIGHLIGHT);
+        // L'anello sta a cavallo fra piu' caselle: si ridisegna tutto il tabellone, che
+        // toglie quello vecchio e disegna quello nuovo.
+        this.repaint();
+    }
+
+    /**
+     * Disegna le caselle e, sopra, l'evidenziazione della casella del giocatore di turno.
+     * <p>
+     * L'anello viene ritagliato dentro la cornice: sul lato esterno di una casella di
+     * bordo a segnarla basta la cornice gialla, che le sta gia' a contatto.
+     *
+     * @param g il contesto grafico fornito da Swing
+     */
+    @Override
+    protected void paintChildren(final Graphics g) {
+        super.paintChildren(g);
+        if (this.highlightedPosition == NO_HIGHLIGHT) {
+            return;
+        }
+        final Rectangle tile = this.tilePanels.get(this.highlightedPosition).getBounds();
+        final Insets frame = this.getInsets();
+        final Graphics2D graphics = (Graphics2D) g.create();
+        try {
+            graphics.clipRect(frame.left, frame.top,
+                    this.getWidth() - frame.left - frame.right, this.getHeight() - frame.top - frame.bottom);
+            final int ring = Theme.HIGHLIGHT_RING;
+            Theme.paintHighlight(graphics, tile.x - ring, tile.y - ring,
+                    tile.width + 2 * ring, tile.height + 2 * ring);
+        } finally {
+            graphics.dispose();
+        }
+    }
+
+    /**
+     * Fa ripartire dal tabellone ogni ridisegno chiesto da una casella.
+     * <p>
+     * L'anello di evidenziazione e' disegnato dal tabellone sopra le caselle: se una
+     * casella si ridisegnasse da sola (per esempio quando cambia chi ci sta sopra)
+     * cancellerebbe la parte di anello che le passa sopra. Partendo dal tabellone,
+     * invece, l'anello viene ridisegnato ogni volta insieme alle caselle.
+     *
+     * @return sempre true
+     */
+    @Override
+    protected boolean isPaintingOrigin() {
+        return true;
+    }
+
+    /**
+     * Il quadrato centrale: la scritta "MONOPOLY" e, centrati sotto di lei, i dadi. Una
+     * colonna alla sua misura, tenuta al centro del quadrato.
+     */
+    private JPanel createCenter() {
+        final JPanel column = new JPanel();
+        column.setLayout(new BoxLayout(column, BoxLayout.Y_AXIS));
+        column.setOpaque(false);
+        column.add(Theme.titleBanner());
+        column.add(Box.createVerticalStrut(3 * Theme.GAP));
+        column.add(this.diceView);
+
+        // GridBagLayout con un solo componente: lo tiene al centro, alla sua misura.
+        final JPanel center = new JPanel(new GridBagLayout());
+        center.setOpaque(false);
+        center.add(column);
+        return center;
     }
 
     /** Crea un {@link TilePanel} per ogni casella e lo mette nella cella giusta della griglia. */
@@ -128,29 +214,6 @@ public final class BoardPanel extends JPanel {
             this.tilePanels.add(panel);
             this.add(panel, tileConstraints(position));
         }
-    }
-
-    /** Il quadrato centrale: titolo del gioco e giocatore di turno. */
-    private JPanel createCenter() {
-        final JPanel center = new JPanel();
-        center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
-        center.setBackground(ViewStyle.BOARD_BACKGROUND);
-
-        final JLabel title = new JLabel("MONOPOLY", JLabel.CENTER);
-        title.setFont(ViewStyle.TITLE_FONT);
-        title.setForeground(ViewStyle.OUTLINE);
-        title.setAlignmentX(CENTER_ALIGNMENT);
-
-        this.turnLabel.setFont(ViewStyle.PLAYER_NAME_FONT);
-        this.turnLabel.setForeground(ViewStyle.TEXT);
-        this.turnLabel.setAlignmentX(CENTER_ALIGNMENT);
-
-        center.add(Box.createVerticalGlue());
-        center.add(title);
-        center.add(Box.createVerticalStrut(8));
-        center.add(this.turnLabel);
-        center.add(Box.createVerticalGlue());
-        return center;
     }
 
     /**

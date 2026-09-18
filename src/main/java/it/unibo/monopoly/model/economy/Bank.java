@@ -32,6 +32,18 @@ public class Bank {
         this.balance = INITIAL_FUNDS;
     }
 
+    /**
+     * Crea la banca con un saldo gia' noto, per esempio quello di una partita salvata.
+     * <p>
+     * Il saldo non viene controllato: la banca non puo' fallire, quindi durante una
+     * partita lunga anche un valore negativo e' una situazione possibile.
+     *
+     * @param balance il denaro in cassa
+     */
+    public Bank(final int balance) {
+        this.balance = balance;
+    }
+
     /** @return il denaro attualmente in cassa alla banca */
     public int getBalance() {
         return this.balance;
@@ -54,8 +66,8 @@ public class Bank {
      * Preleva denaro da un giocatore e lo versa alla banca (tasse, acquisti, multe).
      * <p>
      * Se il giocatore non ha fondi sufficienti l'operazione non viene eseguita e il
-     * metodo restituisce {@code false}: la gestione del fallimento (vendita di case,
-     * ipoteche, uscita dalla partita) sara' responsabilita' del controller.
+     * metodo restituisce {@code false}: la gestione del fallimento spetta a
+     * {@link EconomyManager}.
      *
      * @param player il giocatore che paga
      * @param amount importo da prelevare, strettamente positivo

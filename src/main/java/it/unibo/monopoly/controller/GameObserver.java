@@ -1,6 +1,7 @@
 package it.unibo.monopoly.controller;
 
 import it.unibo.monopoly.model.board.Tile;
+import it.unibo.monopoly.model.economy.Property;
 import it.unibo.monopoly.model.game.GameEventListener;
 import it.unibo.monopoly.model.game.GameState;
 import it.unibo.monopoly.model.game.RollResult;
@@ -9,9 +10,9 @@ import it.unibo.monopoly.model.player.Player;
 /**
  * Osservatore degli eventi di una partita (ruolo "Observer" dell'omonimo pattern).
  * <p>
- * Chi vuole essere informato di cio' che accade in partita (la view testuale di
- * oggi, la GUI del Giorno 4, un eventuale log) implementa questa interfaccia e si
- * registra con {@link GameEngine#addObserver(GameObserver)}. Il {@link GameEngine}
+ * Chi vuole essere informato di cio' che accade in partita (la view testuale, la
+ * GUI, un eventuale log) implementa questa interfaccia e si registra con
+ * {@link GameEngine#addObserver(GameObserver)}. Il {@link GameEngine}
  * conosce solo questa interfaccia e ne invoca i metodi in modo polimorfico, senza
  * sapere quale classe concreta ci sia dall'altra parte.
  * <p>
@@ -33,11 +34,32 @@ import it.unibo.monopoly.model.player.Player;
 public interface GameObserver extends GameEventListener {
 
     /**
-     * La partita e' iniziata (o, in futuro, e' stata ricaricata).
+     * La partita e' iniziata.
+     * <p>
+     * Arriva anche quando il motore mette in gioco una partita caricata da file, se
+     * l'osservatore non ridefinisce {@link #onGameLoaded(GameState)}.
      *
      * @param state lo stato iniziale da mostrare
      */
     default void onGameStarted(final GameState state) {
+    }
+
+    /**
+     * Il motore ha messo in gioco una partita caricata da file, al posto di quella in corso.
+     * <p>
+     * Per chi osserva, una partita caricata e' una partita che riparte da una situazione
+     * gia' avviata: per questo l'implementazione di default ricade su
+     * {@link #onGameStarted(GameState)}, e una view che all'avvio ridisegna tutto non
+     * deve fare nulla di nuovo. Chi vuole distinguere i due casi - per esempio per
+     * scrivere "partita caricata" invece di "partita iniziata" - ridefinisce questo metodo.
+     * <p>
+     * Attenzione: lo stato ricevuto e' un oggetto nuovo, diverso da quello della partita
+     * precedente. Chi aveva conservato un riferimento al vecchio stato deve sostituirlo.
+     *
+     * @param state lo stato della partita caricata
+     */
+    default void onGameLoaded(final GameState state) {
+        this.onGameStarted(state);
     }
 
     /**
@@ -73,6 +95,21 @@ public interface GameObserver extends GameEventListener {
      * @param state lo stato aggiornato della partita
      */
     default void onGameStateChanged(final GameState state) {
+    }
+
+    /**
+     * Il giocatore ha risposto all'offerta di acquisto e il turno puo' ripartire.
+     * <p>
+     * Arriva sia quando compra sia quando rifiuta: {@code bought} dice com'e' andata.
+     * L'evento con i soldi che cambiano mano resta
+     * {@link it.unibo.monopoly.model.game.GameEventListener#onPropertyBought onPropertyBought},
+     * questo serve alla view per togliere la domanda dallo schermo.
+     *
+     * @param player   il giocatore che ha risposto
+     * @param property la proprieta' che gli era stata offerta
+     * @param bought   true se l'ha comprata, false se ha rifiutato o non ce l'ha fatta
+     */
+    default void onPurchaseResolved(final Player player, final Property property, final boolean bought) {
     }
 
     /**
