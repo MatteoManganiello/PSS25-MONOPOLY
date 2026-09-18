@@ -31,7 +31,7 @@
  * stile dei pulsanti, e nessun altro componente scrive un colore a mano;
  * {@link it.unibo.monopoly.view.ViewStyle} traduce i dati del model (categorie di
  * casella, gruppi di colore, pedine, stati dei giocatori, importi) in quei colori e in
- * testo da mostrare. Le superfici arrotondate - pannelli, schede, righe del setup -
- * sono tutte {@link it.unibo.monopoly.view.CardPanel}.
+ * testo da mostrare. Le superfici crema con il bordo grigio - schede, riquadri, righe
+ * del setup - sono tutte {@link it.unibo.monopoly.view.CardPanel}.
  */
 package it.unibo.monopoly.view;

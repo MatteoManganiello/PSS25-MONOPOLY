@@ -22,9 +22,12 @@ import it.unibo.monopoly.model.player.Player;
  * <p>
  * <b>Composizione.</b> Il layout segue la disposizione classica di un gioco da
  * tavolo: il {@link BoardPanel} al centro, il {@link PlayerInfoPanel} sul lato
- * destro e il {@link ControlPanel} in basso; in alto il {@link GameMenuBar} con
- * salvataggio e caricamento. Ogni pannello ha una sola responsabilita' e non conosce
- * gli altri: e' la finestra a comporli e a dire a ciascuno quando aggiornarsi. Sotto i
+ * destro e il {@link ControlPanel} in basso. Il {@link GameMenuBar} con salvataggio
+ * e caricamento non occupa spazio nella finestra: su macOS sta nella barra dei menu del
+ * sistema (lo decide {@link it.unibo.monopoly.MonopolyApp MonopolyApp} all'avvio), sugli
+ * altri sistemi resta la solita barra in cima. Ogni pannello ha una sola
+ * responsabilita' e non conosce gli altri: e' la finestra a comporli e a dire a
+ * ciascuno quando aggiornarsi. Sotto i
  * pannelli c'e' il verde del tavolo ({@link Theme#TABLE_GREEN}), con gli stessi
  * margini su tutti i lati.
  * <p>

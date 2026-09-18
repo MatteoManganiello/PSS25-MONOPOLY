@@ -10,14 +10,13 @@ import java.awt.geom.RoundRectangle2D;
 import javax.swing.JPanel;
 
 /**
- * Pannello a forma di scheda: sfondo pieno con gli angoli arrotondati ed eventuale
- * contorno.
+ * Pannello a forma di scheda: sfondo pieno ed eventuale contorno.
  * <p>
- * E' la superficie comune della GUI - i pannelli laterali, le schede dei giocatori, le
- * righe della schermata di setup, la scritta al centro del tabellone - cosi' tutte
- * hanno lo stesso arrotondamento ({@link Theme#RADIUS}) e lo stesso modo di disegnare
- * il contorno. Il colore di riempimento e' lo sfondo del pannello
- * ({@link #setBackground(Color)}), quindi si imposta come per qualunque altro
+ * E' la superficie comune della GUI - le schede dei giocatori e della banca, i riquadri
+ * dei comandi e del log, le righe della schermata di setup, la scritta al centro del
+ * tabellone - cosi' tutte hanno gli stessi angoli ({@link Theme#RADIUS}, oggi netti) e
+ * lo stesso modo di disegnare il contorno. Il colore di riempimento e' lo sfondo del
+ * pannello ({@link #setBackground(Color)}), quindi si imposta come per qualunque altro
  * componente Swing.
  * <p>
  * Non e' {@code final} perche' e' pensata come classe base dei pannelli che hanno
@@ -63,8 +62,8 @@ public class CardPanel extends JPanel {
     }
 
     /**
-     * @return sempre false: gli angoli arrotondati lasciano vedere cio' che sta sotto,
-     *         e Swing deve saperlo per ridisegnare anche il contenitore
+     * @return sempre false: se gli angoli sono arrotondati lasciano vedere cio' che sta
+     *         sotto, e Swing deve saperlo per ridisegnare anche il contenitore
      */
     @Override
     public boolean isOpaque() {
@@ -72,7 +71,7 @@ public class CardPanel extends JPanel {
     }
 
     /**
-     * Disegna lo sfondo arrotondato e il contorno; i componenti interni vengono
+     * Disegna lo sfondo e il contorno; i componenti interni vengono
      * disegnati sopra da Swing, come in qualunque pannello.
      *
      * @param g il contesto grafico fornito da Swing

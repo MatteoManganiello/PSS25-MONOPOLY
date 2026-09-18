@@ -50,11 +50,11 @@ import it.unibo.monopoly.model.player.TokenCatalog;
  * Cosi' la finestra resta una view: raccoglie dati e li passa, senza decidere niente.
  * <p>
  * <b>Aspetto.</b> Lo stesso della finestra di gioco: il verde del tavolo come fondo,
- * in alto la stessa fascia "MONOPOLY" del centro del tabellone con la domanda in oro,
- * una scheda crema per ogni giocatore con il distintivo del colore della sua pedina, e
- * sotto l'elenco il pulsante per aggiungerne un altro, vicino a dove comparira' la
- * nuova riga. In fondo, su una fascia verde scuro, il conteggio dei giocatori e
- * l'azione principale, "Inizia partita".
+ * in alto la stessa fascia "MONOPOLY" del centro del tabellone con la domanda, una
+ * scheda crema con il bordo grigio per ogni giocatore, con il distintivo del colore
+ * della sua pedina, e sotto l'elenco il pulsante per aggiungerne un altro, vicino a
+ * dove comparira' la nuova riga. In fondo, oltre un filo grigio, il conteggio dei
+ * giocatori e l'azione principale, "Inizia partita".
  * <p>
  * La finestra si riapre anche alla fine di ogni partita: e' la schermata da cui ne
  * parte una nuova.
@@ -96,7 +96,7 @@ public final class SetupWindow extends JFrame {
     private final JButton startButton = new JButton("Inizia partita");
 
     /** Quanti giocatori ci sono in questo momento, nella fascia in basso. */
-    private final JLabel countLabel = Theme.label("", Theme.BODY_BOLD_FONT, Theme.TEXT_LIGHT);
+    private final JLabel countLabel = Theme.label("", Theme.BODY_BOLD_FONT, Theme.TEXT_DARK);
 
     /** Cosa fare con i giocatori configurati, quando l'utente conferma. */
     private final transient Consumer<List<Player>> onConfirm;
@@ -149,22 +149,22 @@ public final class SetupWindow extends JFrame {
 
     /**
      * L'intestazione: la fascia "MONOPOLY", la domanda e la riga di istruzioni, tutte
-     * centrate su una fascia verde scuro.
+     * centrate sul verde del tavolo, con il testo scuro che li' si legge bene.
      */
     private JPanel createHeader() {
         final JPanel header = new JPanel();
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
-        header.setBackground(Theme.DARK_GREEN);
-        // Il filo d'oro in basso separa l'intestazione dal tavolo, come la cornice del tabellone.
+        header.setBackground(Theme.TABLE_GREEN);
+        // Il filo grigio in basso separa l'intestazione dall'elenco dei giocatori.
         header.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 2, 0, Theme.GOLD),
+                BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.BORDER_STRONG),
                 BorderFactory.createEmptyBorder(2 * Theme.PADDING, 2 * Theme.PADDING,
                         Theme.PADDING + 4, 2 * Theme.PADDING)));
 
-        final JLabel title = Theme.label("Chi gioca?", Theme.SUBTITLE_FONT, Theme.GOLD);
+        final JLabel title = Theme.label("Chi gioca?", Theme.SUBTITLE_FONT, Theme.TEXT_DARK);
         final JLabel hint = Theme.label("Da " + GameState.MIN_PLAYERS + " a " + GameState.MAX_PLAYERS
                 + " giocatori. Ogni pedina puo' essere scelta da un giocatore solo.",
-                Theme.BODY_FONT, Theme.TEXT_LIGHT);
+                Theme.BODY_FONT, Theme.TEXT_DARK);
         title.setAlignmentX(CENTER_ALIGNMENT);
         hint.setAlignmentX(CENTER_ALIGNMENT);
 
@@ -209,14 +209,14 @@ public final class SetupWindow extends JFrame {
     }
 
     /**
-     * La fascia in basso, verde scuro come l'intestazione: a sinistra quanti giocatori
-     * ci sono, a destra il pulsante che fa partire la partita.
+     * La fascia in basso, separata dall'elenco da un filo grigio come l'intestazione: a
+     * sinistra quanti giocatori ci sono, a destra il pulsante che fa partire la partita.
      */
     private JPanel createButtons() {
         final JPanel footer = new JPanel(new BorderLayout(Theme.GAP, 0));
-        footer.setBackground(Theme.DARK_GREEN);
+        footer.setBackground(Theme.TABLE_GREEN);
         footer.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(2, 0, 0, 0, Theme.GOLD),
+                BorderFactory.createMatteBorder(1, 0, 0, 0, Theme.BORDER_STRONG),
                 BorderFactory.createEmptyBorder(Theme.PADDING, 2 * Theme.PADDING,
                         Theme.PADDING, 2 * Theme.PADDING)));
         footer.add(this.countLabel, BorderLayout.WEST);

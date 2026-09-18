@@ -15,6 +15,7 @@ import javax.swing.Icon;
 
 import it.unibo.monopoly.controller.SetupProblem;
 import it.unibo.monopoly.model.board.ColorGroup;
+import it.unibo.monopoly.model.board.Tile;
 import it.unibo.monopoly.model.board.TileCategory;
 import it.unibo.monopoly.model.game.GameState;
 import it.unibo.monopoly.model.player.Player;
@@ -38,6 +39,9 @@ import it.unibo.monopoly.model.player.Token;
  */
 public final class ViewStyle {
 
+    /** Inizio del nome delle caselle "Imprevisti", in minuscolo. */
+    private static final String CHANCE_NAME = "imprevist";
+
     /** Sfondo di ogni famiglia di caselle. */
     private static final Map<TileCategory, Color> CATEGORY_COLORS = createCategoryColors();
 
@@ -56,6 +60,24 @@ public final class ViewStyle {
      */
     public static Color colorOf(final TileCategory category) {
         return CATEGORY_COLORS.getOrDefault(category, Theme.TILE_PLAIN);
+    }
+
+    /**
+     * Colore di una casella "Imprevisti" o "Probabilita'": arancione la prima, azzurro
+     * la seconda, come i due mazzi del gioco vero.
+     * <p>
+     * Nel model le due caselle sono la stessa cosa, un segnaposto della categoria
+     * {@link TileCategory#CARD}: l'unica differenza e' il nome stampato sopra, ed e' da
+     * quello che la view le distingue. Una casella di quella categoria con un nome
+     * diverso prende il colore di Probabilita'.
+     *
+     * @param tile una casella della categoria {@link TileCategory#CARD}
+     * @return il colore della sua banda
+     */
+    public static Color colorOfCardTile(final Tile tile) {
+        return tile.getName().toLowerCase(Locale.ROOT).startsWith(CHANCE_NAME)
+                ? Theme.CHANCE
+                : Theme.COMMUNITY_CHEST;
     }
 
     /**
@@ -98,7 +120,7 @@ public final class ViewStyle {
      * Pallino colorato con cui mostrare una pedina in un elenco, per esempio nella
      * tendina della schermata di setup.
      * <p>
-     * E' disegnato come le pedine sul tabellone (un cerchio pieno con il bordo verde scuro),
+     * E' disegnato come le pedine sul tabellone (un cerchio pieno con il bordo grigio),
      * cosi' chi sceglie la pedina vede gia' come apparira' in partita.
      *
      * @param token la pedina da rappresentare
@@ -222,7 +244,9 @@ public final class ViewStyle {
         colors.put(TileCategory.JAIL, Theme.TILE_JAIL);
         colors.put(TileCategory.GO_TO_JAIL, Theme.TILE_GO_TO_JAIL);
         colors.put(TileCategory.FREE_PARKING, Theme.TILE_FREE_PARKING);
-        colors.put(TileCategory.CARD, Theme.TILE_CARD);
+        // Imprevisti e Probabilita' hanno una banda colorata (vedi colorOfCardTile):
+        // sotto la banda sono crema come le altre caselle.
+        colors.put(TileCategory.CARD, Theme.TILE_PLAIN);
         colors.put(TileCategory.OTHER, Theme.TILE_PLAIN);
         return colors;
     }
@@ -260,7 +284,7 @@ public final class ViewStyle {
                 Theme.antialias(graphics);
                 graphics.setColor(this.color);
                 graphics.fillOval(x, y, this.side, this.side);
-                graphics.setColor(Theme.DARK_GREEN);
+                graphics.setColor(Theme.BORDER_STRONG);
                 graphics.drawOval(x, y, this.side, this.side);
                 if (!this.text.isEmpty()) {
                     graphics.setColor(Theme.readableTextOn(this.color));

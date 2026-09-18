@@ -9,15 +9,17 @@ import java.awt.Graphics2D;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
+import javax.swing.JTextPane;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 
 import it.unibo.monopoly.controller.GameEngine;
 import it.unibo.monopoly.model.game.JailManager;
 import it.unibo.monopoly.model.game.RollResult;
-import it.unibo.monopoly.model.player.Player;
 
 /**
  * I comandi con cui si gioca: il pulsante dei dadi, il passaggio del turno, le
@@ -38,23 +40,37 @@ import it.unibo.monopoly.model.player.Player;
  * Il riquadro "Azioni" raccoglie le azioni contestuali, attive solo quando servono:
  * il pagamento della cauzione e la decisione di acquisto ("Compra" / "Non comprare").
  * <p>
- * <b>Aspetto.</b> Le due azioni che fanno avanzare la partita, "Tira i dadi" e
- * "Compra", sono pulsanti principali (rossi); le altre sono secondarie (verdi con la
- * cornice oro). La riga di stato ha una riga tutta sua, sopra i pulsanti, cosi' resta
- * leggibile per intero anche quando la finestra e' stretta.
+ * <b>Aspetto.</b> Due schede crema appoggiate sul tavolo: sopra i comandi con i dadi,
+ * sotto il racconto della partita. Le due azioni che fanno avanzare la partita, "Tira i
+ * dadi" e "Compra", sono pulsanti principali (rossi); le altre sono secondarie (crema
+ * con il bordo grigio). Di chi sia il turno lo dicono gia' il tabellone e le schede
+ * dei giocatori, quindi qui non viene ripetuto.
+ * <p>
+ * <b>Racconto.</b> Le righe dell'ultimo evento - tutto cio' che ha prodotto l'ultimo
+ * comando - sono in grassetto; appena ne arriva uno nuovo, quelle precedenti tornano
+ * in carattere normale. Le righe lunghe vanno a capo invece di essere tagliate.
  * <p>
  * La classe e' {@code final}: e' un componente grafico concreto, non un punto di
  * estensione, e dichiararlo esplicitamente permette al costruttore di configurarsi
  * (layout, dimensioni, bordi) senza il rischio di chiamare metodi ridefiniti da una
  * sottoclasse non ancora inizializzata.
  */
-public final class ControlPanel extends CardPanel {
+public final class ControlPanel extends JPanel {
 
     /** Vedi {@link TilePanel#serialVersionUID}. */
     private static final long serialVersionUID = 1L;
 
-    /** Righe visibili dell'area di log. */
+    /** Righe visibili del racconto della partita. */
     private static final int LOG_ROWS = 6;
+
+    /** Larghezza preferita del racconto: poca, cosi' a decidere la larghezza e' il tabellone. */
+    private static final int LOG_PREFERRED_WIDTH = 400;
+
+    /** Carattere delle righe gia' lette. */
+    private static final SimpleAttributeSet OLDER_LINES = logStyle(false);
+
+    /** Carattere delle righe dell'ultimo evento. */
+    private static final SimpleAttributeSet LATEST_LINES = logStyle(true);
 
     private final transient GameEngine engine;
     private final JButton rollButton;
@@ -63,8 +79,13 @@ public final class ControlPanel extends CardPanel {
     private final JButton buyButton;
     private final JButton declineButton;
     private final DiceView diceView;
-    private final JLabel statusLabel;
-    private final JTextArea logArea;
+    private final JTextPane logPane;
+
+    /**
+     * True quando l'ultimo evento e' concluso: la prossima riga ne apre uno nuovo, e le
+     * righe in grassetto tornano normali.
+     */
+    private boolean latestEventClosed;
 
     /**
      * Crea la barra dei comandi collegata al motore della partita.
@@ -73,7 +94,7 @@ public final class ControlPanel extends CardPanel {
      * @throws IllegalArgumentException se il motore e' null
      */
     public ControlPanel(final GameEngine engine) {
-        super(new BorderLayout(0, Theme.GAP), Theme.GOLD, 1);
+        super(new BorderLayout(0, Theme.GAP));
         if (engine == null) {
             throw new IllegalArgumentException("Il motore della partita non puo' essere null");
         }
@@ -84,13 +105,12 @@ public final class ControlPanel extends CardPanel {
         this.buyButton = new JButton("Compra");
         this.declineButton = new JButton("Non comprare");
         this.diceView = new DiceView();
-        this.statusLabel = new JLabel();
-        this.logArea = new JTextArea(LOG_ROWS, 40);
+        this.logPane = new JTextPane();
 
-        this.setBackground(Theme.DARK_GREEN);
-        this.setBorder(Theme.padding(Theme.PADDING));
-        this.add(this.createCommandsArea(), BorderLayout.NORTH);
-        this.add(this.createLogArea(), BorderLayout.CENTER);
+        // Il pannello in se' e' trasparente: sul tavolo si vedono solo le sue due schede.
+        this.setOpaque(false);
+        this.add(this.createCommandsCard(), BorderLayout.NORTH);
+        this.add(this.createLogCard(), BorderLayout.CENTER);
         this.connectButtons();
         this.refresh();
     }
@@ -116,21 +136,39 @@ public final class ControlPanel extends CardPanel {
 
     /**
      * Aggiunge una riga al racconto della partita e vi scorre sopra.
+     * <p>
+     * La riga fa parte dell'ultimo evento ed e' in grassetto. Se l'evento precedente era
+     * gia' concluso, questa riga ne apre uno nuovo: prima tutto il testo gia' scritto
+     * torna in carattere normale.
      *
      * @param line la riga da mostrare
      */
     public void appendLog(final String line) {
-        this.logArea.append(line + System.lineSeparator());
+        final StyledDocument document = this.logPane.getStyledDocument();
+        if (this.latestEventClosed) {
+            document.setCharacterAttributes(0, document.getLength(), OLDER_LINES, true);
+            this.latestEventClosed = false;
+        }
+        try {
+            document.insertString(document.getLength(), line + "\n", LATEST_LINES);
+        } catch (final BadLocationException e) {
+            // Si scrive sempre in fondo al documento, quindi la posizione e' sempre valida.
+            throw new IllegalStateException("Posizione non valida nel racconto della partita", e);
+        }
         // Il cursore in fondo tiene visibile l'ultima riga scritta.
-        this.logArea.setCaretPosition(this.logArea.getDocument().getLength());
+        this.logPane.setCaretPosition(document.getLength());
     }
 
     /**
-     * Abilita i comandi consentiti in questo momento e aggiorna la riga di stato.
+     * Abilita i comandi consentiti in questo momento.
      * <p>
      * Non decide nulla da sola: chiede al motore cosa e' permesso. E' il motivo per
      * cui le regole restano una sola copia, nel model, anche se l'interfaccia deve
      * saperle mostrare.
+     * <p>
+     * Segna anche la fine dell'evento in corso nel racconto: il {@link MainWindow}
+     * chiama questo metodo a ogni comando concluso, dopo che tutte le sue righe sono
+     * state scritte.
      */
     public void refresh() {
         // Mentre c'e' una proprieta' da decidere, canRollDice() e canEndTurn() sono gia'
@@ -141,36 +179,11 @@ public final class ControlPanel extends CardPanel {
         this.bailButton.setEnabled(this.engine.canPayBail());
         this.buyButton.setEnabled(this.engine.canBuyOfferedProperty());
         this.declineButton.setEnabled(this.engine.canDeclineOfferedProperty());
-        this.statusLabel.setText(this.describeSituation());
+        this.latestEventClosed = true;
     }
 
-    /** Riga di stato: a chi tocca e cosa ci si aspetta che faccia. */
-    private String describeSituation() {
-        if (this.engine.isGameOver()) {
-            return this.engine.getWinner()
-                    .map(winner -> "Partita finita: vince " + winner.getName())
-                    .orElse("Partita finita");
-        }
-        final Player current = this.engine.getState().getCurrentPlayer();
-        final String action;
-        final var offered = this.engine.getOfferedProperty();
-        if (offered.isPresent()) {
-            action = "compri \"" + offered.get().getName() + "\" per " + offered.get().getPrice() + "?";
-        } else if (this.engine.canRollDice()) {
-            action = current.isInJail() ? "tenta l'uscita di prigione" : "lancia i dadi";
-        } else if (this.engine.canEndTurn()) {
-            action = "passa il turno";
-        } else {
-            action = "attendi";
-        }
-        return "Tocca a " + current.getName() + ": " + action;
-    }
-
-    /** La parte superiore: la riga di stato e, sotto, pulsanti, azioni contestuali e dadi. */
-    private JPanel createCommandsArea() {
-        this.statusLabel.setFont(Theme.NAME_FONT);
-        this.statusLabel.setForeground(Theme.TEXT_LIGHT);
-
+    /** La scheda dei comandi: pulsanti del turno, azioni contestuali e, a destra, i dadi. */
+    private JPanel createCommandsCard() {
         Theme.stylePrimary(this.rollButton);
         Theme.styleSecondary(this.endTurnButton);
         Theme.styleSecondary(this.bailButton);
@@ -188,44 +201,34 @@ public final class ControlPanel extends CardPanel {
         buttons.add(this.endTurnButton);
         buttons.add(actions);
 
-        final JPanel area = new JPanel(new BorderLayout(Theme.GAP, Theme.GAP));
-        area.setOpaque(false);
-        area.add(this.statusLabel, BorderLayout.NORTH);
-        area.add(buttons, BorderLayout.CENTER);
-        area.add(this.diceView, BorderLayout.EAST);
-        return area;
+        final CardPanel card = Theme.card(new BorderLayout(Theme.GAP, 0));
+        card.add(buttons, BorderLayout.CENTER);
+        card.add(this.diceView, BorderLayout.EAST);
+        return card;
     }
 
     /**
-     * L'area di testo in cui il {@link MainWindow} riversa la cronaca della partita: una
-     * scheda crema con il testo scuro, sotto il proprio titolo.
+     * La scheda del racconto: un titolo e, sotto, il testo in cui il {@link MainWindow}
+     * riversa la cronaca della partita.
      */
-    private JPanel createLogArea() {
-        this.logArea.setEditable(false);
-        this.logArea.setFont(Theme.LOG_FONT);
-        this.logArea.setLineWrap(true);
-        this.logArea.setWrapStyleWord(true);
-        this.logArea.setBackground(Theme.CREAM);
-        this.logArea.setForeground(Theme.TEXT_DARK);
-        this.logArea.setBorder(BorderFactory.createEmptyBorder(0, Theme.GAP / 2, 0, Theme.GAP / 2));
-        Theme.styleSelection(this.logArea);
+    private JPanel createLogCard() {
+        this.logPane.setEditable(false);
+        this.logPane.setBackground(Theme.CREAM);
+        this.logPane.setForeground(Theme.TEXT_DARK);
+        this.logPane.setBorder(BorderFactory.createEmptyBorder(0, Theme.GAP / 2, 0, Theme.GAP / 2));
+        Theme.styleSelection(this.logPane);
 
-        final JScrollPane scroll = new JScrollPane(this.logArea);
+        final JScrollPane scroll = new JScrollPane(this.logPane);
         scroll.setBorder(BorderFactory.createEmptyBorder());
         scroll.setBackground(Theme.CREAM);
         scroll.getViewport().setBackground(Theme.CREAM);
+        final int lineHeight = this.logPane.getFontMetrics(Theme.LOG_FONT).getHeight();
+        scroll.setPreferredSize(new Dimension(LOG_PREFERRED_WIDTH, LOG_ROWS * lineHeight));
 
-        // Il margine lascia agli angoli arrotondati della scheda lo spazio per vedersi.
-        final CardPanel card = new CardPanel(new BorderLayout(), null, 0);
-        card.setBackground(Theme.CREAM);
-        card.setBorder(Theme.padding(Theme.GAP / 2));
+        final CardPanel card = Theme.card(new BorderLayout(0, Theme.GAP / 2));
+        card.add(Theme.label("Cosa e' successo", Theme.HEADING_FONT, Theme.TEXT_DARK), BorderLayout.NORTH);
         card.add(scroll, BorderLayout.CENTER);
-
-        final JPanel section = new JPanel(new BorderLayout(0, Theme.GAP / 2));
-        section.setOpaque(false);
-        section.add(Theme.label("Cosa e' successo", Theme.BODY_BOLD_FONT, Theme.GOLD), BorderLayout.NORTH);
-        section.add(card, BorderLayout.CENTER);
-        return section;
+        return card;
     }
 
     /** @return una riga trasparente di componenti affiancati, con lo spazio standard fra l'uno e l'altro */
@@ -233,6 +236,19 @@ public final class ControlPanel extends CardPanel {
         final JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, Theme.GAP, 0));
         row.setOpaque(false);
         return row;
+    }
+
+    /**
+     * @param bold true per le righe dell'ultimo evento
+     * @return il carattere del racconto, normale o in grassetto
+     */
+    private static SimpleAttributeSet logStyle(final boolean bold) {
+        final SimpleAttributeSet style = new SimpleAttributeSet();
+        StyleConstants.setFontFamily(style, Theme.LOG_FONT.getFamily());
+        StyleConstants.setFontSize(style, Theme.LOG_FONT.getSize());
+        StyleConstants.setBold(style, bold);
+        StyleConstants.setForeground(style, Theme.TEXT_DARK);
+        return style;
     }
 
     /**
@@ -279,7 +295,7 @@ public final class ControlPanel extends CardPanel {
         DiceView() {
             this.firstValue = NOT_ROLLED;
             this.secondValue = NOT_ROLLED;
-            this.setPreferredSize(new Dimension(2 * DIE_SIDE + GAP, DIE_SIDE + 2));
+            this.setPreferredSize(new Dimension(2 * DIE_SIDE + GAP + 1, DIE_SIDE + 2));
         }
 
         /**
@@ -312,7 +328,7 @@ public final class ControlPanel extends CardPanel {
         private void paintDie(final Graphics2D graphics, final int x, final int y, final int value) {
             graphics.setColor(Theme.CREAM);
             graphics.fillRoundRect(x, y, DIE_SIDE, DIE_SIDE, Theme.SMALL_RADIUS, Theme.SMALL_RADIUS);
-            graphics.setColor(Theme.GOLD);
+            graphics.setColor(Theme.BORDER_STRONG);
             graphics.drawRoundRect(x, y, DIE_SIDE, DIE_SIDE, Theme.SMALL_RADIUS, Theme.SMALL_RADIUS);
             if (value < 1) {
                 return;

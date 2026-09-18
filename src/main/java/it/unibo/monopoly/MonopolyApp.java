@@ -42,6 +42,9 @@ public final class MonopolyApp {
     /** Quanti turni gioca la demo testuale prima di fermarsi e stampare il riepilogo. */
     private static final int DEMO_TURNS = 20;
 
+    /** Proprieta' di sistema con cui macOS sposta i menu delle finestre nella barra in alto. */
+    private static final String MAC_MENU_BAR_PROPERTY = "apple.laf.useScreenMenuBar";
+
     /** L'argomento che fa partire la demo testuale invece della finestra. */
     private static final String CONSOLE_OPTION = "--console";
 
@@ -60,8 +63,22 @@ public final class MonopolyApp {
             runConsoleDemo();
             return;
         }
+        useSystemMenuBar();
         // Swing vuole che le finestre si creino e si usino sull'Event Dispatch Thread.
         SwingUtilities.invokeLater(MonopolyApp::startGraphicalGame);
+    }
+
+    /**
+     * Chiede a macOS di mostrare i menu delle finestre nella barra dei menu del sistema,
+     * invece che in una striscia in cima alla finestra: la finestra di gioco resta tutta
+     * per il tabellone, e il menu "Partita" (salva, carica) resta raggiungibile come in
+     * qualunque altra applicazione del Mac. Sugli altri sistemi la proprieta' viene
+     * ignorata e il menu resta nella finestra.
+     * <p>
+     * Va impostata prima che Swing crei la prima finestra, altrimenti non ha effetto.
+     */
+    private static void useSystemMenuBar() {
+        System.setProperty(MAC_MENU_BAR_PROPERTY, "true");
     }
 
     /** Prepara l'aspetto delle finestre e apre la prima schermata di setup. */

@@ -8,7 +8,7 @@ import java.awt.Container;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Insets;
+import java.awt.LayoutManager;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.geom.RoundRectangle2D;
@@ -19,7 +19,6 @@ import javax.swing.ButtonModel;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.border.AbstractBorder;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.plaf.basic.BasicButtonUI;
@@ -27,8 +26,8 @@ import javax.swing.plaf.basic.BasicGraphicsUtils;
 import javax.swing.text.JTextComponent;
 
 /**
- * Tema grafico della GUI: la tavolozza "Monopoly classico", i caratteri, le misure,
- * i bordi e lo stile dei pulsanti.
+ * Tema grafico della GUI: la tavolozza, i caratteri, le misure, i bordi e lo stile dei
+ * pulsanti.
  * <p>
  * E' l'unico punto della view in cui compaiono valori grafici: tutti i colori e i
  * caratteri sono costanti di questa classe, e i pannelli si limitano a leggerle. Cosi'
@@ -37,11 +36,16 @@ import javax.swing.text.JTextComponent;
  * model (la categoria di una casella, il colore di una pedina, lo stato di un
  * giocatore) in questi colori.
  * <p>
- * <b>Contrasto.</b> Le coppie testo/sfondo usate dalla GUI rispettano il livello AA
- * delle linee guida WCAG (almeno 4,5:1): testo scuro su crema 11,9:1, crema su verde
- * tavolo 6,5:1, crema su verde scuro 10,2:1, crema su rosso 4,6:1, oro su verde scuro
- * 5,1:1. L'oro su crema arriva solo a 2:1, quindi li' non si usa mai per il testo: fa
- * solo da cornice o da linea.
+ * <b>Regole del tema.</b> Le superfici (caselle, schede, riquadri) sono crema e il testo
+ * che ci sta sopra e' scuro; i verdi fanno solo da sfondo. I bordi sono sempre grigi,
+ * con gli angoli netti. Il rosso e' riservato all'azione principale, il blu agli
+ * importi e alle selezioni.
+ * <p>
+ * <b>Contrasto.</b> Tutte le coppie testo/sfondo della GUI rispettano il livello AA delle
+ * linee guida WCAG (almeno 4,5:1): testo scuro su crema 11,9:1, testo scuro sul verde
+ * salvia 5:1, blu su crema 7,3:1, crema su rosso 4,6:1. Il crema sui due verdi resta
+ * sotto la soglia (2,4:1 e 4,2:1), per questo sui verdi non si scrive in chiaro: il
+ * turno al centro del tabellone, per esempio, sta su una scheda crema.
  * <p>
  * Classe di sola utilita': tutti i membri sono statici e non e' istanziabile.
  */
@@ -51,28 +55,31 @@ public final class Theme {
     // Tavolozza
     // ------------------------------------------------------------------
 
-    /** Verde del tavolo: sfondo principale delle finestre e centro del tabellone. */
-    public static final Color TABLE_GREEN = new Color(0x1B5E3A);
+    /** Verde salvia del tavolo: sfondo principale delle finestre. */
+    public static final Color TABLE_GREEN = new Color(0x6BA588);
 
-    /** Verde scuro dei pannelli e delle cornici. */
-    public static final Color DARK_GREEN = new Color(0x123D26);
+    /** Verde scuro, solo dove serve profondita': il centro del tabellone. */
+    public static final Color DARK_GREEN = new Color(0x3F7A5C);
 
-    /** Crema avorio delle superfici: caselle, schede, aree di testo. */
+    /** Crema avorio delle superfici: caselle, schede, riquadri, pulsanti secondari. */
     public static final Color CREAM = new Color(0xF4EAD5);
 
-    /** Oro degli accenti: titoli su verde, cornici, evidenziazione del turno. */
-    public static final Color GOLD = new Color(0xC8A24B);
+    /** Grigio medio dei bordi normali. */
+    public static final Color BORDER = new Color(0x9AA0A6);
+
+    /** Grigio scuro dei bordi marcati: caselle, pulsanti, giocatore di turno. */
+    public static final Color BORDER_STRONG = new Color(0x6E6E6E);
 
     /** Rosso Monopoly: azione principale ed enfasi. */
     public static final Color MONOPOLY_RED = new Color(0xC0392B);
 
-    /** Blu di accento secondario: importi e testo selezionato. */
+    /** Blu di accento secondario: importi, dettagli delle caselle, testo selezionato. */
     public static final Color ACCENT_BLUE = new Color(0x1F4E79);
 
-    /** Testo scuro, da usare sulle superfici crema. */
+    /** Testo scuro, da usare sulle superfici crema e sul verde salvia. */
     public static final Color TEXT_DARK = new Color(0x2B2B2B);
 
-    /** Testo chiaro, da usare sui verdi e sul rosso. */
+    /** Testo chiaro, da usare sul rosso. */
     public static final Color TEXT_LIGHT = CREAM;
 
     // ------------------------------------------------------------------
@@ -104,6 +111,16 @@ public final class Theme {
     public static final Color GROUP_BLUE = new Color(0x0072BB);
 
     // ------------------------------------------------------------------
+    // Caselle speciali: un colore pieno, riconoscibile a colpo d'occhio
+    // ------------------------------------------------------------------
+
+    /** Imprevisti. */
+    public static final Color CHANCE = new Color(0xF7941D);
+
+    /** Probabilita'. */
+    public static final Color COMMUNITY_CHEST = new Color(0x4A90D9);
+
+    // ------------------------------------------------------------------
     // Tinte delle caselle: la tavolozza sciolta nel crema
     // ------------------------------------------------------------------
 
@@ -111,13 +128,13 @@ public final class Theme {
     public static final Color TILE_PLAIN = CREAM;
 
     /** Il "Via": crema con un velo di verde. */
-    public static final Color TILE_START = mix(CREAM, TABLE_GREEN, 0.18);
+    public static final Color TILE_START = mix(CREAM, TABLE_GREEN, 0.25);
 
     /** Tasse: crema con un velo di rosso. */
     public static final Color TILE_TAX = mix(CREAM, MONOPOLY_RED, 0.16);
 
-    /** Prigione: crema con un velo d'oro. */
-    public static final Color TILE_JAIL = mix(CREAM, GOLD, 0.28);
+    /** Prigione: crema con un velo di grigio. */
+    public static final Color TILE_JAIL = mix(CREAM, BORDER_STRONG, 0.18);
 
     /** "Vai in prigione": il rosso piu' deciso del tabellone, ma sempre chiaro. */
     public static final Color TILE_GO_TO_JAIL = mix(CREAM, MONOPOLY_RED, 0.30);
@@ -125,23 +142,23 @@ public final class Theme {
     /** Posteggio gratuito: crema con un velo di blu. */
     public static final Color TILE_FREE_PARKING = mix(CREAM, ACCENT_BLUE, 0.14);
 
-    /** Imprevisti e Probabilita': oro chiaro, come il retro delle carte. */
-    public static final Color TILE_CARD = mix(CREAM, GOLD, 0.40);
-
     /** Banda delle proprieta' senza gruppo di colore (stazioni e societa'). */
-    public static final Color NEUTRAL_BAND = mix(CREAM, DARK_GREEN, 0.14);
+    public static final Color NEUTRAL_BAND = mix(CREAM, BORDER_STRONG, 0.22);
 
-    /** Sfondo della scheda del giocatore di turno: crema appena scaldato dall'oro. */
-    public static final Color CURRENT_CARD = mix(CREAM, GOLD, 0.15);
+    /**
+     * Sfondo di cio' che riguarda il giocatore di turno (la sua scheda e la casella su
+     * cui si trova): crema appena velato dal verde del tavolo.
+     */
+    public static final Color CURRENT_SURFACE = mix(CREAM, TABLE_GREEN, 0.22);
 
     // ------------------------------------------------------------------
     // Stati del giocatore: testo su crema, tutti sopra 4,5:1
     // ------------------------------------------------------------------
 
-    /** Giocatore in partita. */
-    public static final Color STATUS_PLAYING = TABLE_GREEN;
+    /** Giocatore in partita: il verde scuro, scurito quanto basta per leggersi sul crema. */
+    public static final Color STATUS_PLAYING = mix(DARK_GREEN, TEXT_DARK, 0.30);
 
-    /** Giocatore in prigione: un ambra scuro, perche' l'oro su crema non si leggerebbe. */
+    /** Giocatore in prigione: un marrone ambrato. */
     public static final Color STATUS_IN_JAIL = new Color(0x7A4E00);
 
     /** Giocatore fallito. */
@@ -194,16 +211,22 @@ public final class Theme {
     // Caratteri: una sola famiglia sans, pochi pesi e poche misure
     // ------------------------------------------------------------------
 
-    /** Titoli principali: la scritta del tabellone e quella della schermata di setup. */
+    /** Titolo principale: la scritta "MONOPOLY". */
     public static final Font TITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 28);
+
+    /** Importo della cassa della banca: il numero piu' grande della schermata di gioco. */
+    public static final Font AMOUNT_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 26);
 
     /** Sottotitoli delle schermate, come la domanda "Chi gioca?" del setup. */
     public static final Font SUBTITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 20);
 
-    /** Intestazioni dei pannelli e giocatore di turno al centro del tabellone. */
-    public static final Font HEADING_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 15);
+    /** Simbolo al centro delle caselle Imprevisti e Probabilita'. */
+    public static final Font SYMBOL_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 20);
 
-    /** Nome del giocatore sulla sua scheda e riga di stato dei comandi. */
+    /** Intestazioni dei riquadri e giocatore di turno al centro del tabellone. */
+    public static final Font HEADING_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 16);
+
+    /** Nome del giocatore sulla sua scheda. */
     public static final Font NAME_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 14);
 
     /** Etichette dei pulsanti. */
@@ -214,6 +237,9 @@ public final class Theme {
 
     /** Testo informativo da far risaltare (importi, stato, titoli dei riquadri). */
     public static final Font BODY_BOLD_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 12);
+
+    /** Iniziale del giocatore sulla pedina. */
+    public static final Font TOKEN_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 10);
 
     /** Nome della casella. */
     public static final Font TILE_NAME_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 9);
@@ -228,11 +254,14 @@ public final class Theme {
     // Misure
     // ------------------------------------------------------------------
 
-    /** Arrotondamento (diametro dell'arco) di schede, pulsanti e riquadri. */
-    public static final int RADIUS = 12;
+    /**
+     * Arrotondamento (diametro dell'arco) di schede, pulsanti e riquadri: zero, cioe'
+     * angoli netti. E' una costante sola, cosi' l'aspetto resta uguale ovunque.
+     */
+    public static final int RADIUS = 0;
 
-    /** Arrotondamento degli oggetti piccoli, come i dadi. */
-    public static final int SMALL_RADIUS = 8;
+    /** Arrotondamento dei dadi, l'unico oggetto che resta smussato come quelli veri. */
+    public static final int SMALL_RADIUS = 6;
 
     /** Spazio standard fra due elementi vicini. */
     public static final int GAP = 8;
@@ -240,7 +269,7 @@ public final class Theme {
     /** Margine interno standard di pannelli e schede. */
     public static final int PADDING = 10;
 
-    /** Spessore della cornice oro che indica il turno. */
+    /** Spessore del bordo che indica il giocatore di turno e la sua casella. */
     public static final int HIGHLIGHT_WIDTH = 3;
 
     // ------------------------------------------------------------------
@@ -249,13 +278,12 @@ public final class Theme {
 
     /*
      * Un pulsante disabilitato si ricava dalla superficie su cui poggia, spostata di poco
-     * verso il testo che le si scrive sopra: sul verde scuro diventa un verde appena piu'
-     * chiaro con il testo crema spento, sul crema un crema appena piu' scuro con il testo
-     * grigio. In entrambi i casi "rientra" nello sfondo e si capisce che non e' attivo.
+     * verso il testo che le si scrive sopra: sul crema diventa un crema appena piu' scuro
+     * con il testo grigio. "Rientra" nello sfondo e si capisce che non e' attivo.
      */
 
     /** Quanto il riempimento di un pulsante disabilitato si stacca dalla superficie. */
-    private static final double DISABLED_FILL_SHIFT = 0.10;
+    private static final double DISABLED_FILL_SHIFT = 0.08;
 
     /** Quanto il contorno di un pulsante disabilitato si stacca dalla superficie. */
     private static final double DISABLED_OUTLINE_SHIFT = 0.25;
@@ -263,31 +291,30 @@ public final class Theme {
     /** Quanto il testo di un pulsante disabilitato si stacca dalla superficie. */
     private static final double DISABLED_TEXT_SHIFT = 0.50;
 
-    /** Azione principale: rosso pieno, piu' scuro al passaggio del mouse e ancora di piu' alla pressione. */
+    /** Azione principale: rosso pieno con il testo crema, piu' scuro al passaggio del mouse. */
     private static final ButtonColors PRIMARY = new ButtonColors(
             MONOPOLY_RED,
             mix(MONOPOLY_RED, Color.BLACK, 0.15),
             mix(MONOPOLY_RED, Color.BLACK, 0.30),
-            mix(MONOPOLY_RED, Color.BLACK, 0.30));
+            TEXT_LIGHT,
+            null);
 
-    /**
-     * Azione secondaria: verde scuro con la cornice oro. Al passaggio del mouse si
-     * accende del verde del tavolo, alla pressione si scurisce.
-     */
+    /** Azione secondaria: crema con il bordo grigio marcato, velata di grigio al passaggio del mouse. */
     private static final ButtonColors SECONDARY = new ButtonColors(
-            DARK_GREEN,
-            TABLE_GREEN,
-            mix(DARK_GREEN, Color.BLACK, 0.25),
-            GOLD);
+            CREAM,
+            mix(CREAM, BORDER, 0.30),
+            mix(CREAM, BORDER, 0.55),
+            TEXT_DARK,
+            BORDER_STRONG);
 
     /** Margine interno dei pulsanti, sopra e sotto il testo. */
     private static final int BUTTON_PADDING_V = 8;
 
     /** Margine interno dei pulsanti, ai lati del testo. */
-    private static final int BUTTON_PADDING_H = 16;
+    private static final int BUTTON_PADDING_H = 12;
 
     /** Spessore del contorno dei pulsanti. */
-    private static final float BUTTON_OUTLINE = 1.5f;
+    private static final float BUTTON_OUTLINE = 1f;
 
     /** Distanza dal bordo dell'anello che indica il pulsante con il focus. */
     private static final int FOCUS_INSET = 3;
@@ -368,10 +395,23 @@ public final class Theme {
     }
 
     /**
-     * Crea la fascia con il nome del gioco: rossa con la cornice oro e la scritta crema,
-     * come il marchio stampato sui tabelloni veri. E' la stessa al centro del tabellone
-     * e in cima alla schermata di setup, cosi' le due finestre si riconoscono come parti
-     * dello stesso gioco.
+     * Crea una scheda crema con il bordo grigio: la superficie standard della GUI.
+     *
+     * @param layout la disposizione dei componenti interni
+     * @return la scheda, gia' con il margine interno standard
+     */
+    public static CardPanel card(final LayoutManager layout) {
+        final CardPanel card = new CardPanel(layout, BORDER, 1);
+        card.setBackground(CREAM);
+        card.setBorder(padding(PADDING));
+        return card;
+    }
+
+    /**
+     * Crea la fascia con il nome del gioco: rossa con la scritta crema, come il marchio
+     * stampato sui tabelloni veri. E' la stessa al centro del tabellone e in cima alla
+     * schermata di setup, cosi' le due finestre si riconoscono come parti dello stesso
+     * gioco.
      * <p>
      * La fascia resta delle dimensioni della scritta anche in un {@code BoxLayout}, che
      * altrimenti la allargherebbe a tutto lo spazio disponibile.
@@ -379,7 +419,7 @@ public final class Theme {
      * @return la fascia, gia' centrata orizzontalmente nel suo contenitore
      */
     public static JPanel titleBanner() {
-        final CardPanel banner = new CardPanel(new BorderLayout(), GOLD, 2);
+        final CardPanel banner = new CardPanel(new BorderLayout(), null, 0);
         banner.setBackground(MONOPOLY_RED);
         banner.setBorder(BorderFactory.createEmptyBorder(GAP, 3 * GAP, GAP, 3 * GAP));
         final JLabel title = label("MONOPOLY", TITLE_FONT, TEXT_LIGHT);
@@ -400,8 +440,8 @@ public final class Theme {
     }
 
     /**
-     * Da' a un pulsante lo stile delle azioni secondarie: verde scuro, testo crema e
-     * cornice oro.
+     * Da' a un pulsante lo stile delle azioni secondarie: crema, testo scuro e bordo
+     * grigio marcato.
      *
      * @param button il pulsante da stilizzare
      */
@@ -422,30 +462,28 @@ public final class Theme {
     }
 
     /**
-     * Bordo di un riquadro con titolo, da usare sui pannelli verdi: linea oro
-     * arrotondata e titolo oro in grassetto.
+     * Bordo di un riquadro con titolo, da usare sulle schede crema: linea grigia e
+     * titolo scuro in grassetto.
      *
      * @param title il titolo del riquadro
      * @return il bordo, con il margine interno gia' compreso
      */
     public static Border sectionBorder(final String title) {
         final TitledBorder titled = BorderFactory.createTitledBorder(
-                new RoundedLineBorder(GOLD, 1), title,
-                TitledBorder.LEADING, TitledBorder.TOP, BODY_BOLD_FONT, GOLD);
+                BorderFactory.createLineBorder(BORDER), title,
+                TitledBorder.LEADING, TitledBorder.TOP, BODY_BOLD_FONT, TEXT_DARK);
         return BorderFactory.createCompoundBorder(titled,
                 BorderFactory.createEmptyBorder(GAP / 2, GAP, GAP, GAP));
     }
 
     /**
-     * Cornice del tabellone: verde scuro all'esterno, un filo d'oro all'interno, come
-     * il bordo stampato di un tabellone vero.
+     * Cornice del tabellone: una linea grigia marcata, come il bordo stampato di un
+     * tabellone vero.
      *
      * @return il bordo
      */
     public static Border boardBorder() {
-        return BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(DARK_GREEN, GAP / 2 + 1),
-                BorderFactory.createLineBorder(GOLD, 2));
+        return BorderFactory.createLineBorder(BORDER_STRONG, HIGHLIGHT_WIDTH);
     }
 
     /**
@@ -466,6 +504,8 @@ public final class Theme {
     public static void antialias(final Graphics2D graphics) {
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        // Le linee vengono allineate ai pixel: i bordi netti non si sfocano.
+        graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE);
     }
 
     // ------------------------------------------------------------------
@@ -476,9 +516,9 @@ public final class Theme {
      * Applica a un pulsante l'aspetto del tema.
      * <p>
      * Il look and feel di sistema (su macOS, Aqua) ignora il colore di sfondo dei
-     * pulsanti e li disegna sempre alla sua maniera: per avere il rosso e il verde del
-     * tema serve un disegnatore proprio ({@link ThemedButtonUI}). Il passaggio del
-     * mouse non richiede ascoltatori aggiunti: con {@code rolloverEnabled} e' il
+     * pulsanti e li disegna sempre alla sua maniera: per avere i colori del tema serve
+     * un disegnatore proprio ({@link ThemedButtonUI}). Il passaggio del mouse non
+     * richiede ascoltatori aggiunti: con {@code rolloverEnabled} e' il
      * {@link ButtonModel} a registrare lo stato "mouse sopra", e il disegnatore di base
      * di Swing ridisegna il pulsante a ogni cambio di stato.
      * <p>
@@ -488,7 +528,7 @@ public final class Theme {
     private static void styleButton(final AbstractButton button, final ButtonColors colors) {
         button.setUI(new ThemedButtonUI(colors));
         button.setFont(BUTTON_FONT);
-        button.setForeground(TEXT_LIGHT);
+        button.setForeground(colors.text());
         button.setBorder(BorderFactory.createEmptyBorder(
                 BUTTON_PADDING_V, BUTTON_PADDING_H, BUTTON_PADDING_V, BUTTON_PADDING_H));
         button.setOpaque(false);
@@ -530,15 +570,16 @@ public final class Theme {
      * @param fill    riempimento normale
      * @param hover   riempimento con il mouse sopra
      * @param pressed riempimento mentre viene premuto
-     * @param outline contorno
+     * @param text    colore del testo
+     * @param outline contorno, oppure {@code null} se il pulsante non ne ha
      */
-    private record ButtonColors(Color fill, Color hover, Color pressed, Color outline) {
+    private record ButtonColors(Color fill, Color hover, Color pressed, Color text, Color outline) {
     }
 
     /**
-     * Disegnatore dei pulsanti del tema: rettangolo arrotondato colorato secondo lo
-     * stato, testo in crema (spento se il pulsante e' disabilitato) e un anello crema
-     * attorno al testo quando il pulsante ha il focus della tastiera.
+     * Disegnatore dei pulsanti del tema: rettangolo colorato secondo lo stato, con il
+     * contorno se previsto, testo spento se il pulsante e' disabilitato e un anello del
+     * colore del testo quando il pulsante ha il focus della tastiera.
      * <p>
      * Estende {@link BasicButtonUI}, che resta responsabile di tutto il resto:
      * disposizione di testo e icona, gestione di mouse e tastiera, ridisegno a ogni
@@ -559,17 +600,20 @@ public final class Theme {
             final Graphics2D graphics = (Graphics2D) g.create();
             try {
                 antialias(graphics);
-                final RoundRectangle2D shape = new RoundRectangle2D.Float(
-                        BUTTON_OUTLINE / 2, BUTTON_OUTLINE / 2,
-                        component.getWidth() - BUTTON_OUTLINE, component.getHeight() - BUTTON_OUTLINE,
+                final Color outline = model.isEnabled()
+                        ? this.colors.outline()
+                        : disabled(component, DISABLED_OUTLINE_SHIFT);
+                final float inset = outline == null ? 0f : BUTTON_OUTLINE / 2;
+                final RoundRectangle2D shape = new RoundRectangle2D.Float(inset, inset,
+                        component.getWidth() - 2 * inset, component.getHeight() - 2 * inset,
                         RADIUS, RADIUS);
                 graphics.setColor(model.isEnabled() ? this.fillFor(model) : disabled(component, DISABLED_FILL_SHIFT));
                 graphics.fill(shape);
-                graphics.setColor(model.isEnabled()
-                        ? this.colors.outline()
-                        : disabled(component, DISABLED_OUTLINE_SHIFT));
-                graphics.setStroke(new BasicStroke(BUTTON_OUTLINE));
-                graphics.draw(shape);
+                if (outline != null) {
+                    graphics.setColor(outline);
+                    graphics.setStroke(new BasicStroke(BUTTON_OUTLINE));
+                    graphics.draw(shape);
+                }
             } finally {
                 graphics.dispose();
             }
@@ -592,10 +636,11 @@ public final class Theme {
             final Graphics2D graphics = (Graphics2D) g.create();
             try {
                 antialias(graphics);
-                graphics.setColor(TEXT_LIGHT);
+                graphics.setColor(button.getForeground());
+                final int arc = Math.max(0, RADIUS - FOCUS_INSET);
                 graphics.drawRoundRect(FOCUS_INSET, FOCUS_INSET,
                         button.getWidth() - 2 * FOCUS_INSET - 1, button.getHeight() - 2 * FOCUS_INSET - 1,
-                        RADIUS - FOCUS_INSET, RADIUS - FOCUS_INSET);
+                        arc, arc);
             } finally {
                 graphics.dispose();
             }
@@ -629,49 +674,7 @@ public final class Theme {
                     return parent.getBackground();
                 }
             }
-            return DARK_GREEN;
-        }
-    }
-
-    /**
-     * Linea sottile con gli angoli arrotondati, usata come contorno dei riquadri con
-     * titolo. I bordi di Swing hanno un arrotondamento fisso e minimo: questo usa lo
-     * stesso {@link #RADIUS} di schede e pulsanti.
-     */
-    private static final class RoundedLineBorder extends AbstractBorder {
-
-        private static final long serialVersionUID = 1L;
-
-        private final Color color;
-        private final int thickness;
-
-        RoundedLineBorder(final Color color, final int thickness) {
-            super();
-            this.color = color;
-            this.thickness = thickness;
-        }
-
-        @Override
-        public void paintBorder(final Component component, final Graphics g,
-                                final int x, final int y, final int width, final int height) {
-            final Graphics2D graphics = (Graphics2D) g.create();
-            try {
-                antialias(graphics);
-                graphics.setColor(this.color);
-                graphics.setStroke(new BasicStroke(this.thickness));
-                final float half = this.thickness / 2f;
-                graphics.draw(new RoundRectangle2D.Float(x + half, y + half,
-                        width - this.thickness, height - this.thickness, RADIUS, RADIUS));
-            } finally {
-                graphics.dispose();
-            }
-        }
-
-        @Override
-        public Insets getBorderInsets(final Component component, final Insets insets) {
-            final int size = this.thickness + GAP / 2;
-            insets.set(size, size, size, size);
-            return insets;
+            return CREAM;
         }
     }
 }

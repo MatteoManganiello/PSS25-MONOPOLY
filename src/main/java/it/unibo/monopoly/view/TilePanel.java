@@ -16,6 +16,7 @@ import javax.swing.JPanel;
 import it.unibo.monopoly.model.board.PropertyTile;
 import it.unibo.monopoly.model.board.StreetTile;
 import it.unibo.monopoly.model.board.Tile;
+import it.unibo.monopoly.model.board.TileCategory;
 import it.unibo.monopoly.model.player.Player;
 
 /**
@@ -38,6 +39,10 @@ import it.unibo.monopoly.model.player.Player;
  * tabellone vero. Non e' una catena di {@code instanceof}: stazioni e societa' non
  * vengono mai distinte fra loro.
  * <p>
+ * Imprevisti e Probabilita' ({@link TileCategory#CARD}) hanno invece una banda alta, del
+ * colore del loro mazzo, con il punto interrogativo grande al centro: devono
+ * riconoscersi a colpo d'occhio anche fra tante caselle crema.
+ * <p>
  * E' un componente passivo: non conosce il {@link it.unibo.monopoly.controller.GameEngine
  * GameEngine} e non modifica nulla. Riceve dal {@link BoardPanel} chi si trova sulla
  * casella ({@link #setOccupants(List)}) e se e' la casella del giocatore di turno
@@ -59,9 +64,10 @@ public final class TilePanel extends JPanel {
 
     /**
      * Lato preferito della casella, in pixel: 11 caselle per lato danno un tabellone di
-     * ~700px. E' quanto basta perche', con i margini interni, i nomi stiano su due righe.
+     * ~730px. E' quanto basta perche', con i margini interni e le pedine grandi, i nomi
+     * stiano su due righe.
      */
-    private static final int PREFERRED_SIDE = 64;
+    private static final int PREFERRED_SIDE = 66;
 
     /**
      * Altezza della banda in alto sulle caselle acquistabili. Insieme a
@@ -72,14 +78,20 @@ public final class TilePanel extends JPanel {
     /** Spazio fra la banda e la prima riga del nome. */
     private static final int BAND_GAP = 4;
 
+    /** Altezza della banda colorata di Imprevisti e Probabilita', che ospita il simbolo. */
+    private static final int CARD_BAND_HEIGHT = 24;
+
     /** Diametro del segnalino del proprietario, disegnato dentro la banda. */
     private static final int OWNER_BADGE = 8;
 
-    /** Quanto la casella di turno si scalda verso l'oro, come la scheda del suo giocatore. */
-    private static final double CURRENT_TINT = 0.25;
+    /**
+     * Quanto la casella di turno si vela del verde del tavolo: e' la stessa tinta della
+     * scheda del suo giocatore ({@link Theme#CURRENT_SURFACE}).
+     */
+    private static final double CURRENT_TINT = 0.22;
 
-    /** Diametro della pedina disegnata sulla casella. */
-    private static final int TOKEN_DIAMETER = 12;
+    /** Diametro della pedina disegnata sulla casella: grande abbastanza da leggerne l'iniziale. */
+    private static final int TOKEN_DIAMETER = 15;
 
     /** Margine interno della casella: distanza di testo e segnalini dai bordi. */
     private static final int PADDING = 5;
@@ -187,15 +199,15 @@ public final class TilePanel extends JPanel {
             final int height = this.getHeight();
 
             // Colore della casella: lo decide la categoria dichiarata dalla casella stessa.
-            // Quella del giocatore di turno si scalda verso l'oro, come la sua scheda.
+            // Quella del giocatore di turno si vela di verde, come la sua scheda.
             final Color background = ViewStyle.colorOf(this.tile.getCategory());
-            graphics.setColor(this.current ? Theme.mix(background, Theme.GOLD, CURRENT_TINT) : background);
+            graphics.setColor(this.current ? Theme.mix(background, Theme.TABLE_GREEN, CURRENT_TINT) : background);
             graphics.fillRect(0, 0, width, height);
 
             final int textTop = this.paintBand(graphics, width);
             this.paintTexts(graphics, width, height, textTop);
-            // La cornice prima delle pedine: sulla casella di turno quella oro e' spessa, e
-            // le pedine, che sono l'informazione piu' importante, devono restarle sopra.
+            // La cornice prima delle pedine: sulla casella di turno e' spessa, e le
+            // pedine, che sono l'informazione piu' importante, devono restarle sopra.
             this.paintOutline(graphics, width, height);
             this.paintTokens(graphics, width, height);
         } finally {
@@ -206,11 +218,15 @@ public final class TilePanel extends JPanel {
     /**
      * Disegna la banda superiore delle caselle acquistabili: il colore del gruppo per i
      * terreni, una tinta neutra per stazioni e societa'. Se la casella ha un
-     * proprietario, dentro la banda compare il suo segnalino.
+     * proprietario, dentro la banda compare il suo segnalino. Imprevisti e Probabilita'
+     * hanno la loro banda, piu' alta ({@link #paintCardBand(Graphics2D, int)}).
      *
      * @return l'altezza da cui puo' iniziare il testo
      */
     private int paintBand(final Graphics2D graphics, final int width) {
+        if (this.tile.getCategory() == TileCategory.CARD) {
+            return this.paintCardBand(graphics, width);
+        }
         if (!(this.tile instanceof PropertyTile property)) {
             return PADDING;
         }
@@ -218,21 +234,45 @@ public final class TilePanel extends JPanel {
                 ? ViewStyle.colorOf(street.getGroup())
                 : Theme.NEUTRAL_BAND);
         graphics.fillRect(0, 0, width, BAND_HEIGHT);
-        graphics.setColor(Theme.DARK_GREEN);
+        graphics.setColor(Theme.BORDER_STRONG);
         graphics.drawLine(0, BAND_HEIGHT, width, BAND_HEIGHT);
         property.getOwner().ifPresent(owner -> paintOwnerBadge(graphics, width, ViewStyle.colorOf(owner.getToken())));
         return BAND_HEIGHT + BAND_GAP;
     }
 
     /**
+     * Banda di Imprevisti e Probabilita': alta, del colore del mazzo, con il simbolo
+     * della casella ({@link Tile#getDetail()}, il punto interrogativo) grande al centro.
+     * Il simbolo e' scuro: sull'arancione e sull'azzurro si legge meglio del crema.
+     *
+     * @return l'altezza da cui puo' iniziare il nome
+     */
+    private int paintCardBand(final Graphics2D graphics, final int width) {
+        final Color color = ViewStyle.colorOfCardTile(this.tile);
+        graphics.setColor(color);
+        graphics.fillRect(0, 0, width, CARD_BAND_HEIGHT);
+        graphics.setColor(Theme.BORDER_STRONG);
+        graphics.drawLine(0, CARD_BAND_HEIGHT, width, CARD_BAND_HEIGHT);
+        final String symbol = this.tile.getDetail();
+        if (!symbol.isEmpty()) {
+            graphics.setColor(Theme.readableTextOn(color));
+            graphics.setFont(Theme.SYMBOL_FONT);
+            final FontMetrics metrics = graphics.getFontMetrics();
+            graphics.drawString(symbol, centeredX(symbol, metrics, width),
+                    (CARD_BAND_HEIGHT + metrics.getAscent() - metrics.getDescent()) / 2);
+        }
+        return CARD_BAND_HEIGHT + BAND_GAP;
+    }
+
+    /**
      * Segnalino del proprietario: un pallino del colore della sua pedina, nell'angolo
-     * destro della banda. L'anello verde scuro lo stacca da qualunque colore di gruppo,
+     * destro della banda. L'anello grigio scuro lo stacca da qualunque colore di gruppo,
      * anche quando e' simile a quello della pedina.
      */
     private static void paintOwnerBadge(final Graphics2D graphics, final int width, final Color ownerColor) {
         final int x = width - OWNER_BADGE - PADDING;
         final int y = (BAND_HEIGHT - OWNER_BADGE) / 2;
-        graphics.setColor(Theme.DARK_GREEN);
+        graphics.setColor(Theme.BORDER_STRONG);
         graphics.fillOval(x, y, OWNER_BADGE, OWNER_BADGE);
         graphics.setColor(ownerColor);
         graphics.fillOval(x + 1, y + 1, OWNER_BADGE - 2, OWNER_BADGE - 2);
@@ -256,7 +296,8 @@ public final class TilePanel extends JPanel {
         graphics.setFont(Theme.TILE_NAME_FONT);
         final FontMetrics nameMetrics = graphics.getFontMetrics();
         final int usableWidth = width - 2 * PADDING;
-        final String detail = this.tile.getDetail();
+        // Su Imprevisti e Probabilita' il dettaglio e' gia' il simbolo nella banda.
+        final String detail = this.tile.getCategory() == TileCategory.CARD ? "" : this.tile.getDetail();
         final int detailAscent = detail.isEmpty() ? 0
                 : graphics.getFontMetrics(Theme.TILE_DETAIL_FONT).getAscent();
 
@@ -308,41 +349,41 @@ public final class TilePanel extends JPanel {
         int x = Math.max(PADDING, (width - totalWidth) / 2);
         final int y = height - TOKEN_DIAMETER - TOKEN_BOTTOM_MARGIN;
 
+        graphics.setFont(Theme.TOKEN_FONT);
+        final FontMetrics metrics = graphics.getFontMetrics();
         for (final Player player : this.occupants) {
             final Color tokenColor = ViewStyle.colorOf(player.getToken());
             graphics.setColor(tokenColor);
             graphics.fillOval(x, y, TOKEN_DIAMETER, TOKEN_DIAMETER);
-            graphics.setColor(Theme.DARK_GREEN);
+            graphics.setColor(Theme.BORDER_STRONG);
             graphics.setStroke(new BasicStroke(1f));
             graphics.drawOval(x, y, TOKEN_DIAMETER, TOKEN_DIAMETER);
             // Iniziale del nome: distingue le pedine anche a chi non ricorda i colori. E'
-            // scura sulle pedine chiare e chiara su quelle scure, cosi' si legge sempre.
+            // scura sulle pedine chiare e chiara su quelle scure, cosi' si legge sempre,
+            // ed e' centrata sul disco in entrambe le direzioni.
             graphics.setColor(Theme.readableTextOn(tokenColor));
-            graphics.setFont(Theme.TILE_DETAIL_FONT);
             final String initial = player.getName().substring(0, 1).toUpperCase(Locale.ROOT);
-            final FontMetrics metrics = graphics.getFontMetrics();
+            final float center = TOKEN_DIAMETER / 2f;
             graphics.drawString(initial,
-                    x + (TOKEN_DIAMETER - metrics.stringWidth(initial)) / 2,
-                    y + (TOKEN_DIAMETER + metrics.getAscent()) / 2 - 1);
+                    x + center - metrics.stringWidth(initial) / 2f,
+                    y + center + (metrics.getAscent() - metrics.getDescent()) / 2f);
             x += spacing;
         }
     }
 
     /**
-     * Traccia la cornice: un filo verde scuro, a cui la casella di turno aggiunge
-     * all'interno una cornice oro spessa. Il filo scuro resta anche li', cosi' l'oro
-     * si stacca bene sia dal crema della casella sia dal verde del tavolo.
+     * Traccia la cornice grigia: un filo sottile, che sulla casella del giocatore di turno
+     * diventa una cornice spessa. Insieme alla tinta verde dello sfondo e' lo stesso
+     * segno che distingue la scheda di quel giocatore.
      */
     private void paintOutline(final Graphics2D graphics, final int width, final int height) {
-        if (this.current) {
-            final int inset = 1 + Theme.HIGHLIGHT_WIDTH / 2;
-            graphics.setColor(Theme.GOLD);
-            graphics.setStroke(new BasicStroke(Theme.HIGHLIGHT_WIDTH));
-            graphics.drawRect(inset, inset, width - 1 - 2 * inset, height - 1 - 2 * inset);
-        }
-        graphics.setColor(Theme.DARK_GREEN);
-        graphics.setStroke(new BasicStroke(1f));
-        graphics.drawRect(0, 0, width - 1, height - 1);
+        final int thickness = this.current ? Theme.HIGHLIGHT_WIDTH : 1;
+        graphics.setColor(Theme.BORDER_STRONG);
+        // Rettangoli pieni e non tratti: con gli angoli netti restano precisi al pixel.
+        graphics.fillRect(0, 0, width, thickness);
+        graphics.fillRect(0, height - thickness, width, thickness);
+        graphics.fillRect(0, 0, thickness, height);
+        graphics.fillRect(width - thickness, 0, thickness, height);
     }
 
     /**

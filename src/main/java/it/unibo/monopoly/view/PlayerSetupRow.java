@@ -36,8 +36,9 @@ import it.unibo.monopoly.model.player.Token;
  * finestra a decidere. E' lo stesso modo di lavorare del {@link ControlPanel} con il
  * motore: il componente chiede, qualcun altro decide.
  * <p>
- * Ha la forma di una scheda crema ({@link CardPanel}), come quelle dei giocatori nella
- * finestra di gioco: e' lo stesso giocatore, prima e durante la partita.
+ * Ha la forma di una scheda crema con il bordo grigio ({@link CardPanel}), come quelle
+ * dei giocatori nella finestra di gioco: e' lo stesso giocatore, prima e durante la
+ * partita.
  * <p>
  * La classe e' {@code final} per lo stesso motivo degli altri pannelli: e' un
  * componente concreto e il costruttore puo' configurarsi senza rischiare di chiamare
@@ -92,7 +93,7 @@ final class PlayerSetupRow extends CardPanel {
      */
     PlayerSetupRow(final String initialName, final Token initialToken,
                    final Runnable onTokenChosen, final Consumer<PlayerSetupRow> onRemoveRequested) {
-        super(new FlowLayout(FlowLayout.LEFT, Theme.GAP, Theme.GAP / 2), null, 0);
+        super(new FlowLayout(FlowLayout.LEFT, Theme.GAP, Theme.GAP / 2), Theme.BORDER, 1);
         this.setBackground(Theme.CREAM);
         this.setBorder(BorderFactory.createEmptyBorder(Theme.GAP / 2, Theme.PADDING, Theme.GAP / 2, Theme.PADDING));
 

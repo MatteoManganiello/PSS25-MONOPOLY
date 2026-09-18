@@ -1,5 +1,6 @@
 package it.unibo.monopoly.view;
 
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Point;
@@ -76,10 +77,10 @@ public final class BoardPanel extends JPanel {
         }
         this.state = state;
         this.tilePanels = new ArrayList<>(Board.SIZE);
-        this.turnLabel = Theme.label("", Theme.HEADING_FONT, Theme.TEXT_LIGHT);
+        this.turnLabel = Theme.label("", Theme.HEADING_FONT, Theme.TEXT_DARK);
 
         this.setLayout(new GridBagLayout());
-        this.setBackground(Theme.TABLE_GREEN);
+        this.setBackground(Theme.DARK_GREEN);
         this.setBorder(Theme.boardBorder());
         this.createTiles();
         this.add(this.createCenter(), centerConstraints());
@@ -134,20 +135,32 @@ public final class BoardPanel extends JPanel {
         }
     }
 
-    /** Il quadrato centrale: titolo del gioco e giocatore di turno, sul verde del tavolo. */
+    /**
+     * Il quadrato centrale: titolo del gioco e giocatore di turno, sul verde scuro che
+     * stacca il tabellone dal tavolo. Il turno sta su una scheda crema: scritto in chiaro
+     * direttamente sul verde non avrebbe abbastanza contrasto.
+     */
     private JPanel createCenter() {
-        final JPanel center = new JPanel();
-        center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
-        center.setBackground(Theme.TABLE_GREEN);
-
         this.turnLabel.setIconTextGap(Theme.GAP);
-        this.turnLabel.setAlignmentX(CENTER_ALIGNMENT);
+        final CardPanel turnCard = new CardPanel(new FlowLayout(FlowLayout.CENTER, 0, 0), Theme.BORDER_STRONG, 1);
+        turnCard.setBackground(Theme.CREAM);
+        turnCard.setBorder(Theme.padding(Theme.GAP));
+        turnCard.add(this.turnLabel);
+        turnCard.setAlignmentX(CENTER_ALIGNMENT);
 
-        center.add(Box.createVerticalGlue());
-        center.add(Theme.titleBanner());
-        center.add(Box.createVerticalStrut(2 * Theme.GAP));
-        center.add(this.turnLabel);
-        center.add(Box.createVerticalGlue());
+        // Titolo e turno in colonna, larghi uguali; la colonna prende le misure del suo
+        // contenuto e le riprende quando cambia il nome del giocatore di turno.
+        final JPanel column = new JPanel();
+        column.setLayout(new BoxLayout(column, BoxLayout.Y_AXIS));
+        column.setOpaque(false);
+        column.add(Theme.titleBanner());
+        column.add(Box.createVerticalStrut(2 * Theme.GAP));
+        column.add(turnCard);
+
+        // GridBagLayout con un solo componente: lo tiene al centro, alla sua misura.
+        final JPanel center = new JPanel(new GridBagLayout());
+        center.setBackground(Theme.DARK_GREEN);
+        center.add(column);
         return center;
     }
 

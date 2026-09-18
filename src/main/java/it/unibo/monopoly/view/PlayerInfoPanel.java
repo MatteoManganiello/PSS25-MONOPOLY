@@ -1,5 +1,6 @@
 package it.unibo.monopoly.view;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
 import it.unibo.monopoly.model.economy.Property;
@@ -18,19 +20,21 @@ import it.unibo.monopoly.model.game.GameState;
 import it.unibo.monopoly.model.player.Player;
 
 /**
- * Pannello laterale con la situazione di ogni giocatore: nome e pedina, denaro,
- * proprieta' possedute e stato (in gioco, in prigione, fallito).
+ * Colonna laterale con la cassa della banca e la situazione di ogni giocatore: nome e
+ * pedina, denaro, proprieta' possedute e stato (in gioco, in prigione, fallito).
  * <p>
  * Ogni giocatore ha la sua "scheda" ({@link PlayerCard}), creata una volta sola alla
  * costruzione del pannello: {@link #refresh()} non ricostruisce nulla, aggiorna solo
- * il testo delle etichette. La scheda del giocatore di turno viene evidenziata con
- * una cornice oro, uno sfondo appena piu' caldo e un triangolino accanto al nome, cosi'
- * di chi sia il turno si capisce a colpo d'occhio, anche senza distinguere i colori.
+ * il testo delle etichette. La scheda del giocatore di turno viene evidenziata con un
+ * bordo grigio spesso, uno sfondo appena velato di verde e un triangolino accanto al
+ * nome, cosi' di chi sia il turno si capisce a colpo d'occhio, anche senza distinguere
+ * i colori.
  * <p>
- * Il pannello e' una scheda verde scuro con il titolo in oro; le schede dei giocatori
- * sono crema con il testo scuro. Il nome e' sempre scuro: il colore della pedina e'
- * nel pallino accanto, perche' scritto in giallo o in ciano sul crema non si
- * leggerebbe.
+ * <b>Aspetto.</b> La colonna e' trasparente: sul tavolo si vedono solo le schede crema.
+ * In cima c'e' quella della banca, con il bordo marcato e l'importo nel numero piu'
+ * grande della schermata, perche' deve saltare all'occhio. Il nome dei giocatori e'
+ * sempre scuro: il colore della pedina e' nel pallino accanto, perche' scritto in
+ * giallo o in ciano sul crema non si leggerebbe.
  * <p>
  * Come gli altri pannelli legge il {@link GameState} e non lo modifica mai.
  * <p>
@@ -39,7 +43,7 @@ import it.unibo.monopoly.model.player.Player;
  * (layout, dimensioni, bordi) senza il rischio di chiamare metodi ridefiniti da una
  * sottoclasse non ancora inizializzata.
  */
-public final class PlayerInfoPanel extends CardPanel {
+public final class PlayerInfoPanel extends JPanel {
 
     /** Vedi {@link TilePanel#serialVersionUID}. */
     private static final long serialVersionUID = 1L;
@@ -49,13 +53,15 @@ public final class PlayerInfoPanel extends CardPanel {
 
     /**
      * Larghezza a cui mandare a capo l'elenco delle proprieta', in pixel: la colonna
-     * meno i margini interni del pannello e della scheda.
+     * meno i margini interni della scheda e il suo bordo.
      */
-    private static final int TEXT_WIDTH = PREFERRED_WIDTH - 4 * Theme.PADDING - 30;
+    private static final int TEXT_WIDTH = PREFERRED_WIDTH - 2 * Theme.PADDING - 20;
 
     private final transient GameState state;
     private final transient List<PlayerCard> cards;
-    private final JLabel bankLabel;
+
+    /** L'importo in cassa, scritto in grande sulla scheda della banca. */
+    private final JLabel bankAmount;
 
     /**
      * Crea il pannello con una scheda per giocatore.
@@ -64,20 +70,22 @@ public final class PlayerInfoPanel extends CardPanel {
      * @throws IllegalArgumentException se lo stato e' null
      */
     public PlayerInfoPanel(final GameState state) {
-        super(null, Theme.GOLD, 1);
+        super();
         if (state == null) {
             throw new IllegalArgumentException("Lo stato della partita non puo' essere null");
         }
         this.state = state;
         this.cards = new ArrayList<>();
-        this.bankLabel = new JLabel();
+        this.bankAmount = Theme.label("", Theme.AMOUNT_FONT, Theme.ACCENT_BLUE);
 
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        this.setBackground(Theme.DARK_GREEN);
-        this.setBorder(Theme.padding(Theme.PADDING));
+        this.setOpaque(false);
         this.setPreferredSize(new Dimension(PREFERRED_WIDTH, 0));
 
-        final JLabel title = Theme.label("Giocatori", Theme.HEADING_FONT, Theme.GOLD);
+        this.add(this.createBankCard());
+        this.add(Box.createVerticalStrut(2 * Theme.GAP));
+        // Il titolo sta direttamente sul tavolo: il testo scuro sul verde salvia si legge bene.
+        final JLabel title = Theme.label("Giocatori", Theme.HEADING_FONT, Theme.TEXT_DARK);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
         this.add(title);
         this.add(Box.createVerticalStrut(Theme.GAP));
@@ -88,10 +96,6 @@ public final class PlayerInfoPanel extends CardPanel {
             this.add(Box.createVerticalStrut(Theme.GAP));
         }
         this.add(Box.createVerticalGlue());
-        this.bankLabel.setFont(Theme.BODY_FONT);
-        this.bankLabel.setForeground(Theme.TEXT_LIGHT);
-        this.bankLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        this.add(this.bankLabel);
         this.refresh();
     }
 
@@ -108,8 +112,23 @@ public final class PlayerInfoPanel extends CardPanel {
         for (final PlayerCard card : this.cards) {
             card.refresh(highlighted.filter(card::isFor).isPresent());
         }
-        this.bankLabel.setText("Cassa della banca: "
-                + ViewStyle.formatMoney(this.state.getContext().getBank().getBalance()));
+        this.bankAmount.setText(ViewStyle.formatMoney(this.state.getContext().getBank().getBalance()));
+    }
+
+    /**
+     * La scheda della banca: un'etichetta chiara e, sotto, l'importo in cassa in grande.
+     * Il bordo e' quello marcato, piu' spesso di quello dei giocatori, perche' e' la
+     * prima cosa che la colonna deve mostrare.
+     */
+    private CardPanel createBankCard() {
+        final CardPanel card = Theme.card(new BorderLayout(0, 2));
+        card.setOutline(Theme.BORDER_STRONG, 2);
+        card.add(Theme.label("Cassa della banca", Theme.BODY_BOLD_FONT, Theme.TEXT_DARK), BorderLayout.NORTH);
+        card.add(this.bankAmount, BorderLayout.CENTER);
+        card.setAlignmentX(Component.LEFT_ALIGNMENT);
+        // Nel BoxLayout la scheda si allargherebbe anche in altezza: resta alta quanto il suo contenuto.
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, card.getPreferredSize().height));
+        return card;
     }
 
     /**
@@ -133,7 +152,7 @@ public final class PlayerInfoPanel extends CardPanel {
         private final JLabel propertiesLabel;
 
         PlayerCard(final Player player) {
-            super(null, null, 0);
+            super(null, Theme.BORDER, 1);
             this.player = player;
             this.nameLabel = new JLabel();
             this.moneyLabel = new JLabel();
@@ -146,6 +165,7 @@ public final class PlayerInfoPanel extends CardPanel {
             this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             this.setAlignmentX(Component.LEFT_ALIGNMENT);
             this.setBorder(BorderFactory.createEmptyBorder(Theme.GAP, Theme.PADDING, Theme.GAP, Theme.PADDING));
+            this.setBackground(Theme.CREAM);
             this.nameLabel.setFont(Theme.NAME_FONT);
             this.nameLabel.setForeground(Theme.TEXT_DARK);
             // Il pallino della pedina segue il suo nome: "Alice (Cappello) ●".
@@ -186,9 +206,9 @@ public final class PlayerInfoPanel extends CardPanel {
             this.statusLabel.setForeground(ViewStyle.colorOf(this.player.getStatus()));
             this.propertiesLabel.setText(describeProperties(this.player));
 
-            // Il turno si legge dalla cornice oro e dallo sfondo appena piu' caldo.
-            this.setBackground(current ? Theme.CURRENT_CARD : Theme.CREAM);
-            this.setOutline(current ? Theme.GOLD : null, current ? Theme.HIGHLIGHT_WIDTH : 0);
+            // Il turno si legge dal bordo grigio spesso e dallo sfondo velato di verde.
+            this.setBackground(current ? Theme.CURRENT_SURFACE : Theme.CREAM);
+            this.setOutline(current ? Theme.BORDER_STRONG : Theme.BORDER, current ? Theme.HIGHLIGHT_WIDTH : 1);
         }
 
         /**
