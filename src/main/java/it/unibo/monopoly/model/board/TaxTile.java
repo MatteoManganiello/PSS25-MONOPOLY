@@ -41,11 +41,6 @@ public class TaxTile extends Tile {
         this.economy = economy;
     }
 
-    /** @return l'importo base della tassa */
-    public int getAmount() {
-        return this.amount;
-    }
-
     /** @return {@link TileCategory#TAX}: la casella impone un pagamento */
     @Override
     public TileCategory getCategory() {

@@ -43,8 +43,8 @@ public class GameContext {
     }
 
     /**
-     * Crea un contesto attorno a una banca gia' esistente (utile nei test e, in
-     * futuro, per ricaricare una partita salvata).
+     * Crea un contesto attorno a una banca gia' esistente (utile nei test e per
+     * ricaricare una partita salvata).
      *
      * @param bank la banca della partita
      * @throws IllegalArgumentException se la banca e' null

@@ -15,9 +15,6 @@ public class Dice {
     /** Quante facce ha ogni dado. */
     public static final int FACES = 6;
 
-    /** Quanti dadi si lanciano insieme. */
-    public static final int NUMBER_OF_DICE = 2;
-
     /** Il valore che hanno i dadi prima di essere lanciati la prima volta. */
     private static final int NOT_ROLLED = 0;
 

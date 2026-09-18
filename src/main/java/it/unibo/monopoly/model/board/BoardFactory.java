@@ -20,9 +20,8 @@ import it.unibo.monopoly.model.game.JailManager;
  * I nomi delle caselle sono quelli dell'edizione italiana del gioco; gli identificatori
  * del codice restano invece in inglese, come nel resto del progetto.
  * <p>
- * Le caselle "Imprevisti" e "Probabilita'" sono ancora {@link PlaceholderTile}:
- * il mazzo di carte non fa parte del Giorno 3, e una casella segnaposto senza effetto
- * permette di avere gia' il tabellone completo e giocabile.
+ * Le caselle "Imprevisti" e "Probabilita'" sono {@link PlaceholderTile}: segnaposto
+ * senza effetto, che permettono di avere il tabellone completo e giocabile.
  * <p>
  * Le proprieta' non sono piu' tutte uguali: qui si sceglie il tipo concreto giusto
  * ({@link StreetTile}, {@link StationTile}, {@link UtilityTile}) e, per i terreni, il
@@ -93,7 +92,7 @@ public final class BoardFactory {
         tiles.add(street("Piazza Dante", 19, 200, 16, ColorGroup.ORANGE, context));
 
         // --- Terzo lato: dal posteggio al "Vai in prigione" ---
-        tiles.add(new FreeParkingTile("Posteggio gratuito", Board.FREE_PARKING_POSITION, economy));
+        tiles.add(new FreeParkingTile("Posteggio gratuito", Board.FREE_PARKING_POSITION));
         tiles.add(street("Via Marco Polo", 21, 220, 18, ColorGroup.RED, context));
         tiles.add(card("Imprevisti", 22));
         tiles.add(street("Corso Magellano", 23, 220, 18, ColorGroup.RED, context));
@@ -135,7 +134,7 @@ public final class BoardFactory {
         return new UtilityTile(name, position, UTILITY_PRICE, context);
     }
 
-    /** Casella "Imprevisti" o "Probabilita'": segnaposto in attesa del mazzo di carte. */
+    /** Casella "Imprevisti" o "Probabilita'": segnaposto senza effetto. */
     private static PlaceholderTile card(final String name, final int position) {
         return new PlaceholderTile(name, position);
     }

@@ -66,8 +66,8 @@ public class Bank {
      * Preleva denaro da un giocatore e lo versa alla banca (tasse, acquisti, multe).
      * <p>
      * Se il giocatore non ha fondi sufficienti l'operazione non viene eseguita e il
-     * metodo restituisce {@code false}: la gestione del fallimento (vendita di case,
-     * ipoteche, uscita dalla partita) sara' responsabilita' del controller.
+     * metodo restituisce {@code false}: la gestione del fallimento spetta a
+     * {@link EconomyManager}.
      *
      * @param player il giocatore che paga
      * @param amount importo da prelevare, strettamente positivo

@@ -11,11 +11,12 @@ import it.unibo.monopoly.model.player.Player;
  * <p>
  * Estende {@link Tile} perche' una proprieta' <em>e'</em> una casella: ha nome e
  * posizione come tutte le altre, ma in piu' ha un prezzo, un affitto e un
- * eventuale proprietario. Sara' a sua volta la classe base delle proprieta'
- * specializzate (terreni con case/alberghi, stazioni, societa'), che
- * ridefiniranno il calcolo dell'affitto.
+ * eventuale proprietario. E' astratta perche' da sola non e' una casella completa:
+ * e' la classe base di {@link it.unibo.monopoly.model.board.PropertyTile PropertyTile},
+ * che aggiunge il comportamento in partita e da cui derivano le proprieta' concrete
+ * (terreni, stazioni, societa'), ognuna con il proprio calcolo dell'affitto.
  */
-public class Property extends Tile {
+public abstract class Property extends Tile {
 
     private final int price;
     private final int rent;
@@ -51,13 +52,14 @@ public class Property extends Tile {
     }
 
     /**
-     * Affitto dovuto da chi si ferma sulla casella.
+     * Affitto base scritto sulla casella.
      * <p>
-     * E' un metodo (e non un semplice accesso al campo) proprio per poter essere
-     * ridefinito dalle sottoclassi: un terreno con le case, una stazione o una
-     * societa' calcolano l'affitto in modi diversi.
+     * Le sottoclassi non ridefiniscono questo metodo: l'affitto effettivamente dovuto
+     * lo calcola {@link it.unibo.monopoly.model.board.PropertyTile#computeRent
+     * PropertyTile.computeRent(...)}, ed e' quello il metodo che terreni, stazioni e
+     * societa' ridefiniscono, partendo o meno da questo valore.
      *
-     * @return l'importo dell'affitto
+     * @return l'affitto base
      */
     public int getRent() {
         return this.rent;

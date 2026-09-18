@@ -96,11 +96,6 @@ public final class TilePanel extends JPanel {
         this.setToolTipText(tile.getName());
     }
 
-    /** @return la casella rappresentata da questo componente */
-    public Tile getTile() {
-        return this.tile;
-    }
-
     /**
      * Aggiorna l'elenco dei giocatori fermi su questa casella e ridisegna.
      *

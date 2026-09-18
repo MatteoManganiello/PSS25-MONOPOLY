@@ -37,10 +37,8 @@ import it.unibo.monopoly.model.player.Player;
  * si abilitano solo quando il motore dichiara che l'azione e' consentita
  * ({@link GameEngine#canRollDice()} e simili).
  * <p>
- * Il riquadro "Azioni" e' pensato per crescere: oggi contiene la sola azione
- * contestuale gia' prevista dal motore, il pagamento della cauzione, ed e' il posto
- * dove finiranno la conferma di acquisto di una proprieta' e la vendita alla banca
- * quando il {@link GameEngine} esporra' i comandi corrispondenti.
+ * Il riquadro "Azioni" raccoglie le azioni contestuali, attive solo quando servono:
+ * il pagamento della cauzione e la decisione di acquisto ("Compra" / "Non comprare").
  * <p>
  * La classe e' {@code final}: e' un componente grafico concreto, non un punto di
  * estensione, e dichiararlo esplicitamente permette al costruttore di configurarsi
