@@ -3,6 +3,7 @@ package it.unibo.monopoly.view;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -56,8 +57,11 @@ public final class TilePanel extends JPanel {
      */
     private static final long serialVersionUID = 1L;
 
-    /** Lato preferito della casella, in pixel: 11 caselle per lato danno un tabellone di ~640px. */
-    private static final int PREFERRED_SIDE = 58;
+    /**
+     * Lato preferito della casella, in pixel: 11 caselle per lato danno un tabellone di
+     * ~700px. E' quanto basta perche', con i margini interni, i nomi stiano su due righe.
+     */
+    private static final int PREFERRED_SIDE = 64;
 
     /**
      * Altezza della banda in alto sulle caselle acquistabili. Insieme a
@@ -66,7 +70,7 @@ public final class TilePanel extends JPanel {
     private static final int BAND_HEIGHT = 10;
 
     /** Spazio fra la banda e la prima riga del nome. */
-    private static final int BAND_GAP = 2;
+    private static final int BAND_GAP = 4;
 
     /** Diametro del segnalino del proprietario, disegnato dentro la banda. */
     private static final int OWNER_BADGE = 8;
@@ -77,8 +81,14 @@ public final class TilePanel extends JPanel {
     /** Diametro della pedina disegnata sulla casella. */
     private static final int TOKEN_DIAMETER = 12;
 
-    /** Margine interno della casella. */
-    private static final int PADDING = 3;
+    /** Margine interno della casella: distanza di testo e segnalini dai bordi. */
+    private static final int PADDING = 5;
+
+    /** Distanza delle pedine dal bordo inferiore: un po' meno del margine, dove lo spazio e' piu' stretto. */
+    private static final int TOKEN_BOTTOM_MARGIN = 3;
+
+    /** Misura minima a cui si puo' rimpicciolire una parola troppo lunga per la casella. */
+    private static final float MIN_FONT_SIZE = 7f;
 
     /** Numero massimo di righe su cui spezzare il nome della casella. */
     private static final int MAX_NAME_LINES = 3;
@@ -236,6 +246,10 @@ public final class TilePanel extends JPanel {
      * in basso riservata alle pedine. Cosi' il dettaglio - prezzo o importo - resta
      * sempre leggibile e non finisce sotto le pedine anche sulle caselle dal nome
      * lungo, che vengono invece accorciate con i puntini (il nome intero e' nel tooltip).
+     * <p>
+     * Una parola sola piu' larga della casella ("patrimoniale") non si puo' mandare a
+     * capo: quella riga viene scritta appena piu' piccola, cosi' resta dentro i margini
+     * invece di finire sul bordo.
      */
     private void paintTexts(final Graphics2D graphics, final int width, final int height, final int textTop) {
         graphics.setColor(Theme.TEXT_DARK);
@@ -251,7 +265,8 @@ public final class TilePanel extends JPanel {
 
         int baseline = textTop + nameMetrics.getAscent();
         for (final String line : wrap(this.tile.getName(), nameMetrics, usableWidth, maxLines)) {
-            graphics.drawString(line, centeredX(line, nameMetrics, width), baseline);
+            graphics.setFont(fitting(Theme.TILE_NAME_FONT, line, usableWidth, graphics));
+            graphics.drawString(line, centeredX(line, graphics.getFontMetrics(), width), baseline);
             baseline += nameMetrics.getHeight();
         }
 
@@ -259,7 +274,7 @@ public final class TilePanel extends JPanel {
             // Il dettaglio (prezzo, importo, ...) e' in blu: si distingue dal nome a colpo
             // d'occhio senza bisogno di un carattere piu' grande, che qui non ci starebbe.
             graphics.setColor(Theme.ACCENT_BLUE);
-            graphics.setFont(Theme.TILE_DETAIL_FONT);
+            graphics.setFont(fitting(Theme.TILE_DETAIL_FONT, detail, usableWidth, graphics));
             final FontMetrics detailMetrics = graphics.getFontMetrics();
             // Appena sopra le pedine se il nome lo consente, subito sotto al nome
             // altrimenti; mai oltre il bordo inferiore. Dopo il ciclo "baseline" e' gia'
@@ -291,7 +306,7 @@ public final class TilePanel extends JPanel {
                 : Math.max(1, Math.min(TOKEN_DIAMETER + 1, available / (count - 1)));
         final int totalWidth = (count - 1) * spacing + TOKEN_DIAMETER;
         int x = Math.max(PADDING, (width - totalWidth) / 2);
-        final int y = height - TOKEN_DIAMETER - 2;
+        final int y = height - TOKEN_DIAMETER - TOKEN_BOTTOM_MARGIN;
 
         for (final Player player : this.occupants) {
             final Color tokenColor = ViewStyle.colorOf(player.getToken());
@@ -328,6 +343,19 @@ public final class TilePanel extends JPanel {
         graphics.setColor(Theme.DARK_GREEN);
         graphics.setStroke(new BasicStroke(1f));
         graphics.drawRect(0, 0, width - 1, height - 1);
+    }
+
+    /**
+     * @return il carattere con cui il testo sta nella larghezza indicata: quello dato se
+     *         ci sta gia', altrimenti una sua versione piu' piccola, fino a
+     *         {@link #MIN_FONT_SIZE}
+     */
+    private static Font fitting(final Font font, final String text, final int maxWidth, final Graphics2D graphics) {
+        final int textWidth = graphics.getFontMetrics(font).stringWidth(text);
+        if (textWidth <= maxWidth) {
+            return font;
+        }
+        return font.deriveFont(Math.max(MIN_FONT_SIZE, font.getSize2D() * maxWidth / textWidth));
     }
 
     /** @return la coordinata x che centra il testo nella casella */

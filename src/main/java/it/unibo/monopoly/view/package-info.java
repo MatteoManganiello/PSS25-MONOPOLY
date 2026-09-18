@@ -21,7 +21,8 @@
  * in cui si sceglie chi gioca: mostra una {@link it.unibo.monopoly.view.PlayerSetupRow}
  * per giocatore, non contiene nessuna regola (le chiede a
  * {@link it.unibo.monopoly.controller.GameSetup}) e alla conferma consegna i giocatori
- * a chi avvia il gioco.
+ * a chi avvia il gioco. A partita finita la finestra di gioco si chiude e si torna qui,
+ * pronti per la partita successiva.
  * <p>
  * Le frasi della cronaca sono scritte una volta sola in
  * {@link it.unibo.monopoly.view.TextGameObserver}, la classe astratta da cui derivano sia la

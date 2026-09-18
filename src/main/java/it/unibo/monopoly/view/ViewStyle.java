@@ -2,6 +2,7 @@ package it.unibo.monopoly.view;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.util.EnumMap;
@@ -104,7 +105,22 @@ public final class ViewStyle {
      * @return un'icona quadrata con il colore della pedina
      */
     public static Icon iconOf(final Token token) {
-        return new TokenIcon(colorOf(token));
+        return new TokenIcon(colorOf(token), TokenIcon.DOT_SIDE, "");
+    }
+
+    /**
+     * Distintivo tondo di un giocatore: il colore della sua pedina con una scritta al
+     * centro, per esempio il suo numero nella schermata di setup.
+     * <p>
+     * E' disegnato come le pedine sul tabellone, che portano l'iniziale del giocatore:
+     * la scritta e' scura sulle pedine chiare e chiara su quelle scure.
+     *
+     * @param token la pedina del giocatore, oppure null se non l'ha ancora scelta
+     * @param text  la scritta da mettere al centro
+     * @return un'icona tonda, piu' grande di quella di {@link #iconOf(Token)}
+     */
+    public static Icon badgeOf(final Token token, final String text) {
+        return new TokenIcon(colorOf(token), TokenIcon.BADGE_SIDE, text);
     }
 
     /**
@@ -212,20 +228,29 @@ public final class ViewStyle {
     }
 
     /**
-     * Il pallino colorato restituito da {@link #iconOf(Token)}.
+     * Il pallino colorato restituito da {@link #iconOf(Token)} e il distintivo di
+     * {@link #badgeOf(Token, String)}: sono la stessa figura, cambiano solo la misura e
+     * la scritta.
      * <p>
      * E' una classe annidata privata perche' non serve a nessun altro: e' solo il modo
      * di dare a Swing qualcosa da disegnare accanto al nome della pedina.
      */
     private static final class TokenIcon implements Icon {
 
-        /** Lato dell'icona, in pixel. */
-        private static final int SIDE = 12;
+        /** Lato del pallino semplice, in pixel. */
+        private static final int DOT_SIDE = 12;
+
+        /** Lato del distintivo con la scritta, in pixel. */
+        private static final int BADGE_SIDE = 26;
 
         private final Color color;
+        private final int side;
+        private final String text;
 
-        private TokenIcon(final Color color) {
+        private TokenIcon(final Color color, final int side, final String text) {
             this.color = color;
+            this.side = side;
+            this.text = text;
         }
 
         @Override
@@ -234,9 +259,17 @@ public final class ViewStyle {
             try {
                 Theme.antialias(graphics);
                 graphics.setColor(this.color);
-                graphics.fillOval(x, y, SIDE, SIDE);
+                graphics.fillOval(x, y, this.side, this.side);
                 graphics.setColor(Theme.DARK_GREEN);
-                graphics.drawOval(x, y, SIDE, SIDE);
+                graphics.drawOval(x, y, this.side, this.side);
+                if (!this.text.isEmpty()) {
+                    graphics.setColor(Theme.readableTextOn(this.color));
+                    graphics.setFont(Theme.NAME_FONT);
+                    final FontMetrics metrics = graphics.getFontMetrics();
+                    graphics.drawString(this.text,
+                            x + (this.side - metrics.stringWidth(this.text)) / 2,
+                            y + (this.side - metrics.getHeight()) / 2 + metrics.getAscent());
+                }
             } finally {
                 graphics.dispose();
             }
@@ -244,12 +277,12 @@ public final class ViewStyle {
 
         @Override
         public int getIconWidth() {
-            return SIDE;
+            return this.side + 1;
         }
 
         @Override
         public int getIconHeight() {
-            return SIDE;
+            return this.side + 1;
         }
     }
 

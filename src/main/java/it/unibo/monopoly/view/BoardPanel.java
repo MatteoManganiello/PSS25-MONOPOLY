@@ -1,6 +1,5 @@
 package it.unibo.monopoly.view;
 
-import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Point;
@@ -10,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
@@ -145,32 +143,12 @@ public final class BoardPanel extends JPanel {
         this.turnLabel.setIconTextGap(Theme.GAP);
         this.turnLabel.setAlignmentX(CENTER_ALIGNMENT);
 
-        final JPanel banner = createTitleBanner();
         center.add(Box.createVerticalGlue());
-        center.add(banner);
+        center.add(Theme.titleBanner());
         center.add(Box.createVerticalStrut(2 * Theme.GAP));
         center.add(this.turnLabel);
         center.add(Box.createVerticalGlue());
         return center;
-    }
-
-    /**
-     * La fascia con il nome del gioco: rossa con la cornice oro e la scritta crema,
-     * come il marchio stampato sui tabelloni veri.
-     */
-    private static JPanel createTitleBanner() {
-        final CardPanel banner = new CardPanel(new BorderLayout(), Theme.GOLD, 2);
-        banner.setBackground(Theme.MONOPOLY_RED);
-        banner.setBorder(Theme.padding(Theme.GAP));
-        final JLabel title = Theme.label("MONOPOLY", Theme.TITLE_FONT, Theme.TEXT_LIGHT);
-        title.setHorizontalAlignment(JLabel.CENTER);
-        title.setBorder(BorderFactory.createEmptyBorder(0, 2 * Theme.GAP, 0, 2 * Theme.GAP));
-        banner.add(title, BorderLayout.CENTER);
-        banner.setAlignmentX(CENTER_ALIGNMENT);
-        // Nel BoxLayout un pannello si allargherebbe a tutta la larghezza: la fascia
-        // deve restare delle dimensioni della scritta.
-        banner.setMaximumSize(banner.getPreferredSize());
-        return banner;
     }
 
     /**

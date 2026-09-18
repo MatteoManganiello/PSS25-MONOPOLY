@@ -34,6 +34,13 @@ import it.unibo.monopoly.model.player.Player;
  * giocatori, che erano costruiti sulla partita precedente, e poi si ridisegna. Il
  * pannello dei comandi resta, perche' interroga sempre il motore, e con lui resta il log.
  * <p>
+ * <b>Fine della partita.</b> Quando resta un solo giocatore la finestra annuncia il
+ * vincitore e, appena l'utente chiude l'annuncio, si chiude a sua volta ed esegue
+ * l'azione {@code onGameFinished} ricevuta nel costruttore. La finestra non sa cosa
+ * succede dopo: e' {@link it.unibo.monopoly.MonopolyApp MonopolyApp} a decidere di
+ * riaprire la schermata iniziale, esattamente come e' lei a decidere cosa fare dei
+ * giocatori scelti nella {@link SetupWindow}.
+ * <p>
  * <b>Collegamento con il model.</b> La finestra implementa {@link GameObserver} e si
  * registra sul {@link GameEngine}: e' l'unico punto in cui gli eventi della partita
  * entrano nella GUI. Non ascolta uno per uno gli eventi di dettaglio (movimento,
@@ -83,6 +90,9 @@ public final class MainWindow extends JFrame implements GameObserver {
 
     private final transient GameEngine engine;
 
+    /** Cosa fare quando la partita e' finita e la finestra si e' chiusa. */
+    private final transient Runnable onGameFinished;
+
     /** Tabellone della partita mostrata: cambia quando viene caricata un'altra partita. */
     private BoardPanel boardPanel;
 
@@ -101,15 +111,21 @@ public final class MainWindow extends JFrame implements GameObserver {
      * Costruisce la finestra sulla partita gestita dal motore indicato e la registra
      * come osservatore.
      *
-     * @param engine il motore della partita, unico canale verso il model
-     * @throws IllegalArgumentException se il motore e' null
+     * @param engine         il motore della partita, unico canale verso il model
+     * @param onGameFinished l'azione da eseguire a partita finita, dopo che l'utente ha
+     *                       letto chi ha vinto e la finestra si e' chiusa
+     * @throws IllegalArgumentException se il motore o l'azione sono null
      */
-    public MainWindow(final GameEngine engine) {
+    public MainWindow(final GameEngine engine, final Runnable onGameFinished) {
         super(TITLE);
         if (engine == null) {
             throw new IllegalArgumentException("Il motore della partita non puo' essere null");
         }
+        if (onGameFinished == null) {
+            throw new IllegalArgumentException("Serve un'azione da eseguire a fine partita");
+        }
         this.engine = engine;
+        this.onGameFinished = onGameFinished;
         final GameState state = engine.getState();
         this.displayedState = state;
         this.boardPanel = new BoardPanel(state);
@@ -232,7 +248,8 @@ public final class MainWindow extends JFrame implements GameObserver {
 
     /**
      * Chiude la partita: aggiorna i pannelli (i comandi si disabilitano da soli,
-     * perche' il motore non consente piu' nessuna azione) e annuncia il vincitore.
+     * perche' il motore non consente piu' nessuna azione), annuncia il vincitore e,
+     * quando l'utente chiude l'annuncio, lascia il posto alla schermata iniziale.
      * Il riepilogo finale lo scrive il log, subito dopo la propria riga di fine partita.
      *
      * @param winner il giocatore rimasto in partita
@@ -242,10 +259,14 @@ public final class MainWindow extends JFrame implements GameObserver {
         this.refreshAll();
         // La finestra di dialogo e' modale: mostrarla piu' tardi lascia prima finire
         // la notifica in corso, evitando di bloccare il motore a meta' di un comando.
-        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this,
-                "Vince " + winner.getName() + " con " + ViewStyle.formatMoney(winner.getMoney()) + " in cassa!",
-                "Partita finita",
-                JOptionPane.INFORMATION_MESSAGE));
+        SwingUtilities.invokeLater(() -> {
+            JOptionPane.showMessageDialog(this,
+                    "Vince " + winner.getName() + " con " + ViewStyle.formatMoney(winner.getMoney())
+                            + " in cassa!\nSi torna alla schermata iniziale per una nuova partita.",
+                    "Partita finita",
+                    JOptionPane.INFORMATION_MESSAGE);
+            this.leaveFinishedGame();
+        });
     }
 
     /**
@@ -253,9 +274,10 @@ public final class MainWindow extends JFrame implements GameObserver {
      * <p>
      * Senza questo passaggio il {@link GameEngine} continuerebbe a tenere un
      * riferimento alla finestra e al suo log e a notificarli a ogni comando: una
-     * finestra gia' chiusa resterebbe in memoria e continuerebbe a ridisegnarsi. Oggi
-     * la chiusura dalla "X" termina l'intera applicazione, ma il motore puo' sopravvivere
-     * alla finestra che lo osserva. Caricare una partita, invece, non passa da qui: la
+     * finestra gia' chiusa resterebbe in memoria e continuerebbe a ridisegnarsi. La
+     * chiusura dalla "X" termina l'intera applicazione, ma a fine partita la finestra si
+     * chiude da sola e il programma continua con la schermata iniziale: li' questo
+     * passaggio e' indispensabile. Caricare una partita, invece, non passa da qui: la
      * finestra resta la stessa e il motore sposta da solo le registrazioni sulla nuova
      * partita.
      * <p>
@@ -267,6 +289,19 @@ public final class MainWindow extends JFrame implements GameObserver {
         this.engine.removeObserver(this);
         this.engine.removeObserver(this.logObserver);
         super.dispose();
+    }
+
+    /**
+     * Passa la mano a chi deve continuare dopo la partita, poi chiude la finestra.
+     * <p>
+     * L'ordine conta: se si chiudesse prima questa, per un istante non resterebbe
+     * nessuna finestra aperta, ed e' proprio la condizione in cui Java puo' decidere di
+     * terminare il programma. Chiudendo la finestra, {@link #dispose()} la scollega
+     * anche dal motore.
+     */
+    private void leaveFinishedGame() {
+        this.onGameFinished.run();
+        this.dispose();
     }
 
     /** @return il fondo della finestra: il verde del tavolo, su cui poggiano i pannelli */

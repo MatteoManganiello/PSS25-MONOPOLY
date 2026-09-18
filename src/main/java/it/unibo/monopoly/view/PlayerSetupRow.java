@@ -20,7 +20,9 @@ import it.unibo.monopoly.model.player.Token;
 
 /**
  * La riga di un giocatore nella schermata di setup: il suo numero, la casella per il
- * nome, la tendina per la pedina e il pulsante per toglierlo dal tavolo.
+ * nome, la tendina per la pedina e il pulsante per toglierlo dal tavolo. Il numero sta
+ * in un distintivo tondo del colore della pedina scelta, che cambia colore insieme
+ * alla tendina: e' un'anteprima di come il giocatore apparira' sul tabellone.
  * <p>
  * E' un componente e basta: non decide niente e non sa nemmeno quanti giocatori ci
  * sono. Sa fare due cose, che e' quello che serve al {@link SetupWindow}:
@@ -52,7 +54,9 @@ final class PlayerSetupRow extends CardPanel {
     /** Larghezza fissa della tendina, cosi' le righe restano incolonnate. */
     private static final Dimension CHOOSER_SIZE = new Dimension(140, 26);
 
-    private final JLabel numberLabel;
+    /** Il distintivo con il numero del giocatore, del colore della sua pedina. */
+    private final JLabel badge;
+
     private final JTextField nameField;
     private final JComboBox<Token> tokenChooser;
     private final JButton removeButton;
@@ -75,6 +79,9 @@ final class PlayerSetupRow extends CardPanel {
      */
     private boolean rebuildingChoices;
 
+    /** Il numero del giocatore, a partire da 1; 0 finche' la finestra non lo assegna. */
+    private int number;
+
     /**
      * Crea la riga di un giocatore.
      *
@@ -89,8 +96,7 @@ final class PlayerSetupRow extends CardPanel {
         this.setBackground(Theme.CREAM);
         this.setBorder(BorderFactory.createEmptyBorder(Theme.GAP / 2, Theme.PADDING, Theme.GAP / 2, Theme.PADDING));
 
-        this.numberLabel = Theme.label("", Theme.NAME_FONT, Theme.TEXT_DARK);
-        this.numberLabel.setPreferredSize(new Dimension(24, 20));
+        this.badge = new JLabel();
 
         this.proposedName = initialName;
         this.nameField = new JTextField(initialName, NAME_COLUMNS);
@@ -103,6 +109,9 @@ final class PlayerSetupRow extends CardPanel {
         this.tokenChooser.setPreferredSize(CHOOSER_SIZE);
         this.tokenChooser.setRenderer(new TokenRenderer());
         this.tokenChooser.addActionListener(event -> {
+            // Il distintivo segue sempre la tendina; la finestra va avvisata solo
+            // quando a cambiare pedina e' l'utente.
+            this.refreshBadge();
             if (!this.rebuildingChoices) {
                 onTokenChosen.run();
             }
@@ -113,7 +122,7 @@ final class PlayerSetupRow extends CardPanel {
         this.removeButton.setToolTipText("Toglie questo giocatore dalla partita");
         this.removeButton.addActionListener(event -> onRemoveRequested.accept(this));
 
-        this.add(this.numberLabel);
+        this.add(this.badge);
         this.add(Theme.label("Nome:", Theme.BODY_BOLD_FONT, Theme.TEXT_DARK));
         this.add(this.nameField);
         this.add(Theme.label("Pedina:", Theme.BODY_BOLD_FONT, Theme.TEXT_DARK));
@@ -158,13 +167,13 @@ final class PlayerSetupRow extends CardPanel {
     }
 
     /**
-     * Aggiorna il posto occupato dalla riga: il numero mostrato davanti, il nome
+     * Aggiorna il posto occupato dalla riga: il numero sul distintivo, il nome
      * proposto e il pulsante "Togli" (che si spegne quando i giocatori sono gia' il
      * minimo consentito).
      * <p>
      * Il nome viene riscritto <em>solo</em> se nella casella c'e' ancora quello
      * proposto: togliendo un giocatore gli altri si rinumerano, e sarebbe strano
-     * vedere "3." davanti a "Giocatore 4". Se invece l'utente ha scritto il proprio
+     * vedere il distintivo "3" davanti a "Giocatore 4". Se invece l'utente ha scritto il proprio
      * nome, quello non si tocca.
      *
      * @param number       il numero del giocatore, a partire da 1
@@ -172,12 +181,18 @@ final class PlayerSetupRow extends CardPanel {
      * @param removable    true se questo giocatore si puo' togliere
      */
     void updatePosition(final int number, final String defaultName, final boolean removable) {
-        this.numberLabel.setText(number + ".");
+        this.number = number;
+        this.refreshBadge();
         if (this.proposedName.equals(this.nameField.getText())) {
             this.nameField.setText(defaultName);
         }
         this.proposedName = defaultName;
         this.removeButton.setEnabled(removable);
+    }
+
+    /** Ridisegna il distintivo con il numero attuale e il colore della pedina scelta. */
+    private void refreshBadge() {
+        this.badge.setIcon(ViewStyle.badgeOf(this.getSelectedToken(), String.valueOf(this.number)));
     }
 
     /** Porta il cursore nella casella del nome, cosi' si puo' scrivere subito. */

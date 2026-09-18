@@ -1,6 +1,7 @@
 package it.unibo.monopoly.view;
 
 import java.awt.BasicStroke;
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
@@ -17,6 +18,7 @@ import javax.swing.BorderFactory;
 import javax.swing.ButtonModel;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.border.AbstractBorder;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
@@ -195,6 +197,9 @@ public final class Theme {
     /** Titoli principali: la scritta del tabellone e quella della schermata di setup. */
     public static final Font TITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 28);
 
+    /** Sottotitoli delle schermate, come la domanda "Chi gioca?" del setup. */
+    public static final Font SUBTITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 20);
+
     /** Intestazioni dei pannelli e giocatore di turno al centro del tabellone. */
     public static final Font HEADING_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 15);
 
@@ -360,6 +365,29 @@ public final class Theme {
         label.setFont(font);
         label.setForeground(color);
         return label;
+    }
+
+    /**
+     * Crea la fascia con il nome del gioco: rossa con la cornice oro e la scritta crema,
+     * come il marchio stampato sui tabelloni veri. E' la stessa al centro del tabellone
+     * e in cima alla schermata di setup, cosi' le due finestre si riconoscono come parti
+     * dello stesso gioco.
+     * <p>
+     * La fascia resta delle dimensioni della scritta anche in un {@code BoxLayout}, che
+     * altrimenti la allargherebbe a tutto lo spazio disponibile.
+     *
+     * @return la fascia, gia' centrata orizzontalmente nel suo contenitore
+     */
+    public static JPanel titleBanner() {
+        final CardPanel banner = new CardPanel(new BorderLayout(), GOLD, 2);
+        banner.setBackground(MONOPOLY_RED);
+        banner.setBorder(BorderFactory.createEmptyBorder(GAP, 3 * GAP, GAP, 3 * GAP));
+        final JLabel title = label("MONOPOLY", TITLE_FONT, TEXT_LIGHT);
+        title.setHorizontalAlignment(JLabel.CENTER);
+        banner.add(title, BorderLayout.CENTER);
+        banner.setAlignmentX(Component.CENTER_ALIGNMENT);
+        banner.setMaximumSize(banner.getPreferredSize());
+        return banner;
     }
 
     /**
