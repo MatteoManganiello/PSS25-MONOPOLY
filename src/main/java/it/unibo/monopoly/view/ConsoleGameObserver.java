@@ -11,9 +11,8 @@ import java.io.PrintStream;
  * <p>
  * Tutte le frasi della cronaca vivono in {@link TextGameObserver}, la classe astratta
  * da cui questa deriva: qui resta solo la <em>destinazione</em> del testo, cioe' lo
- * stream su cui scrivere. La GUI usa la stessa classe base per
- * riempire la propria area di log, quindi i due racconti sono identici parola per
- * parola e non c'e' un solo messaggio duplicato.
+ * stream su cui scrivere. Una nuova destinazione riuserebbe le stesse frasi parola per
+ * parola, senza un solo messaggio duplicato.
  * <p>
  * La GUI non sostituisce questa view: le due possono osservare la stessa partita
  * contemporaneamente, ed e' proprio cio' che fa

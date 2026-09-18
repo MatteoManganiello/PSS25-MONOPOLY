@@ -3,6 +3,8 @@ package it.unibo.monopoly.view;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -10,7 +12,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -18,6 +19,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
 
 import it.unibo.monopoly.controller.GameSetup;
 import it.unibo.monopoly.controller.PlayerSetup;
@@ -46,6 +48,16 @@ import it.unibo.monopoly.model.player.TokenCatalog;
  * {@link it.unibo.monopoly.MonopolyApp MonopolyApp}, che da li' in poi avvia il gioco.
  * Cosi' la finestra resta una view: raccoglie dati e li passa, senza decidere niente.
  * <p>
+ * <b>Aspetto.</b> Lo stesso della finestra di gioco: il verde del tavolo come fondo,
+ * in alto la stessa fascia "MONOPOLY" del centro del tabellone, da sola, una
+ * scheda crema con il bordo grigio per ogni giocatore, con il distintivo del colore
+ * della sua pedina, e sotto l'elenco il pulsante per aggiungerne un altro, vicino a
+ * dove comparira' la nuova riga. In fondo, oltre un filo grigio, il conteggio dei
+ * giocatori e l'azione principale, "Inizia partita".
+ * <p>
+ * La finestra si riapre anche alla fine di ogni partita: e' la schermata da cui ne
+ * parte una nuova.
+ * <p>
  * La classe e' {@code final} come le altre finestre e pannelli del progetto.
  */
 public final class SetupWindow extends JFrame {
@@ -68,7 +80,10 @@ public final class SetupWindow extends JFrame {
      * Si danno a lei e non alla finestra: cosi' {@code pack()} calcola il resto e
      * titolo e pulsanti ci stanno sempre, comunque siano larghe le righe.
      */
-    private static final Dimension ROWS_AREA_SIZE = new Dimension(560, 210);
+    private static final Dimension ROWS_AREA_SIZE = new Dimension(640, 250);
+
+    /** Pixel percorsi da ogni scatto della rotellina nell'elenco dei giocatori. */
+    private static final int SCROLL_STEP = 16;
 
     /** Le righe dei giocatori, nello stesso ordine in cui sono mostrate. */
     private final transient List<PlayerSetupRow> rows = new ArrayList<>();
@@ -76,8 +91,11 @@ public final class SetupWindow extends JFrame {
     /** Il contenitore verticale che tiene le righe. */
     private final JPanel rowsPanel = new JPanel();
 
-    private final JButton addButton = new JButton("Aggiungi giocatore");
+    private final JButton addButton = new JButton("+ Aggiungi giocatore");
     private final JButton startButton = new JButton("Inizia partita");
+
+    /** Quanti giocatori ci sono in questo momento, nella fascia in basso. */
+    private final JLabel countLabel = Theme.label("", Theme.BODY_BOLD_FONT, Theme.TEXT_DARK);
 
     /** Cosa fare con i giocatori configurati, quando l'utente conferma. */
     private final transient Consumer<List<Player>> onConfirm;
@@ -97,13 +115,18 @@ public final class SetupWindow extends JFrame {
         }
         this.onConfirm = onConfirm;
 
-        this.rowsPanel.setLayout(new BoxLayout(this.rowsPanel, BoxLayout.Y_AXIS));
-        this.rowsPanel.setBackground(ViewStyle.PANEL_BACKGROUND);
+        // Una colonna di schede tutte alte uguali, separate dallo spazio standard.
+        this.rowsPanel.setLayout(new GridLayout(0, 1, 0, Theme.GAP));
+        this.rowsPanel.setOpaque(false);
+        Theme.styleSecondary(this.addButton);
+        Theme.stylePrimary(this.startButton);
 
         this.addButton.addActionListener(event -> this.addPlayerRow());
         this.startButton.addActionListener(event -> this.confirm());
 
-        this.setLayout(new BorderLayout());
+        final JPanel table = new JPanel(new BorderLayout());
+        table.setBackground(Theme.TABLE_GREEN);
+        this.setContentPane(table);
         this.add(this.createHeader(), BorderLayout.NORTH);
         this.add(this.createRowsArea(), BorderLayout.CENTER);
         this.add(this.createButtons(), BorderLayout.SOUTH);
@@ -123,52 +146,71 @@ public final class SetupWindow extends JFrame {
     // Composizione della finestra
     // ------------------------------------------------------------------
 
-    /** Il titolo e la riga di istruzioni in cima alla finestra. */
+    /**
+     * L'intestazione: soltanto la fascia "MONOPOLY", centrata sul verde del tavolo. Le
+     * regole della schermata (quanti giocatori, pedine tutte diverse) non servono scritte:
+     * le fanno rispettare i pulsanti, e il conteggio in fondo dice quanti se ne possono
+     * aggiungere.
+     */
     private JPanel createHeader() {
-        final JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(ViewStyle.PANEL_BACKGROUND);
-        header.setBorder(BorderFactory.createEmptyBorder(12, 12, 8, 12));
-
-        final JLabel title = new JLabel("Chi gioca?");
-        title.setFont(ViewStyle.TITLE_FONT);
-        title.setForeground(ViewStyle.TEXT);
-
-        final JLabel hint = new JLabel("Da " + GameState.MIN_PLAYERS + " a " + GameState.MAX_PLAYERS
-                + " giocatori. Ogni pedina puo' essere scelta da un giocatore solo.");
-        hint.setFont(ViewStyle.PLAYER_INFO_FONT);
-        hint.setForeground(ViewStyle.TEXT);
-
-        header.add(title, BorderLayout.NORTH);
-        header.add(hint, BorderLayout.SOUTH);
+        final JPanel header = new JPanel();
+        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
+        header.setBackground(Theme.TABLE_GREEN);
+        // Il filo grigio in basso separa l'intestazione dall'elenco dei giocatori.
+        header.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.BORDER_STRONG),
+                BorderFactory.createEmptyBorder(2 * Theme.PADDING, 2 * Theme.PADDING,
+                        2 * Theme.PADDING, 2 * Theme.PADDING)));
+        header.add(Theme.titleBanner());
         return header;
     }
 
     /**
-     * L'area scorrevole con le righe dei giocatori.
+     * L'area scorrevole con le righe dei giocatori e, subito sotto l'ultima, il pulsante
+     * per aggiungerne un'altra.
      * <p>
-     * Le righe stanno in un {@link BorderLayout#NORTH}: senza, con pochi giocatori si
-     * allargherebbero in altezza per riempire lo spazio vuoto.
+     * Elenco e pulsante stanno in un {@link BorderLayout#NORTH}: senza, con pochi
+     * giocatori le righe si allargherebbero in altezza per riempire lo spazio vuoto.
      */
     private JScrollPane createRowsArea() {
+        final JPanel addRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        addRow.setOpaque(false);
+        addRow.add(this.addButton);
+
+        final JPanel list = new JPanel(new BorderLayout(0, Theme.GAP + 4));
+        list.setOpaque(false);
+        list.add(this.rowsPanel, BorderLayout.CENTER);
+        list.add(addRow, BorderLayout.SOUTH);
+
         final JPanel holder = new JPanel(new BorderLayout());
-        holder.setBackground(ViewStyle.PANEL_BACKGROUND);
-        holder.add(this.rowsPanel, BorderLayout.NORTH);
+        holder.setBackground(Theme.TABLE_GREEN);
+        holder.setBorder(BorderFactory.createEmptyBorder(0, 0, Theme.PADDING, 0));
+        holder.add(list, BorderLayout.NORTH);
 
         final JScrollPane scroller = new JScrollPane(holder);
         scroller.setPreferredSize(ROWS_AREA_SIZE);
-        scroller.getViewport().setBackground(ViewStyle.PANEL_BACKGROUND);
-        scroller.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
+        scroller.getViewport().setBackground(Theme.TABLE_GREEN);
+        scroller.setBorder(BorderFactory.createEmptyBorder(Theme.PADDING + 4, 2 * Theme.PADDING,
+                0, 2 * Theme.PADDING));
+        scroller.setBackground(Theme.TABLE_GREEN);
+        scroller.getVerticalScrollBar().setUnitIncrement(SCROLL_STEP);
         return scroller;
     }
 
-    /** La barra in basso con i due pulsanti. */
+    /**
+     * La fascia in basso, separata dall'elenco da un filo grigio come l'intestazione: a
+     * sinistra quanti giocatori ci sono, a destra il pulsante che fa partire la partita.
+     */
     private JPanel createButtons() {
-        final JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
-        buttons.setBackground(ViewStyle.PANEL_BACKGROUND);
-        buttons.add(this.addButton);
-        buttons.add(Box.createHorizontalStrut(16));
-        buttons.add(this.startButton);
-        return buttons;
+        final JPanel footer = new JPanel(new BorderLayout(Theme.GAP, 0));
+        footer.setBackground(Theme.TABLE_GREEN);
+        footer.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(1, 0, 0, 0, Theme.BORDER_STRONG),
+                BorderFactory.createEmptyBorder(Theme.PADDING, 2 * Theme.PADDING,
+                        Theme.PADDING, 2 * Theme.PADDING)));
+        footer.add(this.countLabel, BorderLayout.WEST);
+        footer.add(this.startButton, BorderLayout.EAST);
+        return footer;
     }
 
     // ------------------------------------------------------------------
@@ -194,6 +236,9 @@ public final class SetupWindow extends JFrame {
         this.rowsPanel.add(row);
         this.refresh();
         row.focusName();
+        // Con molti giocatori l'elenco scorre: la riga nuova (e il pulsante subito sotto)
+        // va portata in vista, ma solo dopo che Swing l'ha disposta e ne conosce la posizione.
+        SwingUtilities.invokeLater(() -> this.addButton.scrollRectToVisible(new Rectangle(this.addButton.getSize())));
     }
 
     /**
@@ -221,6 +266,7 @@ public final class SetupWindow extends JFrame {
         }
         this.refreshTokenChoices();
         this.addButton.setEnabled(this.rows.size() < GameState.MAX_PLAYERS && this.firstFreeToken().isPresent());
+        this.countLabel.setText(this.rows.size() + " giocatori su " + GameState.MAX_PLAYERS);
         this.rowsPanel.revalidate();
         this.rowsPanel.repaint();
     }

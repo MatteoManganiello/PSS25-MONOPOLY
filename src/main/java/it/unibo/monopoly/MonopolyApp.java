@@ -22,10 +22,12 @@ import it.unibo.monopoly.view.SetupWindow;
  * <p>
  * Il gioco non parte pero' subito: prima si apre la {@link SetupWindow}, dove si
  * decide chi gioca e con che pedina. Il percorso e' sempre lo stesso -
- * <b>setup, conferma, partita</b> - e lo comanda questa classe: la schermata di setup
- * si limita a consegnare i giocatori scelti, senza sapere cosa ne verra' fatto, ed e'
- * qui che nascono il motore e la finestra di gioco. Nessuno dei due conosce l'altro,
- * il collegamento lo fa il metodo {@code main}.
+ * <b>setup, conferma, partita, e di nuovo setup</b> - e lo comanda questa classe: la
+ * schermata di setup si limita a consegnare i giocatori scelti, senza sapere cosa ne
+ * verra' fatto, ed e' qui che nascono il motore e la finestra di gioco; la finestra di
+ * gioco, a partita finita, si limita a chiudersi e ad avvisare, ed e' qui che si
+ * decide di riaprire la schermata iniziale. Nessuna delle due finestre conosce
+ * l'altra: il collegamento lo fanno i metodi di questa classe.
  * <p>
  * Insieme alla finestra registriamo anche la vecchia view testuale
  * {@link ConsoleGameObserver}, che racconta la partita sul terminale. Non e' un
@@ -39,6 +41,9 @@ public final class MonopolyApp {
 
     /** Quanti turni gioca la demo testuale prima di fermarsi e stampare il riepilogo. */
     private static final int DEMO_TURNS = 20;
+
+    /** Proprieta' di sistema con cui macOS sposta i menu delle finestre nella barra in alto. */
+    private static final String MAC_MENU_BAR_PROPERTY = "apple.laf.useScreenMenuBar";
 
     /** L'argomento che fa partire la demo testuale invece della finestra. */
     private static final String CONSOLE_OPTION = "--console";
@@ -58,17 +63,36 @@ public final class MonopolyApp {
             runConsoleDemo();
             return;
         }
+        useSystemMenuBar();
         // Swing vuole che le finestre si creino e si usino sull'Event Dispatch Thread.
         SwingUtilities.invokeLater(MonopolyApp::startGraphicalGame);
     }
 
     /**
-     * Apre la schermata di setup. La partita vera partira' solo quando l'utente
-     * avra' confermato i giocatori: a quel punto la schermata chiama
-     * {@link #startGameWith(List)}.
+     * Chiede a macOS di mostrare i menu delle finestre nella barra dei menu del sistema,
+     * invece che in una striscia in cima alla finestra: la finestra di gioco resta tutta
+     * per il tabellone, e il menu "Partita" (salva, carica) resta raggiungibile come in
+     * qualunque altra applicazione del Mac. Sugli altri sistemi la proprieta' viene
+     * ignorata e il menu resta nella finestra.
+     * <p>
+     * Va impostata prima che Swing crei la prima finestra, altrimenti non ha effetto.
      */
+    private static void useSystemMenuBar() {
+        System.setProperty(MAC_MENU_BAR_PROPERTY, "true");
+    }
+
+    /** Prepara l'aspetto delle finestre e apre la prima schermata di setup. */
     private static void startGraphicalGame() {
         applySystemLookAndFeel();
+        showSetup();
+    }
+
+    /**
+     * Apre la schermata di setup: da qui parte ogni partita, la prima e quelle dopo. La
+     * partita vera partira' solo quando l'utente avra' confermato i giocatori: a quel
+     * punto la schermata chiama {@link #startGameWith(List)}.
+     */
+    private static void showSetup() {
         new SetupWindow(MonopolyApp::startGameWith).setVisible(true);
     }
 
@@ -82,8 +106,9 @@ public final class MonopolyApp {
         // 1. Controller: il motore costruisce da se' il tabellone standard.
         final GameEngine engine = new GameEngine(players);
 
-        // 2. View: la finestra si registra da sola come osservatrice del motore.
-        final MainWindow window = new MainWindow(engine);
+        // 2. View: la finestra si registra da sola come osservatrice del motore. A
+        //    partita finita si chiude e si torna alla schermata di setup.
+        final MainWindow window = new MainWindow(engine, MonopolyApp::showSetup);
         // Seconda view sugli stessi eventi: il racconto sul terminale.
         engine.addObserver(new ConsoleGameObserver());
         window.setVisible(true);
