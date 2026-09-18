@@ -29,13 +29,14 @@ import it.unibo.monopoly.model.player.Player;
  * responsabilita' e non conosce gli altri: e' la finestra a comporli e a dire a
  * ciascuno quando aggiornarsi. Sotto i
  * pannelli c'e' il verde del tavolo ({@link Theme#TABLE_GREEN}), con gli stessi
- * margini su tutti i lati.
+ * margini su tutti i lati. Sopra la partita non c'e' nessun titolo: la scritta
+ * "MONOPOLY", con i dadi sotto, sta al centro del tabellone.
  * <p>
  * <b>Partite caricate.</b> Quando il motore mette in gioco una partita caricata da
  * file, la finestra riceve l'evento di avvio con uno stato nuovo. Non viene ricreata e
  * non si registra di nuovo: sostituisce soltanto il tabellone e le schede dei
  * giocatori, che erano costruiti sulla partita precedente, e poi si ridisegna. Il
- * pannello dei comandi resta, perche' interroga sempre il motore, e con lui resta il log.
+ * pannello dei comandi resta, perche' interroga sempre il motore.
  * <p>
  * <b>Fine della partita.</b> Quando resta un solo giocatore la finestra annuncia il
  * vincitore e, appena l'utente chiude l'annuncio, si chiude a sua volta ed esegue
@@ -52,15 +53,9 @@ import it.unibo.monopoly.model.player.Player;
  * pannelli di rileggere il {@link GameState} e ridisegnarsi. Cosi' ogni comando
  * produce un solo ridisegno, e nessun cambiamento resta fuori. Il motore, dal canto
  * suo, non sa che dall'altra parte c'e' Swing: conosce solo l'interfaccia
- * {@code GameObserver}.
- * <p>
- * <b>Due osservatori, non uno.</b> Oltre a se' stessa, la finestra registra un
- * secondo osservatore che scrive la cronaca testuale nell'area di log del
- * {@link ControlPanel} e, a fine partita, il riepilogo finale. E' una sottoclasse
- * anonima di {@link TextGameObserver}, la stessa classe base usata dalla view su
- * console: cosi' la parte grafica si occupa solo di disegnare e le frasi da mostrare
- * restano scritte in un posto solo. Entrambi gli osservatori vengono rimossi dal
- * motore in {@link #dispose()}.
+ * {@code GameObserver}. La finestra non tiene una cronaca testuale della partita: cosa
+ * e' successo si vede da pedine, saldi e dadi, e il racconto riga per riga resta alla
+ * view su console ({@link ConsoleGameObserver}).
  * <p>
  * <b>Un solo verso.</b> Da qui non parte mai una modifica al model: i comandi
  * dell'utente passano dal {@link ControlPanel} al {@link GameEngine}, e tornano
@@ -107,9 +102,6 @@ public final class MainWindow extends JFrame implements GameObserver {
     /** La partita su cui sono costruiti tabellone e schede dei giocatori. */
     private transient GameState displayedState;
 
-    /** Cronaca testuale della partita, riversata nell'area di log dei comandi. */
-    private final transient TextGameObserver logObserver;
-
     /**
      * Costruisce la finestra sulla partita gestita dal motore indicato e la registra
      * come osservatore.
@@ -134,28 +126,9 @@ public final class MainWindow extends JFrame implements GameObserver {
         this.boardPanel = new BoardPanel(state);
         this.playerInfoPanel = new PlayerInfoPanel(state);
         this.controlPanel = new ControlPanel(engine);
-        // Sottoclasse anonima: riusa tutte le frasi di TextGameObserver e cambia solo
-        // la destinazione, che qui e' l'area di testo dei comandi.
-        this.logObserver = new TextGameObserver() {
-            @Override
-            protected void write(final String line) {
-                // La scrittura nel log non passa da refreshAll(): il controllo del
-                // thread va fatto anche qui, prima di toccare l'area di testo.
-                requireEdt();
-                MainWindow.this.controlPanel.appendLog(line);
-            }
-
-            @Override
-            public void onGameOver(final Player winner) {
-                // Prima l'annuncio del vincitore, poi il riepilogo: e' l'ordine in cui
-                // ha senso leggerli nel log.
-                super.onGameOver(winner);
-                this.printStandings(MainWindow.this.engine.getState());
-            }
-        };
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setJMenuBar(new GameMenuBar(engine, this, this.controlPanel::appendLog));
+        this.setJMenuBar(new GameMenuBar(engine, this));
         this.setContentPane(createTable());
         this.add(this.boardPanel, BorderLayout.CENTER);
         this.add(this.playerInfoPanel, BorderLayout.EAST);
@@ -167,7 +140,6 @@ public final class MainWindow extends JFrame implements GameObserver {
         // Da questo momento la GUI riceve gli eventi della partita. Registrarsi nel
         // costruttore, prima di startGame(), fa arrivare anche l'evento di avvio.
         engine.addObserver(this);
-        engine.addObserver(this.logObserver);
     }
 
     // ------------------------------------------------------------------
@@ -193,16 +165,16 @@ public final class MainWindow extends JFrame implements GameObserver {
     /**
      * Mostra i dadi appena lanciati.
      * <p>
-     * Come la scrittura nel log, non passa da {@code refreshAll()}: il controllo del
-     * thread va fatto anche qui. E' il primo evento di ogni lancio, quindi e' anche il
-     * primo punto in cui un comando inviato dal thread sbagliato verrebbe scoperto.
+     * Non passa da {@code refreshAll()}: il controllo del thread va fatto anche qui. E' il
+     * primo evento di ogni lancio, quindi e' anche il primo punto in cui un comando
+     * inviato dal thread sbagliato verrebbe scoperto.
      *
      * @param result il risultato del lancio
      */
     @Override
     public void onDiceRolled(final RollResult result) {
         requireEdt();
-        this.controlPanel.showRoll(result);
+        this.boardPanel.showRoll(result);
     }
 
     /**
@@ -253,7 +225,6 @@ public final class MainWindow extends JFrame implements GameObserver {
      * Chiude la partita: aggiorna i pannelli (i comandi si disabilitano da soli,
      * perche' il motore non consente piu' nessuna azione), annuncia il vincitore e,
      * quando l'utente chiude l'annuncio, lascia il posto alla schermata iniziale.
-     * Il riepilogo finale lo scrive il log, subito dopo la propria riga di fine partita.
      *
      * @param winner il giocatore rimasto in partita
      */
@@ -276,7 +247,7 @@ public final class MainWindow extends JFrame implements GameObserver {
      * Chiude la finestra e la scollega dal motore.
      * <p>
      * Senza questo passaggio il {@link GameEngine} continuerebbe a tenere un
-     * riferimento alla finestra e al suo log e a notificarli a ogni comando: una
+     * riferimento alla finestra e a notificarla a ogni comando: una
      * finestra gia' chiusa resterebbe in memoria e continuerebbe a ridisegnarsi. La
      * chiusura dalla "X" termina l'intera applicazione, ma a fine partita la finestra si
      * chiude da sola e il programma continua con la schermata iniziale: li' questo
@@ -290,7 +261,6 @@ public final class MainWindow extends JFrame implements GameObserver {
     @Override
     public void dispose() {
         this.engine.removeObserver(this);
-        this.engine.removeObserver(this.logObserver);
         super.dispose();
     }
 
@@ -333,8 +303,8 @@ public final class MainWindow extends JFrame implements GameObserver {
      * Tabellone e schede dei giocatori leggono un {@link GameState} preciso, ricevuto
      * alla creazione (con le sue caselle e i suoi giocatori): quando la partita cambia si
      * creano pannelli nuovi al posto dei vecchi. Questi pannelli non sono osservatori,
-     * quindi sostituirli non lascia registrazioni appese sul motore. Anche i dadi
-     * disegnati appartenevano alla partita precedente, e vengono svuotati.
+     * quindi sostituirli non lascia registrazioni appese sul motore. Il tabellone nuovo
+     * ha anche i dadi vuoti: quelli disegnati appartenevano alla partita precedente.
      */
     private void showState(final GameState state) {
         requireEdt();
@@ -348,7 +318,6 @@ public final class MainWindow extends JFrame implements GameObserver {
         this.add(this.boardPanel, BorderLayout.CENTER);
         this.add(this.playerInfoPanel, BorderLayout.EAST);
         this.displayedState = state;
-        this.controlPanel.clearRoll();
         this.revalidate();
         this.repaint();
     }

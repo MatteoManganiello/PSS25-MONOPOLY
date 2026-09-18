@@ -15,8 +15,12 @@ import javax.swing.Icon;
 
 import it.unibo.monopoly.controller.SetupProblem;
 import it.unibo.monopoly.model.board.ColorGroup;
+import it.unibo.monopoly.model.board.StationTile;
+import it.unibo.monopoly.model.board.StreetTile;
 import it.unibo.monopoly.model.board.Tile;
 import it.unibo.monopoly.model.board.TileCategory;
+import it.unibo.monopoly.model.board.UtilityTile;
+import it.unibo.monopoly.model.economy.Property;
 import it.unibo.monopoly.model.game.GameState;
 import it.unibo.monopoly.model.player.Player;
 import it.unibo.monopoly.model.player.PlayerStatus;
@@ -42,6 +46,9 @@ public final class ViewStyle {
     /** Inizio del nome delle caselle "Imprevisti", in minuscolo. */
     private static final String CHANCE_NAME = "imprevist";
 
+    /** Simbolo della valuta, scritto dopo ogni importo. */
+    private static final String CURRENCY = "€";
+
     /** Sfondo di ogni famiglia di caselle. */
     private static final Map<TileCategory, Color> CATEGORY_COLORS = createCategoryColors();
 
@@ -63,21 +70,67 @@ public final class ViewStyle {
     }
 
     /**
-     * Colore di una casella "Imprevisti" o "Probabilita'": arancione la prima, azzurro
-     * la seconda, come i due mazzi del gioco vero.
+     * Colore di sfondo di una casella precisa: quello della sua famiglia
+     * ({@link #colorOf(TileCategory)}), tranne per Imprevisti e Probabilita', che sono
+     * interamente del colore del loro mazzo - arancione la prima, azzurro la seconda,
+     * come nel gioco vero.
      * <p>
      * Nel model le due caselle sono la stessa cosa, un segnaposto della categoria
      * {@link TileCategory#CARD}: l'unica differenza e' il nome stampato sopra, ed e' da
      * quello che la view le distingue. Una casella di quella categoria con un nome
      * diverso prende il colore di Probabilita'.
      *
-     * @param tile una casella della categoria {@link TileCategory#CARD}
-     * @return il colore della sua banda
+     * @param tile la casella da disegnare
+     * @return il colore con cui riempirla
      */
-    public static Color colorOfCardTile(final Tile tile) {
+    public static Color colorOf(final Tile tile) {
+        if (tile.getCategory() != TileCategory.CARD) {
+            return colorOf(tile.getCategory());
+        }
         return tile.getName().toLowerCase(Locale.ROOT).startsWith(CHANCE_NAME)
                 ? Theme.CHANCE
                 : Theme.COMMUNITY_CHEST;
+    }
+
+    /**
+     * Riga di dettaglio di una casella, pronta da mostrare: se finisce con un importo
+     * ("60", "Paga 200") gli aggiunge il simbolo dell'euro, nello stesso formato di
+     * {@link #formatMoney(int)}.
+     * <p>
+     * Il testo arriva dal model ({@link Tile#getDetail()}), che non conosce la valuta: e'
+     * una scelta di presentazione, quindi la si aggiunge qui. Le scritte che non finiscono
+     * con una cifra ("Solo visita", "?") restano come sono.
+     *
+     * @param tile la casella
+     * @return il dettaglio, eventualmente con il simbolo della valuta
+     */
+    public static String detailOf(final Tile tile) {
+        final String detail = tile.getDetail();
+        return !detail.isEmpty() && Character.isDigit(detail.charAt(detail.length() - 1))
+                ? detail + " " + CURRENCY
+                : detail;
+    }
+
+    /**
+     * Colore di una proprieta': quello della banda in alto sulla sua casella - il gruppo
+     * per i terreni, come sul tabellone vero; un colore proprio per le stazioni e uno
+     * diverso per le societa', cosi' le due famiglie si distinguono a colpo d'occhio - e
+     * della striscia del suo contratto nella scheda del proprietario.
+     * <p>
+     * E' l'unico punto della view che guarda la classe di una proprieta', e lo fa in un
+     * solo {@code switch}: aggiungere una famiglia di caselle significa aggiungere un caso
+     * qui, e nessun pannello va toccato.
+     *
+     * @param property la proprieta'
+     * @return il colore della sua banda
+     */
+    public static Color bandColorOf(final Property property) {
+        return switch (property) {
+            case StreetTile street -> colorOf(street.getGroup());
+            case StationTile _ -> Theme.STATION_BAND;
+            case UtilityTile _ -> Theme.UTILITY_BAND;
+            default -> Theme.NEUTRAL_BAND;
+        };
     }
 
     /**
@@ -200,13 +253,16 @@ public final class ViewStyle {
     }
 
     /**
-     * Formatta un importo con il separatore delle migliaia (1500 diventa "1.500").
+     * Formatta un importo in euro: 1500 diventa "1500 €".
+     * <p>
+     * E' l'unico formato degli importi nella view - cassa della banca, saldi, prezzi,
+     * affitti, cauzione - cosi' si leggono tutti allo stesso modo.
      *
      * @param amount l'importo da mostrare
-     * @return l'importo formattato
+     * @return l'importo formattato, con il simbolo della valuta
      */
     public static String formatMoney(final int amount) {
-        return String.format(Locale.ITALY, "%,d", amount);
+        return amount + " " + CURRENCY;
     }
 
     /**
@@ -244,8 +300,8 @@ public final class ViewStyle {
         colors.put(TileCategory.JAIL, Theme.TILE_JAIL);
         colors.put(TileCategory.GO_TO_JAIL, Theme.TILE_GO_TO_JAIL);
         colors.put(TileCategory.FREE_PARKING, Theme.TILE_FREE_PARKING);
-        // Imprevisti e Probabilita' hanno una banda colorata (vedi colorOfCardTile):
-        // sotto la banda sono crema come le altre caselle.
+        // Imprevisti e Probabilita' prendono il colore del loro mazzo, che dipende dal
+        // nome e non dalla categoria (vedi colorOf(Tile)): questo e' solo il ripiego.
         colors.put(TileCategory.CARD, Theme.TILE_PLAIN);
         colors.put(TileCategory.OTHER, Theme.TILE_PLAIN);
         return colors;

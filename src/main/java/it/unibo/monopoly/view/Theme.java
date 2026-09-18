@@ -1,10 +1,12 @@
 package it.unibo.monopoly.view;
 
+import java.awt.Adjustable;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -12,17 +14,21 @@ import java.awt.LayoutManager;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.geom.RoundRectangle2D;
+import java.util.List;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonModel;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.plaf.basic.BasicButtonUI;
 import javax.swing.plaf.basic.BasicGraphicsUtils;
+import javax.swing.plaf.basic.BasicScrollBarUI;
 import javax.swing.text.JTextComponent;
 
 /**
@@ -37,15 +43,24 @@ import javax.swing.text.JTextComponent;
  * giocatore) in questi colori.
  * <p>
  * <b>Regole del tema.</b> Le superfici (caselle, schede, riquadri) sono crema e il testo
- * che ci sta sopra e' scuro; i verdi fanno solo da sfondo. I bordi sono sempre grigi,
- * con gli angoli netti. Il rosso e' riservato all'azione principale, il blu agli
- * importi e alle selezioni.
+ * che ci sta sopra e' scuro; i verdi fanno solo da sfondo. I bordi normali sono grigi,
+ * con gli angoli netti. Il giallo ({@link #HIGHLIGHT}) ha due soli usi: il turno attivo
+ * (la scheda del giocatore di turno e la casella su cui si trova) e la cornice del
+ * tabellone. Il rosso e' riservato all'azione principale, il blu agli importi, alla
+ * cassa della banca e alle selezioni. Tutti gli importi sono in euro
+ * ({@link ViewStyle#formatMoney(int)}).
  * <p>
  * <b>Contrasto.</b> Tutte le coppie testo/sfondo della GUI rispettano il livello AA delle
  * linee guida WCAG (almeno 4,5:1): testo scuro su crema 11,9:1, testo scuro sul verde
- * salvia 5:1, blu su crema 7,3:1, crema su rosso 4,6:1. Il crema sui due verdi resta
- * sotto la soglia (2,4:1 e 4,2:1), per questo sui verdi non si scrive in chiaro: il
- * turno al centro del tabellone, per esempio, sta su una scheda crema.
+ * salvia 5:1, blu su crema e crema su blu 7,3:1, crema su rosso 4,6:1, testo scuro su
+ * Imprevisti 6,2:1, inchiostro ({@link #TEXT_INK}) su Probabilita' e sulle tasse 5,5:1,
+ * blu sulla prigione 4,7:1 e sul posteggio 5,6:1. Sulle caselle il colore del testo lo
+ * sceglie {@link #textOn(Color)} (e {@link #accentOn(Color)} per gli importi), che
+ * garantisce la soglia qualunque sia lo sfondo. Il crema sui due
+ * verdi resta sotto la soglia (2,4:1 e 4,2:1), per questo sui verdi non si scrive in
+ * chiaro. Il giallo non porta mai testo e contrasta poco con il crema e con il salvia
+ * (1,4:1 e 1,7:1): per questo l'evidenziazione e la cornice hanno sempre un filo grigio
+ * scuro che le stacca dallo sfondo.
  * <p>
  * Classe di sola utilita': tutti i membri sono statici e non e' istanziabile.
  */
@@ -67,20 +82,43 @@ public final class Theme {
     /** Grigio medio dei bordi normali. */
     public static final Color BORDER = new Color(0x9AA0A6);
 
-    /** Grigio scuro dei bordi marcati: caselle, pulsanti, giocatore di turno. */
+    /** Grigio scuro dei bordi marcati: caselle, pulsanti secondari, cassa della banca. */
     public static final Color BORDER_STRONG = new Color(0x6E6E6E);
+
+    /**
+     * Giallo di evidenziazione. Si usa SOLO per il turno attivo (la scheda del giocatore di
+     * turno e la casella su cui si trova) e per la cornice esterna del tabellone.
+     */
+    public static final Color HIGHLIGHT = new Color(0xF2C230);
 
     /** Rosso Monopoly: azione principale ed enfasi. */
     public static final Color MONOPOLY_RED = new Color(0xC0392B);
 
-    /** Blu di accento secondario: importi, dettagli delle caselle, testo selezionato. */
+    /** Blu di accento secondario: importi, dettagli delle caselle, cassa della banca, testo selezionato. */
     public static final Color ACCENT_BLUE = new Color(0x1F4E79);
 
     /** Testo scuro, da usare sulle superfici crema e sul verde salvia. */
     public static final Color TEXT_DARK = new Color(0x2B2B2B);
 
-    /** Testo chiaro, da usare sul rosso. */
+    /**
+     * Inchiostro piu' scuro di {@link #TEXT_DARK}, per il testo sulle caselle a tinta piena
+     * dove il testo scuro normale non arriva alla soglia AA: sull'azzurro di Probabilita'
+     * (4,2:1 contro 5,5:1) e sul corallo delle tasse (4,2:1 contro 5,5:1). Lo sceglie
+     * {@link #textOn(Color)}.
+     */
+    public static final Color TEXT_INK = new Color(0x141414);
+
+    /** Testo chiaro, da usare sul rosso e sul blu. */
     public static final Color TEXT_LIGHT = CREAM;
+
+    /** Faccia dei dadi: bianco pieno, che li stacca dal verde del tabellone su cui poggiano. */
+    public static final Color DIE_FACE = new Color(0xFFFFFF);
+
+    /**
+     * Carta dei contratti: le proprieta' elencate nelle schede dei giocatori. Un crema piu'
+     * chiaro della scheda, cosi' ogni proprieta' si stacca come un cartoncino a se'.
+     */
+    public static final Color DEED_SURFACE = mix(CREAM, DIE_FACE, 0.6);
 
     // ------------------------------------------------------------------
     // Bande dei gruppi di colore dei terreni (colori classici del gioco)
@@ -111,17 +149,17 @@ public final class Theme {
     public static final Color GROUP_BLUE = new Color(0x0072BB);
 
     // ------------------------------------------------------------------
-    // Caselle speciali: un colore pieno, riconoscibile a colpo d'occhio
+    // Caselle speciali: tutta la casella di un colore pieno, riconoscibile a colpo d'occhio
     // ------------------------------------------------------------------
 
-    /** Imprevisti. */
+    /** Imprevisti: arancione. */
     public static final Color CHANCE = new Color(0xF7941D);
 
-    /** Probabilita'. */
+    /** Probabilita': azzurro. */
     public static final Color COMMUNITY_CHEST = new Color(0x4A90D9);
 
     // ------------------------------------------------------------------
-    // Tinte delle caselle: la tavolozza sciolta nel crema
+    // Caselle speciali e bande senza gruppo
     // ------------------------------------------------------------------
 
     /** Proprieta' (e ogni casella senza una tinta propria): crema pieno. */
@@ -130,26 +168,26 @@ public final class Theme {
     /** Il "Via": crema con un velo di verde. */
     public static final Color TILE_START = mix(CREAM, TABLE_GREEN, 0.25);
 
-    /** Tasse: crema con un velo di rosso. */
-    public static final Color TILE_TAX = mix(CREAM, MONOPOLY_RED, 0.16);
+    /** Tasse: un corallo acceso, che avvisa del pagamento a colpo d'occhio. */
+    public static final Color TILE_TAX = new Color(0xEF5B45);
 
-    /** Prigione: crema con un velo di grigio. */
-    public static final Color TILE_JAIL = mix(CREAM, BORDER_STRONG, 0.18);
+    /** Prigione: lavanda. */
+    public static final Color TILE_JAIL = new Color(0xC9B7E8);
 
-    /** "Vai in prigione": il rosso piu' deciso del tabellone, ma sempre chiaro. */
+    /** "Vai in prigione": crema velato di rosso, chiaro. */
     public static final Color TILE_GO_TO_JAIL = mix(CREAM, MONOPOLY_RED, 0.30);
 
-    /** Posteggio gratuito: crema con un velo di blu. */
-    public static final Color TILE_FREE_PARKING = mix(CREAM, ACCENT_BLUE, 0.14);
+    /** Posteggio gratuito: verde menta. */
+    public static final Color TILE_FREE_PARKING = new Color(0xA7DCC6);
 
-    /** Banda delle proprieta' senza gruppo di colore (stazioni e societa'). */
+    /** Banda delle stazioni: blu indaco. */
+    public static final Color STATION_BAND = new Color(0x3F51B5);
+
+    /** Banda delle societa' (elettrica, acqua potabile): verde acqua. */
+    public static final Color UTILITY_BAND = new Color(0x00897B);
+
+    /** Banda di una proprieta' acquistabile che non e' ne' terreno, ne' stazione, ne' societa'. */
     public static final Color NEUTRAL_BAND = mix(CREAM, BORDER_STRONG, 0.22);
-
-    /**
-     * Sfondo di cio' che riguarda il giocatore di turno (la sua scheda e la casella su
-     * cui si trova): crema appena velato dal verde del tavolo.
-     */
-    public static final Color CURRENT_SURFACE = mix(CREAM, TABLE_GREEN, 0.22);
 
     // ------------------------------------------------------------------
     // Stati del giocatore: testo su crema, tutti sopra 4,5:1
@@ -215,13 +253,13 @@ public final class Theme {
     public static final Font TITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 28);
 
     /** Importo della cassa della banca: il numero piu' grande della schermata di gioco. */
-    public static final Font AMOUNT_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 26);
+    public static final Font AMOUNT_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 32);
 
-    /** Sottotitoli delle schermate, come la domanda "Chi gioca?" del setup. */
-    public static final Font SUBTITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 20);
-
-    /** Simbolo al centro delle caselle Imprevisti e Probabilita'. */
-    public static final Font SYMBOL_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 20);
+    /**
+     * Punto interrogativo delle caselle Imprevisti e Probabilita': piccolo, perche' la
+     * casella si riconosce gia' dal colore.
+     */
+    public static final Font SYMBOL_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 11);
 
     /** Intestazioni dei riquadri e giocatore di turno al centro del tabellone. */
     public static final Font HEADING_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 16);
@@ -239,16 +277,16 @@ public final class Theme {
     public static final Font BODY_BOLD_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 12);
 
     /** Iniziale del giocatore sulla pedina. */
-    public static final Font TOKEN_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 10);
+    public static final Font TOKEN_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 12);
 
     /** Nome della casella. */
     public static final Font TILE_NAME_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 9);
 
+    /** Nome sulle caselle Imprevisti e Probabilita': piu' piccolo delle altre caselle. */
+    public static final Font CARD_NAME_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 8);
+
     /** Riga di dettaglio della casella (prezzo, importo, ...). */
     public static final Font TILE_DETAIL_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 9);
-
-    /** Carattere a spaziatura fissa del log, cosi' le colonne del riepilogo restano allineate. */
-    public static final Font LOG_FONT = new Font(Font.MONOSPACED, Font.PLAIN, 12);
 
     // ------------------------------------------------------------------
     // Misure
@@ -261,7 +299,7 @@ public final class Theme {
     public static final int RADIUS = 0;
 
     /** Arrotondamento dei dadi, l'unico oggetto che resta smussato come quelli veri. */
-    public static final int SMALL_RADIUS = 6;
+    public static final int SMALL_RADIUS = 8;
 
     /** Spazio standard fra due elementi vicini. */
     public static final int GAP = 8;
@@ -269,8 +307,30 @@ public final class Theme {
     /** Margine interno standard di pannelli e schede. */
     public static final int PADDING = 10;
 
-    /** Spessore del bordo che indica il giocatore di turno e la sua casella. */
-    public static final int HIGHLIGHT_WIDTH = 3;
+    /** Spessore della parte gialla piena dell'evidenziazione del turno. */
+    public static final int HIGHLIGHT_WIDTH = 4;
+
+    /**
+     * Spessore dell'anello pieno dell'evidenziazione: il filo grigio scuro esterno piu' il
+     * giallo. L'alone sfumato ({@link #paintHighlight(Graphics2D, int, int, int, int)})
+     * prosegue verso l'interno.
+     */
+    public static final int HIGHLIGHT_RING = 1 + HIGHLIGHT_WIDTH;
+
+    /** Spessore della parte gialla della cornice del tabellone. */
+    public static final int BOARD_FRAME_WIDTH = 6;
+
+    /** Spessore della striscia colorata sul lato sinistro di un contratto. */
+    private static final int DEED_STRIPE = 6;
+
+    /** Margine interno di un contratto, sopra e sotto il nome. */
+    private static final int DEED_PADDING_V = 3;
+
+    /** Spessore delle barre di scorrimento del tema. */
+    private static final int SCROLLBAR_SIZE = 10;
+
+    /** Distanza fra il cursore della barra di scorrimento e il contenuto che scorre. */
+    private static final int SCROLL_THUMB_GAP = 3;
 
     // ------------------------------------------------------------------
     // Pulsanti
@@ -320,6 +380,20 @@ public final class Theme {
     private static final int FOCUS_INSET = 3;
 
     // ------------------------------------------------------------------
+    // Evidenziazione del turno
+    // ------------------------------------------------------------------
+
+    /**
+     * L'alone dell'evidenziazione: un filo di giallo per ogni colore, dal piu' intenso
+     * (subito dentro l'anello pieno) al piu' tenue. Sfuma nella superficie sottostante e
+     * da' all'anello l'aspetto di una cornice accesa.
+     */
+    private static final List<Color> GLOW = List.of(
+            withAlpha(HIGHLIGHT, 150),
+            withAlpha(HIGHLIGHT, 85),
+            withAlpha(HIGHLIGHT, 35));
+
+    // ------------------------------------------------------------------
     // Coefficienti del contrasto WCAG
     // ------------------------------------------------------------------
 
@@ -333,6 +407,9 @@ public final class Theme {
     private static final double GAMMA = 2.4;
     private static final double FLARE = 0.05;
     private static final double MAX_CHANNEL = 255.0;
+
+    /** Contrasto minimo del livello AA per il testo normale. */
+    private static final double AA_CONTRAST = 4.5;
 
     /** Classe di utilita': non deve essere istanziata. */
     private Theme() {
@@ -373,6 +450,36 @@ public final class Theme {
      */
     public static Color readableTextOn(final Color background) {
         return contrast(TEXT_DARK, background) >= contrast(TEXT_LIGHT, background) ? TEXT_DARK : TEXT_LIGHT;
+    }
+
+    /**
+     * Colore del testo principale (per esempio il nome di una casella) sopra uno sfondo
+     * del tema: il testo scuro normale finche' raggiunge il livello AA, altrimenti
+     * l'inchiostro o il crema, quello dei due che contrasta di piu'.
+     * <p>
+     * Cosi' una casella a tinta piena, come le tasse o Probabilita', resta leggibile
+     * senza che il pannello debba sapere di che colore e'.
+     *
+     * @param background lo sfondo
+     * @return {@link #TEXT_DARK}, {@link #TEXT_INK} oppure {@link #TEXT_LIGHT}
+     */
+    public static Color textOn(final Color background) {
+        if (contrast(TEXT_DARK, background) >= AA_CONTRAST) {
+            return TEXT_DARK;
+        }
+        return contrast(TEXT_INK, background) >= contrast(TEXT_LIGHT, background) ? TEXT_INK : TEXT_LIGHT;
+    }
+
+    /**
+     * Colore degli importi e dei dettagli sopra uno sfondo del tema: il blu di accento
+     * dove raggiunge il livello AA (sul crema e sulle tinte chiare), altrimenti lo stesso
+     * colore del testo principale ({@link #textOn(Color)}).
+     *
+     * @param background lo sfondo
+     * @return {@link #ACCENT_BLUE}, oppure il colore di {@link #textOn(Color)}
+     */
+    public static Color accentOn(final Color background) {
+        return contrast(ACCENT_BLUE, background) >= AA_CONTRAST ? ACCENT_BLUE : textOn(background);
     }
 
     // ------------------------------------------------------------------
@@ -477,13 +584,77 @@ public final class Theme {
     }
 
     /**
-     * Cornice del tabellone: una linea grigia marcata, come il bordo stampato di un
-     * tabellone vero.
+     * Cornice del tabellone: gialla, come il bordo stampato di un tabellone vero, con un
+     * filo grigio scuro all'esterno che la stacca dal verde del tavolo. E' uno dei due soli
+     * usi del giallo, insieme al turno attivo.
      *
      * @return il bordo
      */
     public static Border boardBorder() {
-        return BorderFactory.createLineBorder(BORDER_STRONG, HIGHLIGHT_WIDTH);
+        return BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_STRONG, 1),
+                BorderFactory.createLineBorder(HIGHLIGHT, BOARD_FRAME_WIDTH));
+    }
+
+    /**
+     * Disegna l'evidenziazione "illuminata" del turno attivo lungo il bordo interno del
+     * rettangolo indicato: un filo grigio scuro, un anello giallo pieno e, verso l'interno,
+     * un alone giallo che sfuma nella superficie.
+     * <p>
+     * E' la stessa per la scheda del giocatore di turno e per la casella su cui si trova,
+     * cosi' le due si leggono come la stessa informazione. Il filo scuro c'e' perche' il
+     * giallo, da solo, sul crema e sul verde salvia si vedrebbe poco. Sono tutti rettangoli
+     * pieni e non tratti: con gli angoli netti restano precisi al pixel.
+     *
+     * @param graphics il contesto su cui disegnare
+     * @param x        ascissa del bordo esterno
+     * @param y        ordinata del bordo esterno
+     * @param width    larghezza del rettangolo
+     * @param height   altezza del rettangolo
+     */
+    public static void paintHighlight(final Graphics2D graphics, final int x, final int y,
+                                      final int width, final int height) {
+        graphics.setColor(BORDER_STRONG);
+        fillRing(graphics, x, y, width, height, 1);
+        graphics.setColor(HIGHLIGHT);
+        fillRing(graphics, x + 1, y + 1, width - 2, height - 2, HIGHLIGHT_WIDTH);
+        int inset = HIGHLIGHT_RING;
+        for (final Color glow : GLOW) {
+            graphics.setColor(glow);
+            fillRing(graphics, x + inset, y + inset, width - 2 * inset, height - 2 * inset, 1);
+            inset++;
+        }
+    }
+
+    /**
+     * Bordo di un contratto, cioe' di una proprieta' elencata nella scheda del suo
+     * proprietario: il filo grigio dei bordi normali, una striscia del colore della
+     * proprieta' sul lato sinistro e il margine interno.
+     *
+     * @param stripe il colore della proprieta', lo stesso della sua banda sul tabellone
+     * @return il bordo
+     */
+    public static Border deedBorder(final Color stripe) {
+        return BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER),
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createMatteBorder(0, DEED_STRIPE, 0, 0, stripe),
+                        BorderFactory.createEmptyBorder(DEED_PADDING_V, GAP, DEED_PADDING_V, GAP)));
+    }
+
+    /**
+     * Da' a una barra di scorrimento l'aspetto del tema: sottile, senza frecce, con un
+     * cursore crema dal bordo grigio ad angoli netti, come le schede, su una guida
+     * trasparente. Sul verde del tavolo la barra di sistema stonerebbe.
+     *
+     * @param bar la barra da stilizzare
+     */
+    public static void styleScrollBar(final JScrollBar bar) {
+        bar.setUI(new ThemedScrollBarUI());
+        bar.setOpaque(false);
+        bar.setPreferredSize(bar.getOrientation() == Adjustable.VERTICAL
+                ? new Dimension(SCROLLBAR_SIZE, 0)
+                : new Dimension(0, SCROLLBAR_SIZE));
     }
 
     /**
@@ -542,6 +713,20 @@ public final class Theme {
         return (int) Math.round(from + (to - from) * ratio);
     }
 
+    /** Lo stesso colore, con l'opacita' indicata (da 0, trasparente, a 255, pieno). */
+    private static Color withAlpha(final Color color, final int alpha) {
+        return new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
+    }
+
+    /** Riempie una cornice rettangolare dello spessore indicato, senza sovrapporne gli angoli. */
+    private static void fillRing(final Graphics2D graphics, final int x, final int y,
+                                 final int width, final int height, final int thickness) {
+        graphics.fillRect(x, y, width, thickness);
+        graphics.fillRect(x, y + height - thickness, width, thickness);
+        graphics.fillRect(x, y + thickness, thickness, height - 2 * thickness);
+        graphics.fillRect(x + width - thickness, y + thickness, thickness, height - 2 * thickness);
+    }
+
     /** Rapporto di contrasto WCAG fra due colori, da 1 (identici) a 21 (nero su bianco). */
     private static double contrast(final Color first, final Color second) {
         final double lighter = Math.max(luminance(first), luminance(second));
@@ -562,6 +747,56 @@ public final class Theme {
         return value <= LINEAR_THRESHOLD
                 ? value / LINEAR_DIVISOR
                 : Math.pow((value + GAMMA_OFFSET) / GAMMA_DIVISOR, GAMMA);
+    }
+
+    /**
+     * Disegnatore delle barre di scorrimento del tema: niente frecce e niente guida, solo
+     * il cursore, crema con il bordo grigio e velato di grigio sotto il mouse o mentre lo
+     * si trascina, come i pulsanti secondari. Un piccolo stacco lo separa dal contenuto.
+     * <p>
+     * Estende {@link BasicScrollBarUI}, che resta responsabile di tutto il resto:
+     * trascinamento, rotellina, clic sulla guida.
+     */
+    private static final class ThemedScrollBarUI extends BasicScrollBarUI {
+
+        @Override
+        protected JButton createDecreaseButton(final int orientation) {
+            return invisibleButton();
+        }
+
+        @Override
+        protected JButton createIncreaseButton(final int orientation) {
+            return invisibleButton();
+        }
+
+        @Override
+        protected void paintTrack(final Graphics g, final JComponent component, final Rectangle bounds) {
+            // Guida trasparente: si vede il fondo su cui poggia la barra.
+        }
+
+        @Override
+        protected void paintThumb(final Graphics g, final JComponent component, final Rectangle bounds) {
+            if (bounds.isEmpty() || !this.scrollbar.isEnabled()) {
+                return;
+            }
+            final Rectangle thumb = this.scrollbar.getOrientation() == Adjustable.VERTICAL
+                    ? new Rectangle(bounds.x + SCROLL_THUMB_GAP, bounds.y, bounds.width - SCROLL_THUMB_GAP, bounds.height)
+                    : new Rectangle(bounds.x, bounds.y + SCROLL_THUMB_GAP, bounds.width, bounds.height - SCROLL_THUMB_GAP);
+            g.setColor(this.isDragging || this.isThumbRollover() ? SECONDARY.hover() : SECONDARY.fill());
+            g.fillRect(thumb.x, thumb.y, thumb.width, thumb.height);
+            g.setColor(SECONDARY.outline());
+            g.drawRect(thumb.x, thumb.y, thumb.width - 1, thumb.height - 1);
+        }
+
+        /** @return un pulsante di misura nulla: al posto delle frecce non resta nulla */
+        private static JButton invisibleButton() {
+            final JButton button = new JButton();
+            final Dimension none = new Dimension(0, 0);
+            button.setPreferredSize(none);
+            button.setMinimumSize(none);
+            button.setMaximumSize(none);
+            return button;
+        }
     }
 
     /**

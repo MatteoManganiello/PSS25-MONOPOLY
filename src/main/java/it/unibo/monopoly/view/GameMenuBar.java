@@ -8,7 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import javax.swing.JFileChooser;
 import javax.swing.JMenu;
@@ -32,7 +31,7 @@ import it.unibo.monopoly.model.persistence.SaveFileException;
  * file) e la passa al {@link GameEngine}: non sa come e' fatto un salvataggio e non
  * tocca il model. Dopo un caricamento non ridisegna nulla: e' il motore a notificare gli
  * osservatori, e la finestra si aggiorna come dopo qualunque altro comando. Da qui parte
- * solo il feedback all'utente: una riga nel log e una finestra di dialogo con l'esito.
+ * solo il feedback all'utente: una finestra di dialogo con l'esito.
  * <p>
  * <b>Thread.</b> Vale la regola di tutta la GUI: i comandi al motore e gli aggiornamenti di
  * Swing avvengono sull'Event Dispatch Thread.
@@ -68,9 +67,6 @@ public final class GameMenuBar extends JMenuBar {
     /** Componente sopra cui aprire file chooser e finestre di dialogo. */
     private final Component dialogParent;
 
-    /** Dove scrivere l'esito, perche' ne resti traccia nel racconto della partita. */
-    private final transient Consumer<String> log;
-
     /** Unico per tutta la finestra: ricorda l'ultima cartella usata. */
     private final JFileChooser fileChooser;
 
@@ -82,16 +78,14 @@ public final class GameMenuBar extends JMenuBar {
      *
      * @param engine       il motore a cui inoltrare salvataggi e caricamenti
      * @param dialogParent la finestra sopra cui mostrare file chooser e messaggi
-     * @param log          dove scrivere l'esito delle operazioni
      * @throws IllegalArgumentException se un parametro e' null
      */
-    public GameMenuBar(final GameEngine engine, final Component dialogParent, final Consumer<String> log) {
-        if (engine == null || dialogParent == null || log == null) {
-            throw new IllegalArgumentException("Motore, finestra e log non possono essere null");
+    public GameMenuBar(final GameEngine engine, final Component dialogParent) {
+        if (engine == null || dialogParent == null) {
+            throw new IllegalArgumentException("Motore e finestra non possono essere null");
         }
         this.engine = engine;
         this.dialogParent = dialogParent;
-        this.log = log;
         this.fileChooser = new JFileChooser();
         this.fileChooser.setFileFilter(
                 new FileNameExtensionFilter("Partite di Monopoly (*." + EXTENSION + ")", EXTENSION));
@@ -184,12 +178,8 @@ public final class GameMenuBar extends JMenuBar {
         return Optional.of(file);
     }
 
-    /**
-     * Comunica l'esito all'utente: una riga nel log, perche' ne resti traccia, e una
-     * finestra di dialogo, perche' non passi inosservato.
-     */
+    /** Comunica l'esito all'utente con una finestra di dialogo, perche' non passi inosservato. */
     private void report(final PersistenceResult result, final String title) {
-        this.log.accept(result.message());
         JOptionPane.showMessageDialog(this.dialogParent, result.message(), title,
                 result.successful() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE);
     }

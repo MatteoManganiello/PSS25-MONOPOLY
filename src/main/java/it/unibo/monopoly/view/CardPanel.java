@@ -12,12 +12,16 @@ import javax.swing.JPanel;
 /**
  * Pannello a forma di scheda: sfondo pieno ed eventuale contorno.
  * <p>
- * E' la superficie comune della GUI - le schede dei giocatori e della banca, i riquadri
- * dei comandi e del log, le righe della schermata di setup, la scritta al centro del
- * tabellone - cosi' tutte hanno gli stessi angoli ({@link Theme#RADIUS}, oggi netti) e
- * lo stesso modo di disegnare il contorno. Il colore di riempimento e' lo sfondo del
- * pannello ({@link #setBackground(Color)}), quindi si imposta come per qualunque altro
- * componente Swing.
+ * E' la superficie comune della GUI - le schede dei giocatori e della banca, il riquadro
+ * dei comandi, le righe e il titolo della schermata di setup - cosi' tutte hanno gli
+ * stessi angoli ({@link Theme#RADIUS}, oggi netti) e lo stesso modo di disegnare il
+ * contorno. Il colore di riempimento e' lo sfondo del pannello
+ * ({@link #setBackground(Color)}), quindi si imposta come per qualunque altro componente
+ * Swing.
+ * <p>
+ * Una scheda puo' essere evidenziata ({@link #setHighlighted(boolean)}): al posto del
+ * contorno compare l'anello giallo del turno attivo, lo stesso che il tabellone disegna
+ * attorno alla casella del giocatore di turno.
  * <p>
  * Non e' {@code final} perche' e' pensata come classe base dei pannelli che hanno
  * questa forma. Proprio per questo il costruttore si limita a memorizzare i valori,
@@ -36,6 +40,9 @@ public class CardPanel extends JPanel {
     /** Spessore del contorno, in pixel. */
     private int outlineWidth;
 
+    /** True se la scheda e' evidenziata come turno attivo: l'anello giallo sostituisce il contorno. */
+    private boolean highlighted;
+
     /**
      * Crea una scheda.
      *
@@ -47,6 +54,23 @@ public class CardPanel extends JPanel {
         super(layout);
         this.outline = outline;
         this.outlineWidth = outlineWidth;
+        this.highlighted = false;
+    }
+
+    /**
+     * Accende o spegne l'evidenziazione del turno attivo.
+     * <p>
+     * L'anello e' disegnato dentro la scheda, quindi non ne cambia le misure: la colonna
+     * dei giocatori non si sposta quando passa il turno. Serve pero' un margine interno
+     * almeno pari all'anello con il suo alone, perche' il contenuto non ci finisca sotto.
+     *
+     * @param highlighted true per evidenziare la scheda
+     */
+    public void setHighlighted(final boolean highlighted) {
+        if (this.highlighted != highlighted) {
+            this.highlighted = highlighted;
+            this.repaint();
+        }
     }
 
     /**
@@ -71,8 +95,8 @@ public class CardPanel extends JPanel {
     }
 
     /**
-     * Disegna lo sfondo e il contorno; i componenti interni vengono
-     * disegnati sopra da Swing, come in qualunque pannello.
+     * Disegna lo sfondo e il contorno, oppure l'anello del turno attivo; i componenti
+     * interni vengono disegnati sopra da Swing, come in qualunque pannello.
      *
      * @param g il contesto grafico fornito da Swing
      */
@@ -81,6 +105,12 @@ public class CardPanel extends JPanel {
         final Graphics2D graphics = (Graphics2D) g.create();
         try {
             Theme.antialias(graphics);
+            if (this.highlighted) {
+                graphics.setColor(this.getBackground());
+                graphics.fillRect(0, 0, this.getWidth(), this.getHeight());
+                Theme.paintHighlight(graphics, 0, 0, this.getWidth(), this.getHeight());
+                return;
+            }
             final boolean outlined = this.outline != null && this.outlineWidth > 0;
             final float inset = outlined ? this.outlineWidth / 2f : 0f;
             final RoundRectangle2D shape = new RoundRectangle2D.Float(inset, inset,

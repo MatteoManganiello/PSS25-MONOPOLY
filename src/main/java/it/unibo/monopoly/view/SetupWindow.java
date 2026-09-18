@@ -12,7 +12,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -50,7 +49,7 @@ import it.unibo.monopoly.model.player.TokenCatalog;
  * Cosi' la finestra resta una view: raccoglie dati e li passa, senza decidere niente.
  * <p>
  * <b>Aspetto.</b> Lo stesso della finestra di gioco: il verde del tavolo come fondo,
- * in alto la stessa fascia "MONOPOLY" del centro del tabellone con la domanda, una
+ * in alto la stessa fascia "MONOPOLY" del centro del tabellone, da sola, una
  * scheda crema con il bordo grigio per ogni giocatore, con il distintivo del colore
  * della sua pedina, e sotto l'elenco il pulsante per aggiungerne un altro, vicino a
  * dove comparira' la nuova riga. In fondo, oltre un filo grigio, il conteggio dei
@@ -148,8 +147,10 @@ public final class SetupWindow extends JFrame {
     // ------------------------------------------------------------------
 
     /**
-     * L'intestazione: la fascia "MONOPOLY", la domanda e la riga di istruzioni, tutte
-     * centrate sul verde del tavolo, con il testo scuro che li' si legge bene.
+     * L'intestazione: soltanto la fascia "MONOPOLY", centrata sul verde del tavolo. Le
+     * regole della schermata (quanti giocatori, pedine tutte diverse) non servono scritte:
+     * le fanno rispettare i pulsanti, e il conteggio in fondo dice quanti se ne possono
+     * aggiungere.
      */
     private JPanel createHeader() {
         final JPanel header = new JPanel();
@@ -159,20 +160,8 @@ public final class SetupWindow extends JFrame {
         header.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.BORDER_STRONG),
                 BorderFactory.createEmptyBorder(2 * Theme.PADDING, 2 * Theme.PADDING,
-                        Theme.PADDING + 4, 2 * Theme.PADDING)));
-
-        final JLabel title = Theme.label("Chi gioca?", Theme.SUBTITLE_FONT, Theme.TEXT_DARK);
-        final JLabel hint = Theme.label("Da " + GameState.MIN_PLAYERS + " a " + GameState.MAX_PLAYERS
-                + " giocatori. Ogni pedina puo' essere scelta da un giocatore solo.",
-                Theme.BODY_FONT, Theme.TEXT_DARK);
-        title.setAlignmentX(CENTER_ALIGNMENT);
-        hint.setAlignmentX(CENTER_ALIGNMENT);
-
+                        2 * Theme.PADDING, 2 * Theme.PADDING)));
         header.add(Theme.titleBanner());
-        header.add(Box.createVerticalStrut(Theme.PADDING + 4));
-        header.add(title);
-        header.add(Box.createVerticalStrut(Theme.GAP / 2));
-        header.add(hint);
         return header;
     }
 

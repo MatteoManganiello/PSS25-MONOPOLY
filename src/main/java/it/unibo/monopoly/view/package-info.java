@@ -11,9 +11,10 @@
  * <ul>
  *   <li>la <b>GUI Swing</b>, composta dalla finestra {@link it.unibo.monopoly.view.MainWindow}
  *       e dai suoi tre pannelli: {@link it.unibo.monopoly.view.BoardPanel} (il tabellone, fatto
- *       di {@link it.unibo.monopoly.view.TilePanel}), {@link it.unibo.monopoly.view.PlayerInfoPanel}
- *       (la situazione dei giocatori) e {@link it.unibo.monopoly.view.ControlPanel} (i comandi,
- *       i dadi e il log);</li>
+ *       di {@link it.unibo.monopoly.view.TilePanel}, con al centro la scritta "MONOPOLY" e i
+ *       dadi, {@link it.unibo.monopoly.view.DiceView}),
+ *       {@link it.unibo.monopoly.view.PlayerInfoPanel} (la situazione dei giocatori e la
+ *       cassa della banca) e {@link it.unibo.monopoly.view.ControlPanel} (i comandi);</li>
  *   <li>la <b>view testuale</b> {@link it.unibo.monopoly.view.ConsoleGameObserver}, che stampa
  *       la cronaca sul terminale.</li>
  * </ul>
@@ -25,10 +26,11 @@
  * pronti per la partita successiva.
  * <p>
  * Le frasi della cronaca sono scritte una volta sola in
- * {@link it.unibo.monopoly.view.TextGameObserver}, la classe astratta da cui derivano sia la
- * view su console sia il log della GUI. L'aspetto sta in due classi di utilita':
- * {@link it.unibo.monopoly.view.Theme} contiene la tavolozza, i caratteri, i bordi e lo
- * stile dei pulsanti, e nessun altro componente scrive un colore a mano;
+ * {@link it.unibo.monopoly.view.TextGameObserver}, la classe astratta da cui deriva la
+ * view su console. L'aspetto sta in due classi di utilita':
+ * {@link it.unibo.monopoly.view.Theme} contiene la tavolozza, i caratteri, i bordi, lo
+ * stile dei pulsanti e l'evidenziazione gialla del turno, e nessun altro componente
+ * scrive un colore a mano;
  * {@link it.unibo.monopoly.view.ViewStyle} traduce i dati del model (categorie di
  * casella, gruppi di colore, pedine, stati dei giocatori, importi) in quei colori e in
  * testo da mostrare. Le superfici crema con il bordo grigio - schede, riquadri, righe
