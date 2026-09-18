@@ -99,13 +99,14 @@ class TurnManagerEconomyTest {
     @Test
     void passingOverGoPaysTheSalary() {
         final GameState state = newGame(List.of(alice, bob));
-        // 33 + 9 = 42, cioe' casella 2: il giro passa dal Via senza fermarcisi.
-        alice.setPosition(33);
+        // 32 + 9 = 41, cioe' casella 1: il giro passa dal Via senza fermarcisi. Vicolo
+        // Corto, libero, propone solo l'acquisto e non sposta denaro.
+        alice.setPosition(32);
 
         final RollResult result = new TurnManager(state).rollDice();
 
         assertTrue(result.passedGo());
-        assertEquals(2, alice.getPosition());
+        assertEquals(1, alice.getPosition());
         assertEquals(Bank.STARTING_BALANCE + Bank.GO_SALARY, alice.getMoney());
     }
 
