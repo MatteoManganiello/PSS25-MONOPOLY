@@ -3,6 +3,7 @@ package it.unibo.monopoly.view;
 import java.util.Optional;
 
 import it.unibo.monopoly.controller.GameObserver;
+import it.unibo.monopoly.model.board.Card;
 import it.unibo.monopoly.model.board.Tile;
 import it.unibo.monopoly.model.economy.Property;
 import it.unibo.monopoly.model.game.GameState;
@@ -86,6 +87,11 @@ public abstract class TextGameObserver implements GameObserver {
     public void onPlayerMoved(final Player player, final Tile from, final Tile to) {
         this.write("  " + player.getName() + " si sposta da \"" + from.getName()
                 + "\" a \"" + to.getName() + "\"");
+    }
+
+    @Override
+    public void onCardDrawn(final Player player, final String deck, final Card card) {
+        this.write("  " + player.getName() + " pesca una carta " + deck + ": \"" + card.text() + "\"");
     }
 
     @Override

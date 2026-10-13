@@ -2,6 +2,7 @@ package it.unibo.monopoly.model.game;
 
 import java.util.Optional;
 
+import it.unibo.monopoly.model.board.Card;
 import it.unibo.monopoly.model.economy.Property;
 import it.unibo.monopoly.model.player.Player;
 
@@ -92,6 +93,19 @@ public interface GameEventListener {
      * @param amount l'importo ricevuto
      */
     default void onMoneyReceivedFromBank(final Player player, final String reason, final int amount) {
+    }
+
+    /**
+     * Un giocatore ha pescato una carta "Imprevisti" o "Probabilita'".
+     * <p>
+     * Arriva prima dell'effetto della carta: il movimento di denaro che segue e'
+     * annunciato a parte ({@link #onMoneyReceivedFromBank} o {@link #onMoneyPaidToBank}).
+     *
+     * @param player il giocatore che ha pescato
+     * @param deck   il nome del mazzo, gia' pronto per essere mostrato
+     * @param card   la carta pescata
+     */
+    default void onCardDrawn(final Player player, final String deck, final Card card) {
     }
 
     /**

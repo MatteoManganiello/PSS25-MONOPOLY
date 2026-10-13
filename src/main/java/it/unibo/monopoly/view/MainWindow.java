@@ -11,6 +11,7 @@ import javax.swing.SwingUtilities;
 
 import it.unibo.monopoly.controller.GameEngine;
 import it.unibo.monopoly.controller.GameObserver;
+import it.unibo.monopoly.model.board.Card;
 import it.unibo.monopoly.model.economy.Property;
 import it.unibo.monopoly.model.game.GameState;
 import it.unibo.monopoly.model.game.RollResult;
@@ -55,7 +56,9 @@ import it.unibo.monopoly.model.player.Player;
  * suo, non sa che dall'altra parte c'e' Swing: conosce solo l'interfaccia
  * {@code GameObserver}. La finestra non tiene una cronaca testuale della partita: cosa
  * e' successo si vede da pedine, saldi e dadi, e il racconto riga per riga resta alla
- * view su console ({@link ConsoleGameObserver}).
+ * view su console ({@link ConsoleGameObserver}). L'unica eccezione sono le carte
+ * "Imprevisti" e "Probabilita'": il loro testo non si vede da nessun'altra parte, quindi
+ * la finestra lo mostra in un riquadro ({@link #onCardDrawn(Player, String, Card)}).
  * <p>
  * <b>Un solo verso.</b> Da qui non parte mai una modifica al model: i comandi
  * dell'utente passano dal {@link ControlPanel} al {@link GameEngine}, e tornano
@@ -219,6 +222,27 @@ public final class MainWindow extends JFrame implements GameObserver {
     @Override
     public void onPurchaseResolved(final Player player, final Property property, final boolean bought) {
         this.refreshAll();
+    }
+
+    /**
+     * Mostra la carta pescata: il mazzo nel titolo, il testo e cosa comporta.
+     * <p>
+     * Come l'annuncio di fine partita, il riquadro si apre piu' tardi: la notifica in
+     * corso finisce, i pannelli si ridisegnano con il saldo gia' aggiornato, e solo dopo
+     * compare la carta.
+     *
+     * @param player il giocatore che ha pescato
+     * @param deck   il nome del mazzo
+     * @param card   la carta pescata
+     */
+    @Override
+    public void onCardDrawn(final Player player, final String deck, final Card card) {
+        final String effect = (card.isGain() ? "Incassa " : "Paga ")
+                + ViewStyle.formatMoney(Math.abs(card.amount()));
+        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this,
+                player.getName() + " pesca una carta " + deck + ":\n\n\"" + card.text() + "\"\n\n" + effect,
+                deck,
+                JOptionPane.INFORMATION_MESSAGE));
     }
 
     /**

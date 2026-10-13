@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Random;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -43,7 +45,8 @@ class TileDisplayTest {
                 new GoToJailTile("Vai in prigione", 30, jail).getCategory());
         assertEquals(TileCategory.FREE_PARKING,
                 new FreeParkingTile("Posteggio", 20).getCategory());
-        assertEquals(TileCategory.CARD, new PlaceholderTile("Imprevisti", 7).getCategory());
+        assertEquals(TileCategory.CARD,
+                new CardTile("Imprevisti", 7, BoardFactory.CHANCE_CARDS, context, new Random()).getCategory());
     }
 
     @Test

@@ -61,8 +61,8 @@ class BoardTest {
         assertEquals(4, countOf(StationTile.class), "le quattro stazioni");
         assertEquals(2, countOf(UtilityTile.class), "le due societa'");
         assertEquals(2, countOf(TaxTile.class));
-        // Imprevisti e Probabilita': segnaposto senza effetto.
-        assertEquals(6, countOf(PlaceholderTile.class));
+        // Imprevisti e Probabilita': tre caselle per mazzo.
+        assertEquals(6, countOf(CardTile.class));
     }
 
     @Test

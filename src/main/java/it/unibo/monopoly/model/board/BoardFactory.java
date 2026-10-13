@@ -2,6 +2,7 @@ package it.unibo.monopoly.model.board;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import it.unibo.monopoly.model.economy.EconomyManager;
 import it.unibo.monopoly.model.game.GameContext;
@@ -20,8 +21,10 @@ import it.unibo.monopoly.model.game.JailManager;
  * I nomi delle caselle sono quelli dell'edizione italiana del gioco; gli identificatori
  * del codice restano invece in inglese, come nel resto del progetto.
  * <p>
- * Le caselle "Imprevisti" e "Probabilita'" sono {@link PlaceholderTile}: segnaposto
- * senza effetto, che permettono di avere il tabellone completo e giocabile.
+ * Le caselle "Imprevisti" e "Probabilita'" sono {@link CardTile}: chi ci si ferma pesca
+ * una carta dal mazzo della casella. I due mazzi ({@link #CHANCE_CARDS} e
+ * {@link #COMMUNITY_CHEST_CARDS}) sono dati fissi del gioco come prezzi e affitti, e per
+ * questo stanno qui; le tre caselle dello stesso tipo pescano dallo stesso elenco.
  * <p>
  * Le proprieta' non sono piu' tutte uguali: qui si sceglie il tipo concreto giusto
  * ({@link StreetTile}, {@link StationTile}, {@link UtilityTile}) e, per i terreni, il
@@ -37,6 +40,35 @@ public final class BoardFactory {
 
     /** Prezzo uguale per le due societa' (l'affitto dipende dai dadi, vedi {@link UtilityTile}). */
     private static final int UTILITY_PRICE = 150;
+
+    /** Nome delle caselle, e del mazzo, "Imprevisti". */
+    private static final String CHANCE = "Imprevisti";
+
+    /** Nome delle caselle, e del mazzo, "Probabilita'". */
+    private static final String COMMUNITY_CHEST = "Probabilita'";
+
+    /**
+     * Le carte "Imprevisti". Importo positivo: incasso dalla banca; negativo: pagamento.
+     */
+    public static final List<Card> CHANCE_CARDS = List.of(
+            new Card("La banca vi paga un dividendo", 50),
+            new Card("Multa per eccesso di velocita'", -15),
+            new Card("Il vostro prestito edilizio e' scaduto: ritirate il capitale", 150),
+            new Card("Pagate la retta scolastica", -150),
+            new Card("Avete vinto un concorso di cruciverba", 100),
+            new Card("Spese di manutenzione della vostra auto", -25));
+
+    /**
+     * Le carte "Probabilita'". Importo positivo: incasso dalla banca; negativo: pagamento.
+     */
+    public static final List<Card> COMMUNITY_CHEST_CARDS = List.of(
+            new Card("Errore della banca a vostro favore", 200),
+            new Card("Parcella del medico", -50),
+            new Card("Dalla vendita di azioni ricavate un guadagno", 50),
+            new Card("Rimborso delle tasse sul reddito", 20),
+            new Card("Pagate il ricovero in ospedale", -100),
+            new Card("Secondo premio in un concorso di bellezza", 10),
+            new Card("Ereditate da un lontano parente", 100));
 
     /** Classe di utilita': non deve essere istanziata. */
     private BoardFactory() {
@@ -65,17 +97,19 @@ public final class BoardFactory {
     public static List<Tile> createStandardTiles(final GameContext context) {
         final EconomyManager economy = context.getEconomy();
         final JailManager jail = context.getJail();
+        // Un solo generatore per tutte le caselle "carta" del tabellone.
+        final Random random = new Random();
         final List<Tile> tiles = new ArrayList<>(Board.SIZE);
 
         // --- Primo lato: dal Via alla prigione ---
         tiles.add(new StartTile("Via", Board.START_POSITION, economy));
         tiles.add(street("Vicolo Corto", 1, 60, 2, ColorGroup.BROWN, context));
-        tiles.add(card("Probabilita'", 2));
+        tiles.add(card(COMMUNITY_CHEST, 2, COMMUNITY_CHEST_CARDS, context, random));
         tiles.add(street("Vicolo Stretto", 3, 60, 4, ColorGroup.BROWN, context));
         tiles.add(new TaxTile("Tassa patrimoniale", 4, 200, economy));
         tiles.add(station("Stazione Sud", 5, context));
         tiles.add(street("Bastioni Gran Sasso", 6, 100, 6, ColorGroup.LIGHT_BLUE, context));
-        tiles.add(card("Imprevisti", 7));
+        tiles.add(card(CHANCE, 7, CHANCE_CARDS, context, random));
         tiles.add(street("Viale Monterosa", 8, 100, 6, ColorGroup.LIGHT_BLUE, context));
         tiles.add(street("Viale Vesuvio", 9, 120, 8, ColorGroup.LIGHT_BLUE, context));
 
@@ -87,14 +121,14 @@ public final class BoardFactory {
         tiles.add(street("Piazza Universita'", 14, 160, 12, ColorGroup.PINK, context));
         tiles.add(station("Stazione Ovest", 15, context));
         tiles.add(street("Via Verdi", 16, 180, 14, ColorGroup.ORANGE, context));
-        tiles.add(card("Probabilita'", 17));
+        tiles.add(card(COMMUNITY_CHEST, 17, COMMUNITY_CHEST_CARDS, context, random));
         tiles.add(street("Corso Raffaello", 18, 180, 14, ColorGroup.ORANGE, context));
         tiles.add(street("Piazza Dante", 19, 200, 16, ColorGroup.ORANGE, context));
 
         // --- Terzo lato: dal posteggio al "Vai in prigione" ---
         tiles.add(new FreeParkingTile("Posteggio gratuito", Board.FREE_PARKING_POSITION));
         tiles.add(street("Via Marco Polo", 21, 220, 18, ColorGroup.RED, context));
-        tiles.add(card("Imprevisti", 22));
+        tiles.add(card(CHANCE, 22, CHANCE_CARDS, context, random));
         tiles.add(street("Corso Magellano", 23, 220, 18, ColorGroup.RED, context));
         tiles.add(street("Largo Colombo", 24, 240, 20, ColorGroup.RED, context));
         tiles.add(station("Stazione Nord", 25, context));
@@ -107,10 +141,10 @@ public final class BoardFactory {
         tiles.add(new GoToJailTile("Vai in prigione", Board.GO_TO_JAIL_POSITION, jail));
         tiles.add(street("Via Roma", 31, 300, 26, ColorGroup.GREEN, context));
         tiles.add(street("Corso Impero", 32, 300, 26, ColorGroup.GREEN, context));
-        tiles.add(card("Probabilita'", 33));
+        tiles.add(card(COMMUNITY_CHEST, 33, COMMUNITY_CHEST_CARDS, context, random));
         tiles.add(street("Largo Augusto", 34, 320, 28, ColorGroup.GREEN, context));
         tiles.add(station("Stazione Est", 35, context));
-        tiles.add(card("Imprevisti", 36));
+        tiles.add(card(CHANCE, 36, CHANCE_CARDS, context, random));
         tiles.add(street("Viale dei Giardini", 37, 350, 35, ColorGroup.BLUE, context));
         tiles.add(new TaxTile("Tassa di lusso", 38, 100, economy));
         tiles.add(street("Parco della Vittoria", 39, 400, 50, ColorGroup.BLUE, context));
@@ -134,8 +168,9 @@ public final class BoardFactory {
         return new UtilityTile(name, position, UTILITY_PRICE, context);
     }
 
-    /** Casella "Imprevisti" o "Probabilita'": segnaposto senza effetto. */
-    private static PlaceholderTile card(final String name, final int position) {
-        return new PlaceholderTile(name, position);
+    /** Casella "Imprevisti" o "Probabilita'": pesca a caso dal mazzo indicato. */
+    private static CardTile card(final String name, final int position, final List<Card> deck,
+                                 final GameContext context, final Random random) {
+        return new CardTile(name, position, deck, context, random);
     }
 }

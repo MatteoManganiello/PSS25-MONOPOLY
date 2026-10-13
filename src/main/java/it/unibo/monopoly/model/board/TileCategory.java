@@ -34,7 +34,7 @@ public enum TileCategory {
     /** Posteggio gratuito. */
     FREE_PARKING,
 
-    /** Casella "Imprevisti" o "Probabilita'" (segnaposto senza effetto). */
+    /** Casella "Imprevisti" o "Probabilita'", che fa pescare una carta. */
     CARD,
 
     /** Categoria di ripiego per le caselle che non ne dichiarano una. */
